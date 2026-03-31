@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Librarian</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <!-- ─── Top Navigation Bar ──────────────────────── -->
+    <header id="topbar">
+      <div id="topbar-drag">
+        <div id="topbar-brand">
+          <img class="topbar-logo" src="../res/logo/librarian-icon.png" alt="Librarian">
+          <span class="topbar-name">Librarian</span>
+        </div>
+        <nav id="topbar-nav">
+          <button class="nav-tab active" data-page="home" id="nav-home">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-tab" data-page="library" id="nav-library">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V14a1 1 0 11-2 0V4.804z"/></svg>
+            <span>Library</span>
+          </button>
+          <button class="nav-tab" data-page="store" id="nav-store">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+            <span>Store</span>
+          </button>
+          <button class="nav-tab" data-page="downloads" id="nav-downloads">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg>
+            <span>Downloads</span>
+            <span class="nav-badge hidden" id="badge-downloads">0</span>
+          </button>
+          <button class="nav-tab" data-page="crack" id="nav-crack">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/></svg>
+            <span>Crack</span>
+          </button>
+          <button class="nav-tab" data-page="settings" id="nav-settings">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+      </div>
+      <div id="window-controls">
+        <button class="win-btn" id="btn-minimize" title="Minimize">
+          <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="win-btn" id="btn-maximize" title="Maximize">
+          <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+        </button>
+        <button class="win-btn close-btn" id="btn-close" title="Close">
+          <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ─── Page Container ──────────────────────────── -->
+    <div id="page-container">
+
+      <!-- ═══ PAGE: Home ═══ -->
+      <div class="page active" id="page-home">
+        <div id="home-scroll">
+          <!-- Hero Spotlight -->
+          <section id="hero-section">
+            <div id="hero-bg"></div>
+            <div id="hero-content">
+              <div id="hero-badge">★ FEATURED</div>
+              <h1 id="hero-title">Welcome to Librarian</h1>
+              <p id="hero-subtitle">Scan your library to see your games here</p>
+              <div id="hero-actions">
+                <button class="xbox-btn xbox-btn-primary" id="hero-play-btn">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                  Play
+                </button>
+                <button class="xbox-btn xbox-btn-secondary" id="hero-details-btn">Details</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Game Rows -->
+          <section class="game-row" id="row-recent">
+            <div class="row-header">
+              <h2 class="row-title">Recently Added</h2>
+              <button class="row-see-all" data-target="library">See all →</button>
+            </div>
+            <div class="row-scroll" id="row-recent-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-updates">
+            <div class="row-header">
+              <h2 class="row-title">Updates Available</h2>
+            </div>
+            <div class="row-scroll" id="row-updates-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-all">
+            <div class="row-header">
+              <h2 class="row-title">My Library</h2>
+              <button class="row-see-all" data-target="library">See all →</button>
+            </div>
+            <div class="row-scroll" id="row-all-scroll"></div>
+          </section>
+
+          <!-- Empty state -->
+          <div id="home-empty" class="empty-hero">
+            <svg viewBox="0 0 48 48" fill="none" style="width:64px;height:64px;margin-bottom:16px;opacity:0.3"><path d="M24 4L24 32M24 32L16 24M24 32L32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 36V40C8 41.1 8.9 42 10 42H38C39.1 42 40 41.1 40 40V36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h2>No games yet</h2>
+            <p>Scan your Steam libraries or download games from the Store</p>
+            <div class="flex gap-8">
+              <button class="xbox-btn xbox-btn-primary" id="home-scan-btn">🔍 Scan Libraries</button>
+              <button class="xbox-btn xbox-btn-secondary" id="home-store-btn">🛒 Go to Store</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Library ═══ -->
+      <div class="page" id="page-library">
+        <div class="page-bar">
+          <div class="page-bar-left">
+            <h2 class="page-heading">My Library</h2>
+            <span class="page-count" id="lib-count">0 games</span>
+          </div>
+          <div class="page-bar-right">
+            <input type="text" class="filter-input" id="lib-filter" placeholder="Filter games...">
+            <button class="xbox-btn xbox-btn-primary" id="lib-add-game-btn">Add Game</button>
+            <button class="xbox-btn xbox-btn-primary" id="lib-scan-btn">Scan</button>
+            <button class="xbox-btn xbox-btn-secondary" id="lib-check-updates-btn">Check Updates</button>
+          </div>
+        </div>
+        <div id="lib-grid" class="game-grid"></div>
+      </div>
+
+      <!-- ═══ PAGE: Store (Search) ═══ -->
+      <div class="page" id="page-store">
+        <div class="page-bar">
+          <div class="page-bar-left">
+            <h2 class="page-heading">Store</h2>
+          </div>
+          <div class="page-bar-right">
+            <input type="text" class="search-input" id="search-input" placeholder="🔍  Search for a game and press Enter...">
+          </div>
+        </div>
+        <div id="search-status" class="empty-state-centered">Search Morrenus to find and download games.</div>
+        <div id="search-results" class="store-results"></div>
+      </div>
+
+      <!-- ═══ PAGE: Downloads ═══ -->
+      <div class="page" id="page-downloads">
+        <!-- Drop Zone -->
+        <div id="drop-zone">
+          <div id="drop-zone-inner">
+            <div id="grid-bg"></div>
+            <svg id="drop-icon" viewBox="0 0 48 48" fill="none">
+              <path d="M24 4L24 32M24 32L16 24M24 32L32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 36V40C8 41.1 8.9 42 10 42H38C39.1 42 40 41.1 40 40V36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="drop-text">Drop a game ZIP or click to browse</span>
+            <span id="drop-subtext">Librarian will handle the rest — queue, download, crack.</span>
+          </div>
+        </div>
+
+        <!-- Download Stats Bar -->
+        <div id="dl-stats" class="hidden">
+          <div id="dl-stats-left">
+            <div id="dl-game-name">—</div>
+            <div id="dl-status-line">
+              <span id="dl-pct-text">0%</span>
+              <span class="dl-dot">·</span>
+              <span id="dl-speed">—</span>
+              <span class="dl-dot">·</span>
+              <span id="dl-eta">—</span>
+            </div>
+          </div>
+          <div id="dl-stats-right">
+            <canvas id="speed-chart" width="120" height="36"></canvas>
+          </div>
+        </div>
+        <div id="dl-progress-track" class="hidden">
+          <div id="dl-progress-fill"></div>
+        </div>
+
+        <!-- Queue Cards -->
+        <div id="queue-area" class="hidden">
+          <div id="queue-header-row">
+            <span class="section-label">Queue</span>
+            <div id="queue-actions">
+              <button class="icon-btn" id="btn-pause" title="Pause">⏸</button>
+              <button class="icon-btn" id="btn-cancel" title="Cancel">⏹</button>
+            </div>
+          </div>
+          <div id="queue-cards"></div>
+        </div>
+
+        <!-- Log -->
+        <div id="log-area" class="hidden">
+          <div id="log-header-row">
+            <span class="section-label">Log</span>
+            <button class="icon-btn" id="btn-clear-log" title="Clear">⌫</button>
+          </div>
+          <div id="log-output"></div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Auto Crack ═══ -->
+      <div class="page" id="page-crack">
+        <div class="settings-panel">
+          <div class="settings-section">
+            <h3 class="settings-title">Steam Auto Crack</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:14px">
+              Apply Goldberg Steam Emulator to a downloaded game. Automatically generates configs, DLC unlocks, and achievements.
+            </p>
+            <div id="crack-goldberg-status" class="mb-12"></div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Select Game Folder</h3>
+            <div class="form-group">
+              <div class="color-pick-row">
+                <button class="xbox-btn xbox-btn-primary" id="crack-browse">📂 Browse</button>
+                <span class="font-mono text-dim" style="font-size:12px" id="crack-path">No folder selected</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>App ID</label>
+              <input type="text" class="form-input" id="crack-appid" placeholder="e.g. 570">
+            </div>
+            <div class="form-group">
+              <label>Game Name</label>
+              <input type="text" class="form-input" id="crack-name" placeholder="e.g. Dota 2">
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Scan Results</h3>
+            <div id="crack-scan-results" class="empty-state-small">Select a game folder to scan.</div>
+          </div>
+
+          <div class="settings-section">
+            <div class="flex gap-8">
+              <button class="xbox-btn xbox-btn-primary" id="crack-apply" disabled>🔧 Apply Crack</button>
+              <button class="xbox-btn xbox-btn-secondary" id="crack-restore" disabled>↩ Restore Originals</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Log</h3>
+            <div id="crack-log" class="crack-log-box"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Settings ═══ -->
+      <div class="page" id="page-settings">
+        <div class="settings-panel">
+          <div class="settings-section">
+            <h3 class="settings-title">API Configuration</h3>
+            <div class="form-group">
+              <label>Morrenus API Key</label>
+              <input type="text" class="form-input" id="inp-api-key" placeholder="Paste your API key">
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-title">Download Options</h3>
+            <label class="toggle-row"><input type="checkbox" id="chk-sls"><span class="toggle-slider"></span><span>SLSsteam / GreenLuma Wrapper Mode</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-library"><span class="toggle-slider"></span><span>Limit Downloads to Steam Libraries</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-achievements"><span class="toggle-slider"></span><span>Generate Steam Achievements</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-steamless"><span class="toggle-slider"></span><span>Remove Steam DRM with Steamless</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-auto-crack"><span class="toggle-slider"></span><span>Auto-Crack after Download (Goldberg)</span></label>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Theme</h3>
+            <div class="form-group">
+              <label>Accent Color</label>
+              <div class="color-pick-row">
+                <input type="color" class="color-pick" id="inp-accent" value="#10B981">
+                <span class="color-hex font-mono" id="accent-hex">#10B981</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-reset-accent">Reset</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Background Color</label>
+              <div class="color-pick-row">
+                <input type="color" class="color-pick" id="inp-bg" value="#0e0e0e">
+                <span class="color-hex font-mono" id="bg-hex">#0e0e0e</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-reset-bg">Reset</button>
+              </div>
+            </div>
+            <button class="xbox-btn xbox-btn-primary" id="btn-apply-style">Apply Theme</button>
+          </div>
+
+          <div class="settings-section">
+            <button class="xbox-btn xbox-btn-primary" id="btn-save-settings">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Game Detail Flyout Panel ───────────────── -->
+    <div id="game-flyout" class="flyout-closed">
+      <div id="flyout-backdrop"></div>
+      <div id="flyout-panel">
+        <button id="flyout-close" class="icon-btn">✕</button>
+        <div id="flyout-hero">
+          <img id="flyout-hero-img" src="" alt="">
+        </div>
+        <div id="flyout-body">
+          <h2 id="flyout-title"></h2>
+          <div id="flyout-meta"></div>
+          <div id="flyout-update-status"></div>
+          <div id="flyout-actions"></div>
+          <div id="flyout-details"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Modal Overlay (for depot selection etc.) ───── -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-container">
+      <div id="modal-header">
+        <span id="modal-title"></span>
+        <button id="modal-close" class="icon-btn">✕</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>

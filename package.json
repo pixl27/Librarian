@@ -1,0 +1,23 @@
+{
+  "name": "librarian",
+  "version": "1.0.0",
+  "description": "Librarian — game downloader and manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "steam",
+    "depot",
+    "downloader"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "electron": "^41.0.2",
+    "electron-store": "^11.0.2",
+    "node-fetch": "^2.7.0",
+    "yauzl": "^3.2.1"
+  }
+}
