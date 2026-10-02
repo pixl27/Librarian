@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>PeakJoinFriend</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Compilé contre le runtime du jeu, pas celui du SDK : c'est le seul moyen
+         d'obtenir un assembly que le Mono d'Unity charge sans redirection de
+         type. Les références implicites du SDK entreraient en cycle avec le
+         mscorlib livré dans PEAK_Data/Managed. -->
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+
+  <!-- Rien n'est téléchargé : on compile contre les DLL déjà sur la machine,
+       celles du jeu et celles de BepInEx. -->
+  <PropertyGroup>
+    <GameDir>e:\games\steam\steamapps\common\PEAK</GameDir>
+    <Managed>$(GameDir)\PEAK_Data\Managed</Managed>
+    <BepCore>$(GameDir)\BepInEx\core</BepCore>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="mscorlib">     <HintPath>$(Managed)\mscorlib.dll</HintPath></Reference>
+    <Reference Include="System">       <HintPath>$(Managed)\System.dll</HintPath></Reference>
+    <Reference Include="System.Core">  <HintPath>$(Managed)\System.Core.dll</HintPath></Reference>
+    <Reference Include="netstandard">  <HintPath>$(Managed)\netstandard.dll</HintPath></Reference>
+
+    <Reference Include="BepInEx">       <HintPath>$(BepCore)\BepInEx.dll</HintPath></Reference>
+    <Reference Include="0Harmony">      <HintPath>$(BepCore)\0Harmony.dll</HintPath></Reference>
+
+    <Reference Include="UnityEngine">                  <HintPath>$(Managed)\UnityEngine.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule">       <HintPath>$(Managed)\UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.IMGUIModule">      <HintPath>$(Managed)\UnityEngine.IMGUIModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(Managed)\UnityEngine.InputLegacyModule.dll</HintPath></Reference>
+
+    <Reference Include="PhotonUnityNetworking">  <HintPath>$(Managed)\PhotonUnityNetworking.dll</HintPath></Reference>
+    <Reference Include="PhotonRealtime">         <HintPath>$(Managed)\PhotonRealtime.dll</HintPath></Reference>
+    <Reference Include="Photon3Unity3D">         <HintPath>$(Managed)\Photon3Unity3D.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp">      <HintPath>$(Managed)\Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="Zorro.Core.Runtime">   <HintPath>$(Managed)\Zorro.Core.Runtime.dll</HintPath></Reference>
+    <Reference Include="com.rlabrecque.steamworks.net"><HintPath>$(Managed)\com.rlabrecque.steamworks.net.dll</HintPath></Reference>
+  </ItemGroup>
+
+</Project>

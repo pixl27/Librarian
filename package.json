@@ -1,23 +1,114 @@
 {
   "name": "librarian",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Librarian — game downloader and manager",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win portable",
+    "installer": "node dev/build-installer.cjs",
+    "release": "node dev/build-installer.cjs --publish",
+    "test:presets": "node dev/verify-game-presets.cjs",
+    "test": "node dev/verify-reliability.cjs",
+    "test:full": "node dev/run-regression.cjs",
+    "test:ui": "node dev/run-electron-check.cjs ui",
+    "test:custom-updates": "node dev/verify-custom-updates.cjs",
+    "test:online-adapter": "node dev/verify-online-adapter.cjs",
+    "test:valheim-online": "node dev/verify-valheim-online.cjs",
+    "test:dlssg": "node dev/verify-dlssg.cjs",
+    "test:dlssg-updates": "node dev/verify-dlssg-updates.cjs"
   },
   "keywords": [
     "steam",
     "depot",
     "downloader"
   ],
+  "author": "Unknown",
   "license": "MIT",
+  "build": {
+    "appId": "com.librarian.app",
+    "productName": "Librarian",
+    "directories": {
+      "buildResources": "res"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "tools/peExports.js",
+      "res/**/*",
+      "hubcap_manifests/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "src/core/chunkWorker.js",
+      "src/core/chunkCodec.js",
+      "node_modules/lzma/**",
+      "node_modules/@napi-rs/**"
+    ],
+    "extraResources": [
+      {
+        "from": "deps",
+        "to": "deps",
+        "filter": [
+          "**/*",
+          "!**/*.prev",
+          "!**/*.prev/**/*",
+          "!**/*.tmp",
+          "!**/*.log",
+          "!**/steamclient_experimental/steamclient_loader_*.exe"
+        ]
+      }
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "res/logo/librarian-icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Librarian",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Librarian-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "pixl27",
+        "repo": "Librarian",
+        "releaseType": "release"
+      }
+    ]
+  },
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
-    "electron": "^41.0.2",
-    "electron-store": "^11.0.2",
+    "@napi-rs/lzma": "^1.5.1",
+    "electron-updater": "^6.8.9",
+    "http-proxy-agent": "^7.0.0",
+    "https-proxy-agent": "^7.0.0",
+    "lzma": "^2.3.2",
     "node-fetch": "^2.7.0",
     "yauzl": "^3.2.1"
+  },
+  "devDependencies": {
+    "electron": "41.10.7",
+    "electron-builder": "26.15.3"
+  },
+  "optionalDependencies": {
+    "@napi-rs/lzma-win32-x64-msvc": "^1.5.1"
   }
 }

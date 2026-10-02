@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Librarian — the Tuning page
+
+   Loads after main.css and leans on its panels, toggles, buttons and
+   tokens; everything here is prefixed tn- and scoped to #page-tuning.
+   The page is dense with numbers, so the numbers get the room: tiles in a
+   grid, a monospace face for every figure, and colour only where it means
+   something (live, warning, better, worse).
+   ═══════════════════════════════════════════════════════════════════ */
+
+#page-tuning .tn-panel {
+  --tn-spark: var(--brass, #D2A65C);
+  max-width: 1120px;
+}
+
+/* ── Head ─────────────────────────────────────────────────────────*/
+#page-tuning .tn-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0 8px;
+}
+#page-tuning .tn-head-text { min-width: 0; }
+#page-tuning .tn-lead {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  color: var(--paper-2, var(--text-secondary));
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+#page-tuning .tn-master {
+  flex: 0 0 auto;
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line-2, var(--border-strong));
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-2, var(--bg-card));
+  font-weight: 600;
+}
+
+#page-tuning .tn-status {
+  margin: 8px 0 18px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--line-2, var(--border-strong));
+  border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+  background: var(--surface, var(--bg-card));
+  color: var(--paper-2, var(--text-secondary));
+  font-size: 13px;
+  line-height: 1.45;
+}
+#page-tuning .tn-status.is-live { border-left-color: var(--patina, #74BBAB); color: var(--paper, var(--text-primary)); }
+#page-tuning .tn-status.is-warn { border-left-color: var(--oxblood, #C65B4F); color: var(--paper, var(--text-primary)); }
+
+/* The whole in-game and launch block reads as dormant with the mode off:
+ * still editable — a profile can be prepared — but visibly not in effect. */
+#page-tuning.tn-off .tn-grid,
+#page-tuning.tn-off #tn-game { opacity: 0.72; }
+
+/* ── Cards ────────────────────────────────────────────────────────*/
+#page-tuning .tn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+#page-tuning .tn-card { margin: 0 0 16px; }
+#page-tuning .tn-grid .tn-card { margin: 0; }
+#page-tuning .tn-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+#page-tuning .tn-card-head .settings-title { margin-bottom: 0; }
+#page-tuning .tn-api {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--paper-3, var(--text-muted));
+  letter-spacing: 0.02em;
+}
+
+#page-tuning .tn-field { margin: 4px 0 12px; }
+#page-tuning .tn-field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--paper, var(--text-primary));
+}
+#page-tuning .tn-hint {
+  font-size: 12px;
+  color: var(--paper-3, var(--text-muted));
+}
+#page-tuning .tn-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#page-tuning .tn-wrap { flex-wrap: wrap; }
+#page-tuning .tn-inline-label { font-size: 13px; color: var(--paper-2, var(--text-secondary)); }
+#page-tuning .tn-num { width: 96px; font-family: var(--font-mono); text-align: right; }
+#page-tuning .tn-select { min-width: 240px; max-width: 100%; }
+#page-tuning .tn-select-sm { width: auto; min-height: 34px; padding: 0 10px; font-size: 12.5px; }
+
+/* ── Segmented control ────────────────────────────────────────────*/
+#page-tuning .tn-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line, var(--border));
+  border-radius: var(--radius-full, 9999px);
+  background: var(--ink, var(--bg-deep));
+}
+#page-tuning .tn-seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--paper-2, var(--text-secondary));
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-full, 9999px);
+  cursor: pointer;
+  transition: background 140ms var(--ease-out, ease-out), color 140ms var(--ease-out, ease-out);
+}
+#page-tuning .tn-seg button:hover { color: var(--paper, var(--text-primary)); }
+#page-tuning .tn-seg button.is-on {
+  background: var(--surface-3, var(--bg-elevated));
+  color: var(--paper, var(--text-primary));
+  box-shadow: inset 0 0 0 1px var(--line-2, var(--border-strong));
+}
+#page-tuning .tn-seg button:focus-visible { outline: 2px solid var(--brass, var(--primary)); outline-offset: 1px; }
+#page-tuning .tn-seg button[disabled] { opacity: 0.45; cursor: default; }
+
+/* ── Tiles ────────────────────────────────────────────────────────*/
+#page-tuning .tn-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+#page-tuning .tn-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, var(--border));
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-2, var(--bg-card));
+  min-width: 0;
+}
+#page-tuning .tn-tile-key { border-color: var(--line-2, var(--border-strong)); }
+#page-tuning .tn-tile-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--paper-3, var(--text-muted));
+}
+#page-tuning .tn-tile-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--paper, var(--text-primary));
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+#page-tuning .tn-tile-sub {
+  font-size: 11.5px;
+  color: var(--paper-3, var(--text-muted));
+  overflow-wrap: anywhere;
+}
+
+#page-tuning .tn-spark {
+  display: block;
+  width: 100%;
+  height: 72px;
+  border: 1px solid var(--line, var(--border));
+  border-radius: var(--radius-sm, 8px);
+  background: var(--ink, var(--bg-deep));
+}
+#page-tuning .tn-applied {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--paper-3, var(--text-muted));
+}
+
+/* ── Before / after ───────────────────────────────────────────────*/
+#page-tuning .tn-ab-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+#page-tuning .tn-ab-bar {
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3, var(--bg-elevated));
+  overflow: hidden;
+}
+#page-tuning .tn-ab-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--brass, var(--primary));
+  transition: width 240ms linear;
+}
+#page-tuning .tn-ab-phase {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  color: var(--paper-2, var(--text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+#page-tuning .tn-table-wrap { overflow-x: auto; }
+#page-tuning .tn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#page-tuning .tn-table th,
+#page-tuning .tn-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line, var(--border));
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+#page-tuning .tn-table th:first-child,
+#page-tuning .tn-table td:first-child { text-align: left; white-space: normal; }
+#page-tuning .tn-table th {
+  font-weight: 600;
+  color: var(--paper-2, var(--text-secondary));
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#page-tuning .tn-table th small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--paper-3, var(--text-muted));
+}
+#page-tuning .tn-table td { font-family: var(--font-mono); color: var(--paper, var(--text-primary)); }
+#page-tuning .tn-table td:first-child { font-family: inherit; color: var(--paper-2, var(--text-secondary)); }
+#page-tuning .tn-table td.is-better { color: var(--patina, #74BBAB); }
+#page-tuning .tn-table td.is-worse { color: var(--oxblood, #C65B4F); }
+#page-tuning .tn-table td.is-same { color: var(--paper-3, var(--text-muted)); }
+#page-tuning .tn-table .tn-table-foot td { border-bottom: 0; text-align: left; font-family: inherit; }
+#page-tuning .tn-muted { color: var(--paper-3, var(--text-muted)); font-size: 12px; }
+
+/* ── Notes ────────────────────────────────────────────────────────*/
+#page-tuning .tn-notes ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--paper-2, var(--text-secondary));
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+#page-tuning .tn-notes li + li { margin-top: 4px; }
+
+@media (max-width: 760px) {
+  #page-tuning .tn-head { flex-direction: column; }
+  #page-tuning .tn-seg { flex-wrap: wrap; }
+}

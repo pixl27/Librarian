@@ -1,0 +1,1 @@
+{ "schema": 1, "id": "x", "name": "X", "hotkey":"F7","friends":"steam","match":{"appId":"1"}, "identity": {"strategy":"prefix-host","prefix":""}, "entry": {"strategy":"raw"} }

@@ -1,0 +1,3727 @@
+[
+ {
+  "category": "cAuth",
+  "verb": "POST",
+  "path": "/auth/login",
+  "method": "postAuthLogin",
+  "req": [
+   [
+    "CrossplayEnabled",
+    "Boolean"
+   ],
+   [
+    "IsEnableAnalysis",
+    "Boolean"
+   ],
+   [
+    "IsPsPlus",
+    "Boolean"
+   ],
+   [
+    "MachineDetail",
+    "String"
+   ],
+   [
+    "MainLanguage",
+    "ace_network.EnumPlayerLanguage"
+   ],
+   [
+    "OsVersion",
+    "String"
+   ],
+   [
+    "RebeToken",
+    "String"
+   ],
+   [
+    "RomRegion",
+    "String"
+   ],
+   [
+    "RomRevision",
+    "Int32"
+   ],
+   [
+    "RomVersion",
+    "Int32"
+   ],
+   [
+    "SocialRestriction",
+    "Boolean"
+   ],
+   [
+    "UtcOffsetMinutes",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "IpAddress",
+    "String"
+   ],
+   [
+    "IpAddressHash",
+    "String"
+   ],
+   [
+    "IsInCommunityBan",
+    "Boolean"
+   ],
+   [
+    "SessionId",
+    "String"
+   ],
+   [
+    "SubHash",
+    "String"
+   ],
+   [
+    "UserId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cAuth",
+  "verb": "POST",
+  "path": "/auth/register",
+  "method": "postAuthRegister",
+  "req": [
+   [
+    "CrossplayEnabled",
+    "Boolean"
+   ],
+   [
+    "IsEnableAnalysis",
+    "Boolean"
+   ],
+   [
+    "IsPsPlus",
+    "Boolean"
+   ],
+   [
+    "MachineDetail",
+    "String"
+   ],
+   [
+    "MainLanguage",
+    "ace_network.EnumPlayerLanguage"
+   ],
+   [
+    "OsVersion",
+    "String"
+   ],
+   [
+    "RebeToken",
+    "String"
+   ],
+   [
+    "RomVersion",
+    "Int32"
+   ],
+   [
+    "SocialRestriction",
+    "Boolean"
+   ],
+   [
+    "UniqueId",
+    "String"
+   ],
+   [
+    "UtcOffsetMinutes",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "SessionId",
+    "String"
+   ],
+   [
+    "UserId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cAuth",
+  "verb": "POST",
+  "path": "/auth/ticket",
+  "method": "postAuthTicket",
+  "req": [],
+  "resp": [
+   [
+    "Ticket",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cBan",
+  "verb": "POST",
+  "path": "/ban/info",
+  "method": "postBanInfo",
+  "req": [],
+  "resp": [
+   [
+    "UnlockTime",
+    "Int64"
+   ],
+   [
+    "BanReasons",
+    "Collections.Generic.List`1<ace_network.EnumReportBanReason>"
+   ],
+   [
+    "Status",
+    "ace_network.EnumUserBanType"
+   ]
+  ]
+ },
+ {
+  "category": "cBlock",
+  "verb": "POST",
+  "path": "/block/block",
+  "method": "postBlockBlock",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "OperationId",
+    "UInt32"
+   ]
+  ]
+ },
+ {
+  "category": "cBlock",
+  "verb": "POST",
+  "path": "/block/list",
+  "method": "postBlockList",
+  "req": [
+   [
+    "LastOperationId",
+    "UInt32"
+   ]
+  ],
+  "resp": [
+   [
+    "BlockedHunter",
+    "Collections.Generic.List`1<cCommonBlock.BlockBlockedHunter>"
+   ],
+   [
+    "IsConsistent",
+    "Boolean"
+   ],
+   [
+    "OperationId",
+    "UInt32"
+   ]
+  ]
+ },
+ {
+  "category": "cBlock",
+  "verb": "POST",
+  "path": "/block/unblock",
+  "method": "postBlockUnblock",
+  "req": [
+   [
+    "TargetUserId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "OperationId",
+    "UInt32"
+   ]
+  ]
+ },
+ {
+  "category": "cChat",
+  "verb": "POST",
+  "path": "/chat/circle/log",
+  "method": "postChatCircleLog",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "CircleChatLogs",
+    "Collections.Generic.List`1<cCommonChat.ChatCircleChatLog>"
+   ]
+  ]
+ },
+ {
+  "category": "cChat",
+  "verb": "POST",
+  "path": "/chat/circle/send",
+  "method": "postChatCircleSend",
+  "req": [
+   [
+    "Message",
+    "Collections.Generic.List`1<Byte>"
+   ],
+   [
+    "TargetCircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cChat",
+  "verb": "POST",
+  "path": "/chat/private/send",
+  "method": "postChatPrivateSend",
+  "req": [
+   [
+    "Message",
+    "Collections.Generic.List`1<Byte>"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cChat",
+  "verb": "POST",
+  "path": "/chat/system/send",
+  "method": "postChatSystemSend",
+  "req": [
+   [
+    "Message",
+    "Collections.Generic.List`1<Byte>"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/active/set",
+  "method": "postCircleActiveSet",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/active/unset",
+  "method": "postCircleActiveUnset",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/change_leader",
+  "method": "postCircleChangeLeader",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "MemberList",
+    "Collections.Generic.List`1<cCommonCircle.CircleMember>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/create",
+  "method": "postCircleCreate",
+  "req": [
+   [
+    "AutoAcceptJoinRequests",
+    "Boolean"
+   ],
+   [
+    "Comment",
+    "String"
+   ],
+   [
+    "Icon",
+    "UInt64"
+   ],
+   [
+    "LeaderComment",
+    "String"
+   ],
+   [
+    "Name",
+    "String"
+   ],
+   [
+    "PlatformType",
+    "ace_network.EnumAuthPlatformType"
+   ],
+   [
+    "Policy",
+    "ace_network.EnumCirclePolicy"
+   ],
+   [
+    "Requirements",
+    "ace_network.EnumCircleRequirements"
+   ],
+   [
+    "SameLanguage",
+    "Boolean"
+   ]
+  ],
+  "resp": [
+   [
+    "CircleInfo",
+    "cCommonCircle.CircleJoinedCircleInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/delete",
+  "method": "postCircleDelete",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/edit",
+  "method": "postCircleEdit",
+  "req": [
+   [
+    "AutoAcceptJoinRequests",
+    "Boolean"
+   ],
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "Comment",
+    "String"
+   ],
+   [
+    "Icon",
+    "UInt64"
+   ],
+   [
+    "Policy",
+    "ace_network.EnumCirclePolicy"
+   ],
+   [
+    "Requirements",
+    "ace_network.EnumCircleRequirements"
+   ],
+   [
+    "SameLanguage",
+    "Boolean"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/edit_leader_card",
+  "method": "postCircleEditLeaderCard",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "LeaderComment",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/info",
+  "method": "postCircleInfo",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "CircleInfo",
+    "cCommonCircle.CircleInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/info_by_short_id",
+  "method": "postCircleInfoByShortId",
+  "req": [
+   [
+    "CircleShortId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "CircleInfo",
+    "cCommonCircle.CircleInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite",
+  "method": "postCircleInvite",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "SendInvite",
+    "cCommonCircle.CircleSendInvite"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite/received/accept",
+  "method": "postCircleInviteReceivedAccept",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite/received/list",
+  "method": "postCircleInviteReceivedList",
+  "req": [],
+  "resp": [
+   [
+    "ReceivedInvites",
+    "Collections.Generic.List`1<cCommonCircle.CircleReceivedInvite>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite/received/reject",
+  "method": "postCircleInviteReceivedReject",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite/send/cancel",
+  "method": "postCircleInviteSendCancel",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/invite/send/list",
+  "method": "postCircleInviteSendList",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "SendInvites",
+    "Collections.Generic.List`1<cCommonCircle.CircleSendInvite>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request",
+  "method": "postCircleJoinRequest",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "SendJoinRequest",
+    "cCommonCircle.CircleSendJoinRequest"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/received/accept",
+  "method": "postCircleJoinRequestReceivedAccept",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/received/list",
+  "method": "postCircleJoinRequestReceivedList",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "ReceivedJoinRequests",
+    "Collections.Generic.List`1<cCommonCircle.CircleReceivedJoinRequest>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/received/list_all",
+  "method": "postCircleJoinRequestReceivedListAll",
+  "req": [],
+  "resp": [
+   [
+    "ReceivedJoinRequests",
+    "Collections.Generic.List`1<cCommonCircle.CircleReceivedJoinRequestAll>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/received/reject",
+  "method": "postCircleJoinRequestReceivedReject",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/send/cancel",
+  "method": "postCircleJoinRequestSendCancel",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/join_request/send/list",
+  "method": "postCircleJoinRequestSendList",
+  "req": [],
+  "resp": [
+   [
+    "SendJoinRequests",
+    "Collections.Generic.List`1<cCommonCircle.CircleSendJoinRequest>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/leader_info_get",
+  "method": "postCircleLeaderInfoGet",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "HideComments",
+    "Boolean"
+   ],
+   [
+    "HunterInfo",
+    "cCommonHunter.HunterInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/leader_info_get_by_circle_ids",
+  "method": "postCircleLeaderInfoGetByCircleIds",
+  "req": [
+   [
+    "CircleIds",
+    "Collections.Generic.List`1<String>"
+   ]
+  ],
+  "resp": [
+   [
+    "HunterInfos",
+    "Collections.Generic.List`1<cCircle.PostCircleLeaderInfoGetByCircleIdsResponse.HunterInfosValue>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/list_joined",
+  "method": "postCircleListJoined",
+  "req": [],
+  "resp": [
+   [
+    "JoinedCircleInfo",
+    "Collections.Generic.List`1<cCommonCircle.CircleJoinedCircleInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/member/change_role",
+  "method": "postCircleMemberChangeRole",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "Role",
+    "ace_network.EnumCircleRole"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/member/kick",
+  "method": "postCircleMemberKick",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/member/leave",
+  "method": "postCircleMemberLeave",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/member/list",
+  "method": "postCircleMemberList",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "MemberList",
+    "Collections.Generic.List`1<cCommonCircle.CircleMember>"
+   ]
+  ]
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/new_leader_confirm",
+  "method": "postCircleNewLeaderConfirm",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "DeletePreviousComments",
+    "Boolean"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/rename",
+  "method": "postCircleRename",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "NewName",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCircle",
+  "verb": "POST",
+  "path": "/circle/search",
+  "method": "postCircleSearch",
+  "req": [
+   [
+    "AutoAcceptJoinRequests",
+    "Boolean"
+   ],
+   [
+    "Policy",
+    "ace_network.EnumCirclePolicy"
+   ],
+   [
+    "Requirements",
+    "ace_network.EnumCircleRequirements"
+   ],
+   [
+    "SameLanguage",
+    "Boolean"
+   ],
+   [
+    "SamePlatform",
+    "Boolean"
+   ]
+  ],
+  "resp": [
+   [
+    "IsPartial",
+    "Boolean"
+   ],
+   [
+    "SearchResults",
+    "Collections.Generic.List`1<cCommonCircle.CircleInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cCommunity",
+  "verb": "POST",
+  "path": "/community/invitation/received_list",
+  "method": "postCommunityInvitationReceivedList",
+  "req": [],
+  "resp": [
+   [
+    "List",
+    "Collections.Generic.List`1<cCommonCommunity.CommunityInvitationInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cCommunity",
+  "verb": "POST",
+  "path": "/community/invitation/send",
+  "method": "postCommunityInvitationSend",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ],
+   [
+    "InvitationType",
+    "ace_network.EnumCommunityInvitationType"
+   ],
+   [
+    "SessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cCommunity",
+  "verb": "POST",
+  "path": "/community/invitation/send_list",
+  "method": "postCommunityInvitationSendList",
+  "req": [],
+  "resp": [
+   [
+    "List",
+    "Collections.Generic.List`1<cCommonCommunity.CommunityInvitationInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cContsnt",
+  "verb": "GET",
+  "path": "/v1/consent/countries/",
+  "method": "getConsentCountries",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cContsnt",
+  "verb": "GET",
+  "path": "/v1/consent/restrictions/",
+  "method": "getConsentRestrictions",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cContsnt",
+  "verb": "GET",
+  "path": "/v1/consent/documents/",
+  "method": "getConsentDocuments",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cContsnt",
+  "verb": "GET",
+  "path": "/v1/consent/parent/initialize",
+  "method": "getConsents",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cContsnt",
+  "verb": "GET",
+  "path": "/v1/consent/parent/finalize",
+  "method": "getParentConsent",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/ban/community",
+  "method": "postDebugBanCommunity",
+  "req": [
+   [
+    "UserId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/cheat/data_upload",
+  "method": "postDebugCheatDataUpload",
+  "req": [
+   [
+    "MasterDataChecksum",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/circle/join_force",
+  "method": "postDebugCircleJoinForce",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/delivery/get_quest_by_id",
+  "method": "postDebugDeliveryGetQuestById",
+  "req": [
+   [
+    "MissionId",
+    "Int64"
+   ]
+  ],
+  "resp": [
+   [
+    "Quest",
+    "cCommonDeliveryData.DeliveryDataQuest"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/force_error/delete_code",
+  "method": "postDebugForceErrorDeleteCode",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ],
+   [
+    "Path",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/force_error/set_code",
+  "method": "postDebugForceErrorSetCode",
+  "req": [
+   [
+    "Code",
+    "Int64"
+   ],
+   [
+    "HunterId",
+    "String"
+   ],
+   [
+    "Path",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/friend/add_force",
+  "method": "postDebugFriendAddForce",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/game_server/allocate",
+  "method": "postDebugGameServerAllocate",
+  "req": [],
+  "resp": [
+   [
+    "Address",
+    "String"
+   ],
+   [
+    "GameServerName",
+    "String"
+   ],
+   [
+    "NodeName",
+    "String"
+   ],
+   [
+    "Ports",
+    "Collections.Generic.List`1<cCommonDebug.DebugLobbyPorts>"
+   ],
+   [
+    "State",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/hunter/delete",
+  "method": "postDebugHunterDelete",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/hunter/info_get",
+  "method": "postDebugHunterInfoGet",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "UserId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/loader",
+  "method": "postDebugLoader",
+  "req": [
+   [
+    "LoaderNum",
+    "Int64"
+   ],
+   [
+    "LoaderType",
+    "String"
+   ],
+   [
+    "ServerTarget",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Duration",
+    "Int64"
+   ],
+   [
+    "EndTime",
+    "Int64"
+   ],
+   [
+    "StartTime",
+    "Int64"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/auto_join",
+  "method": "postDebugLobbyAutoJoin",
+  "req": [
+   [
+    "ClientEnvId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Endpoints",
+    "Collections.Generic.List`1<String>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/create",
+  "method": "postDebugLobbyCreate",
+  "req": [
+   [
+    "Alias",
+    "String"
+   ],
+   [
+    "Language",
+    "ace_network.EnumPlayerLanguage"
+   ],
+   [
+    "Passphrase",
+    "String"
+   ],
+   [
+    "Type",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "LobbyId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/domain/recreate",
+  "method": "postDebugLobbyDomainRecreate",
+  "req": [
+   [
+    "Address",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/fleet/get",
+  "method": "postDebugLobbyFleetGet",
+  "req": [
+   [
+    "Language",
+    "ace_network.EnumPlayerLanguage"
+   ],
+   [
+    "Type",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "GetFleets",
+    "Collections.Generic.List`1<cCommonLobby.LobbyGetFleet>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/fleet_autoscaler/update",
+  "method": "postDebugLobbyFleetAutoscalerUpdate",
+  "req": [
+   [
+    "Endpoint",
+    "String"
+   ],
+   [
+    "Scale",
+    "cCommonLobby.LobbyFleetAutoscalerInfo"
+   ],
+   [
+    "Type",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/hunter_jump",
+  "method": "postDebugLobbyHunterJump",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "LobbyId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/public/rate_get",
+  "method": "postDebugLobbyPublicRateGet",
+  "req": [
+   [
+    "IsFreeMatches",
+    "Collections.Generic.List`1<Boolean>"
+   ],
+   [
+    "Languages",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "Levels",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "PlatformTypes",
+    "Collections.Generic.List`1<Int64>"
+   ],
+   [
+    "PlayStyles",
+    "Collections.Generic.List`1<Int32>"
+   ]
+  ],
+  "resp": [
+   [
+    "RateInfos",
+    "Collections.Generic.List`1<cCommonLobby.LobbyRateInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/public/setting_delete",
+  "method": "postDebugLobbyPublicSettingDelete",
+  "req": [
+   [
+    "IsFreeMatches",
+    "Collections.Generic.List`1<Boolean>"
+   ],
+   [
+    "Languages",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "Levels",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "PlatformTypes",
+    "Collections.Generic.List`1<Int64>"
+   ],
+   [
+    "PlayStyles",
+    "Collections.Generic.List`1<Int32>"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/public/setting_get",
+  "method": "postDebugLobbyPublicSettingGet",
+  "req": [
+   [
+    "IsFreeMatches",
+    "Collections.Generic.List`1<Boolean>"
+   ],
+   [
+    "Languages",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "Levels",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "PlatformTypes",
+    "Collections.Generic.List`1<Int64>"
+   ],
+   [
+    "PlayStyles",
+    "Collections.Generic.List`1<Int32>"
+   ]
+  ],
+  "resp": [
+   [
+    "ScalingSettings",
+    "Collections.Generic.List`1<cCommonLobby.LobbyScalingSetting>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/public/setting_set",
+  "method": "postDebugLobbyPublicSettingSet",
+  "req": [
+   [
+    "IsFreeMatches",
+    "Collections.Generic.List`1<Boolean>"
+   ],
+   [
+    "Languages",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "Levels",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "PlatformTypes",
+    "Collections.Generic.List`1<Int64>"
+   ],
+   [
+    "PlayStyles",
+    "Collections.Generic.List`1<Int32>"
+   ],
+   [
+    "ScalingSetting",
+    "cCommonLobby.LobbyScalingSetting"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/search",
+  "method": "postDebugLobbySearch",
+  "req": [
+   [
+    "IsFreeMatch",
+    "Boolean"
+   ],
+   [
+    "Language",
+    "Int32"
+   ],
+   [
+    "Level",
+    "Int32"
+   ],
+   [
+    "PlayStyle",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "SearchResults",
+    "Collections.Generic.List`1<cCommonLobby.LobbyInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/set_state",
+  "method": "postDebugLobbySetState",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "LobbyId",
+    "String"
+   ],
+   [
+    "Passphrase",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/single_clear",
+  "method": "postDebugLobbySingleClear",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/lobby/single_get",
+  "method": "postDebugLobbySingleGet",
+  "req": [],
+  "resp": [
+   [
+    "LobbyId",
+    "String"
+   ],
+   [
+    "Endpoint",
+    "String"
+   ],
+   [
+    "ShortId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/offline/notification_add",
+  "method": "postDebugOfflineNotificationAdd",
+  "req": [
+   [
+    "FromCircleId",
+    "String"
+   ],
+   [
+    "FromHunterId",
+    "String"
+   ],
+   [
+    "Type",
+    "Int64"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/present/all_delete",
+  "method": "postDebugPresentAllDelete",
+  "req": [
+   [
+    "TargetContentId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/present/all_insert",
+  "method": "postDebugPresentAllInsert",
+  "req": [
+   [
+    "Presents",
+    "Collections.Generic.List`1<cCommonPresent.PresentPresent>"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/present/all_update",
+  "method": "postDebugPresentAllUpdate",
+  "req": [
+   [
+    "Present",
+    "cCommonPresent.PresentPresent"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/present/hunter_insert",
+  "method": "postDebugPresentHunterInsert",
+  "req": [
+   [
+    "Presents",
+    "Collections.Generic.List`1<cCommonPresent.PresentPresent>"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/ranking/quest_time/board_delete",
+  "method": "postDebugRankingQuestTimeBoardDelete",
+  "req": [
+   [
+    "LimitedRankingId",
+    "String"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/ranking/quest_time/border_set",
+  "method": "postDebugRankingQuestTimeBorderSet",
+  "req": [
+   [
+    "BorderTime",
+    "Int64"
+   ],
+   [
+    "LimitedRankingId",
+    "String"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/ranking/quest_time/fix",
+  "method": "postDebugRankingQuestTimeFix",
+  "req": [
+   [
+    "BoardType",
+    "Int32"
+   ],
+   [
+    "IsReset",
+    "Boolean"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "StartTime",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/send_notify",
+  "method": "postDebugSendNotify",
+  "req": [
+   [
+    "NotifyText",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/steam/price",
+  "method": "postDebugSteamPrice",
+  "req": [
+   [
+    "AppIds",
+    "Collections.Generic.List`1<UInt64>"
+   ],
+   [
+    "PlatformId",
+    "String"
+   ],
+   [
+    "PlatformType",
+    "ace_network.EnumAuthPlatformType"
+   ]
+  ],
+  "resp": [
+   [
+    "Prices",
+    "Collections.Generic.List`1<cCommonSteam.SteamPackagePrice>"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/user/dummy_ban_set",
+  "method": "postDebugUserDummyBanSet",
+  "req": [
+   [
+    "BanReasons",
+    "Collections.Generic.List`1<ace_network.EnumReportBanReason>"
+   ],
+   [
+    "OnlineBanUnlockTime",
+    "Int64"
+   ],
+   [
+    "UserId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/user/info_get",
+  "method": "postDebugUserInfoGet",
+  "req": [
+   [
+    "DummyRebeToken",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "RealRebeToken",
+    "String"
+   ],
+   [
+    "UserId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDebug",
+  "verb": "POST",
+  "path": "/debug/user/ticket_create",
+  "method": "postDebugUserTicketCreate",
+  "req": [
+   [
+    "CreateUserInfo",
+    "cCommonDebug.DebugCreateUserInfo"
+   ]
+  ],
+  "resp": [
+   [
+    "CreateUserInfo",
+    "cCommonDebug.DebugCreateUserInfo"
+   ],
+   [
+    "TicketId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cDeliveryData",
+  "verb": "POST",
+  "path": "/delivery_data/get",
+  "method": "postDeliveryDataGet",
+  "req": [],
+  "resp": [
+   [
+    "BountyList",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "DlcProducts",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "DlcRecommendMessages",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "ExParamsInfo",
+    "cCommonDeliveryData.DeliveryDataExParams"
+   ],
+   [
+    "LimitedEventList",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "Message",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "Quests",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "SeasonEvents",
+    "cCommonDeliveryData.DeliveryDataCompressDeliveryData"
+   ],
+   [
+    "TitleBannerInfo",
+    "Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataTitleBanner>"
+   ]
+  ]
+ },
+ {
+  "category": "cDeliveryData",
+  "verb": "POST",
+  "path": "/delivery_data/get_login_bonus",
+  "method": "postDeliveryDataGetLoginBonus",
+  "req": [],
+  "resp": [
+   [
+    "BeginnerLoginBonus",
+    "Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataBeginnerLoginBonus>"
+   ],
+   [
+    "ComebackLoginBonus",
+    "Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataComebackLoginBonus>"
+   ],
+   [
+    "DailyLoginBonus",
+    "Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataDailyLoginBonus>"
+   ],
+   [
+    "GetDataAt",
+    "Int64"
+   ],
+   [
+    "SpecialLoginBonus",
+    "Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataSpecialLoginBonus>"
+   ]
+  ]
+ },
+ {
+  "category": "cDeliveryData",
+  "verb": "POST",
+  "path": "/delivery_data/received_login_bonus",
+  "method": "postDeliveryDataReceivedLoginBonus",
+  "req": [
+   [
+    "ReceivedBeginnerLoginBonusIds",
+    "Collections.Generic.List`1<String>"
+   ],
+   [
+    "ReceivedComebackLoginBonusIds",
+    "Collections.Generic.List`1<String>"
+   ],
+   [
+    "ReceivedDailyLoginBonusIds",
+    "Collections.Generic.List`1<String>"
+   ],
+   [
+    "ReceivedDataAt",
+    "Int64"
+   ],
+   [
+    "ReceivedSpecialLoginBonusIds",
+    "Collections.Generic.List`1<String>"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cFollow",
+  "verb": "POST",
+  "path": "/follow",
+  "method": "postFollow",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "OperationId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cFollow",
+  "verb": "POST",
+  "path": "/follow/delete",
+  "method": "postFollowDelete",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "OperationId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cFollow",
+  "verb": "POST",
+  "path": "/follow/follower/list",
+  "method": "postFollowFollowerList",
+  "req": [
+   [
+    "QueryKey",
+    "Int64"
+   ]
+  ],
+  "resp": [
+   [
+    "FollowerHunterNum",
+    "Int64"
+   ],
+   [
+    "FollowerList",
+    "Collections.Generic.List`1<cCommonFollow.FollowHunterInfo>"
+   ],
+   [
+    "NextQueryKey",
+    "Int64"
+   ]
+  ]
+ },
+ {
+  "category": "cFollow",
+  "verb": "POST",
+  "path": "/follow/list",
+  "method": "postFollowList",
+  "req": [
+   [
+    "QueryKey",
+    "Int64"
+   ]
+  ],
+  "resp": [
+   [
+    "FollowHunterNum",
+    "Int64"
+   ],
+   [
+    "FollowList",
+    "Collections.Generic.List`1<cCommonFollow.FollowHunterInfo>"
+   ],
+   [
+    "NextQueryKey",
+    "Int64"
+   ]
+  ]
+ },
+ {
+  "category": "cFollow",
+  "verb": "POST",
+  "path": "/follow/total_list",
+  "method": "postFollowTotalList",
+  "req": [
+   [
+    "LastOperationId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "FollowList",
+    "Collections.Generic.List`1<cCommonFollow.FollowRelationshipHunterInfo>"
+   ],
+   [
+    "FollowerNum",
+    "Int64"
+   ],
+   [
+    "LastOperationId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/delete",
+  "method": "postFriendDelete",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "FriendList",
+    "Collections.Generic.List`1<cCommonFriend.FriendRequestHunterInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/list",
+  "method": "postFriendList",
+  "req": [],
+  "resp": [
+   [
+    "FriendList",
+    "Collections.Generic.List`1<cCommonFriend.FriendRequestHunterInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/relationship_list",
+  "method": "postFriendRelationshipList",
+  "req": [],
+  "resp": [
+   [
+    "FriendList",
+    "Collections.Generic.List`1<cCommonFriend.FriendRelationshipHunterInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/request",
+  "method": "postFriendRequest",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/request/accept",
+  "method": "postFriendRequestAccept",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "AcceptedHunterInfo",
+    "cCommonFriend.FriendRequestHunterInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/request/cancel",
+  "method": "postFriendRequestCancel",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cFriend",
+  "verb": "POST",
+  "path": "/friend/request/reject",
+  "method": "postFriendRequestReject",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/chara_recipe/delete",
+  "method": "postHunterCharaRecipeDelete",
+  "req": [
+   [
+    "DownloadKey",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/chara_recipe/download",
+  "method": "postHunterCharaRecipeDownload",
+  "req": [
+   [
+    "DownloadKey",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "CharaRecipeType",
+    "ace_network.EnumHunterCharaRecipeType"
+   ],
+   [
+    "CreateHunterInfo",
+    "cCommonHunter.HunterInfo"
+   ],
+   [
+    "DownloadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/chara_recipe/list",
+  "method": "postHunterCharaRecipeList",
+  "req": [],
+  "resp": [
+   [
+    "CharaRecipes",
+    "Collections.Generic.List`1<cCommonHunter.HunterCharaRecipe>"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/chara_recipe/upload",
+  "method": "postHunterCharaRecipeUpload",
+  "req": [
+   [
+    "CharaRecipeType",
+    "ace_network.EnumHunterCharaRecipeType"
+   ],
+   [
+    "FileSize",
+    "Int64"
+   ],
+   [
+    "HunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "DownloadKey",
+    "String"
+   ],
+   [
+    "SignedHeaders",
+    "Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>"
+   ],
+   [
+    "UploadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/character_creation/get",
+  "method": "postHunterCharacterCreationGet",
+  "req": [],
+  "resp": [
+   [
+    "DownloadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/character_creation/upload",
+  "method": "postHunterCharacterCreationUpload",
+  "req": [
+   [
+    "FileSize",
+    "Int64"
+   ]
+  ],
+  "resp": [
+   [
+    "SignedHeaders",
+    "Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>"
+   ],
+   [
+    "UploadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/delete",
+  "method": "postHunterDelete",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/hidden_status/set",
+  "method": "postHunterHiddenStatusSet",
+  "req": [
+   [
+    "IsHiddenStatus",
+    "Boolean"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/info_get",
+  "method": "postHunterInfoGet",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "HunterInfo",
+    "cCommonHunter.HunterInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/list",
+  "method": "postHunterList",
+  "req": [],
+  "resp": [
+   [
+    "HunterList",
+    "Collections.Generic.List`1<cCommonHunter.HunterInfoWithStatus>"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/list_by_ids",
+  "method": "postHunterListByIds",
+  "req": [
+   [
+    "HunterIds",
+    "Collections.Generic.List`1<String>"
+   ]
+  ],
+  "resp": [
+   [
+    "HunterList",
+    "Collections.Generic.List`1<cCommonHunter.HunterInfoForMemberList>"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/profile/get",
+  "method": "postHunterProfileGet",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "DownloadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/profile/update",
+  "method": "postHunterProfileUpdate",
+  "req": [
+   [
+    "FileSize",
+    "Int64"
+   ]
+  ],
+  "resp": [
+   [
+    "SignedHeaders",
+    "Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>"
+   ],
+   [
+    "UploadUrl",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/search_by_id",
+  "method": "postHunterSearchById",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "TargetHunterInfo",
+    "cCommonHunter.HunterInfoForMemberList"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/search_by_short_id",
+  "method": "postHunterSearchByShortId",
+  "req": [
+   [
+    "TargetShortId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "TargetHunterInfo",
+    "cCommonHunter.HunterInfoForMemberList"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/sync",
+  "method": "postHunterSync",
+  "req": [
+   [
+    "HunterSaveList",
+    "Collections.Generic.List`1<cCommonHunter.HunterSaveSlotInfo>"
+   ],
+   [
+    "MainLanguage",
+    "ace_network.EnumPlayerLanguage"
+   ],
+   [
+    "UsingSaveSlot",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "SaveSlotInfoList",
+    "Collections.Generic.List`1<cCommonHunter.HunterSaveSlotInfoWithShortId>"
+   ],
+   [
+    "InvalidClientHunterIdList",
+    "Collections.Generic.List`1<String>"
+   ],
+   [
+    "InvalidSaveSlotInfoList",
+    "Collections.Generic.List`1<cCommonHunter.HunterInvalidSaveSlotInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/update/name",
+  "method": "postHunterUpdateName",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ],
+   [
+    "Name",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/update/otomo_name",
+  "method": "postHunterUpdateOtomoName",
+  "req": [
+   [
+    "HunterId",
+    "String"
+   ],
+   [
+    "OtomoName",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cHunter",
+  "verb": "POST",
+  "path": "/hunter/update/rank",
+  "method": "postHunterUpdateRank",
+  "req": [
+   [
+    "Hr",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/invite/received/accept",
+  "method": "postLinkPartyInviteReceivedAccept",
+  "req": [
+   [
+    "LinkPartyId",
+    "String"
+   ],
+   [
+    "SenderHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/invite/received/reject",
+  "method": "postLinkPartyInviteReceivedReject",
+  "req": [
+   [
+    "LinkPartyId",
+    "String"
+   ],
+   [
+    "Reason",
+    "ace_network.EnumLinkPartyInviteRejectReason"
+   ],
+   [
+    "SenderHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/invite/received/reject_all",
+  "method": "postLinkPartyInviteReceivedRejectAll",
+  "req": [
+   [
+    "Reason",
+    "ace_network.EnumLinkPartyInviteRejectReason"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/invite/send/cancel",
+  "method": "postLinkPartyInviteSendCancel",
+  "req": [
+   [
+    "LinkPartyId",
+    "String"
+   ],
+   [
+    "Reason",
+    "ace_network.EnumLinkPartyInviteCancelReason"
+   ],
+   [
+    "ReceiverHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/invite/send/cancel_all",
+  "method": "postLinkPartyInviteSendCancelAll",
+  "req": [
+   [
+    "Reason",
+    "ace_network.EnumLinkPartyInviteCancelReason"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/recruit/delete",
+  "method": "postLinkPartyRecruitDelete",
+  "req": [
+   [
+    "LeaderHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/recruit/join",
+  "method": "postLinkPartyRecruitJoin",
+  "req": [
+   [
+    "LeaderHunterId",
+    "String"
+   ],
+   [
+    "Password",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "SessionId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cLinkParty",
+  "verb": "POST",
+  "path": "/link_party/recruit/update",
+  "method": "postLinkPartyRecruitUpdate",
+  "req": [
+   [
+    "Password",
+    "String"
+   ],
+   [
+    "SessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/auto_join",
+  "method": "postLobbyAutoJoin",
+  "req": [],
+  "resp": [
+   [
+    "Endpoints",
+    "Collections.Generic.List`1<String>"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/circle/join",
+  "method": "postLobbyCircleJoin",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "DummyUpdateIntervalSec",
+    "Int32"
+   ],
+   [
+    "Endpoint",
+    "String"
+   ],
+   [
+    "LobbyId",
+    "String"
+   ],
+   [
+    "WelcomeInfo",
+    "cCommonLobby.LobbyWelcomeInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/circle/list",
+  "method": "postLobbyCircleList",
+  "req": [],
+  "resp": [
+   [
+    "CircleLobbies",
+    "Collections.Generic.List`1<cCommonLobby.LobbyCircleLobby>"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/dummy/touch",
+  "method": "postLobbyDummyTouch",
+  "req": [
+   [
+    "LobbyId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Endpoint",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/friend/jump",
+  "method": "postLobbyFriendJump",
+  "req": [
+   [
+    "FriendHunterId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Endpoint",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/join",
+  "method": "postLobbyJoin",
+  "req": [
+   [
+    "LobbyId",
+    "String"
+   ],
+   [
+    "LobbyShortId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Endpoint",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/private/create",
+  "method": "postLobbyPrivateCreate",
+  "req": [
+   [
+    "IsFriendOpen",
+    "Boolean"
+   ]
+  ],
+  "resp": [
+   [
+    "DummyUpdateIntervalSec",
+    "Int32"
+   ],
+   [
+    "Endpoint",
+    "String"
+   ],
+   [
+    "LobbyId",
+    "String"
+   ],
+   [
+    "WelcomeInfo",
+    "cCommonLobby.LobbyWelcomeInfo"
+   ]
+  ]
+ },
+ {
+  "category": "cLobby",
+  "verb": "POST",
+  "path": "/lobby/search",
+  "method": "postLobbySearch",
+  "req": [
+   [
+    "IsFreeMatch",
+    "Boolean"
+   ],
+   [
+    "Language",
+    "Int32"
+   ],
+   [
+    "Level",
+    "Int32"
+   ],
+   [
+    "PlayStyle",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "SearchResults",
+    "Collections.Generic.List`1<cCommonLobby.LobbyInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cObt",
+  "verb": "POST",
+  "path": "/obt/play",
+  "method": "postObtPlay",
+  "req": [
+   [
+    "PlayedObtNo",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cObt",
+  "verb": "POST",
+  "path": "/obt/played_info",
+  "method": "postObtPlayedInfo",
+  "req": [
+   [
+    "UserId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "PlayedObtNos",
+    "Collections.Generic.List`1<Int32>"
+   ]
+  ]
+ },
+ {
+  "category": "cObt",
+  "verb": "POST",
+  "path": "/obt/receive_reward",
+  "method": "postObtReceiveReward",
+  "req": [
+   [
+    "ObtNo",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cOffline",
+  "verb": "POST",
+  "path": "/offline/notification_list",
+  "method": "postOfflineNotificationList",
+  "req": [],
+  "resp": [
+   [
+    "List",
+    "Collections.Generic.List`1<cCommonOffline.OfflineNotificationInfo>"
+   ]
+  ]
+ },
+ {
+  "category": "cPresent",
+  "verb": "POST",
+  "path": "/present/list",
+  "method": "postPresentList",
+  "req": [
+   [
+    "Page",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonPresent.PresentPresent>"
+   ],
+   [
+    "PresentInfo",
+    "cPresent.PostPresentListResponse.PresentInfoValue"
+   ]
+  ]
+ },
+ {
+  "category": "cPresent",
+  "verb": "POST",
+  "path": "/present/receive",
+  "method": "postPresentReceive",
+  "req": [
+   [
+    "ReceivedIds",
+    "Collections.Generic.List`1<String>"
+   ]
+  ],
+  "resp": [
+   [
+    "ReceivedIds",
+    "Collections.Generic.List`1<String>"
+   ]
+  ]
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/host_hunter/send",
+  "method": "postQuestHostHunterSend",
+  "req": [
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/log/send",
+  "method": "postQuestLogSend",
+  "req": [
+   [
+    "ArmorArm",
+    "Int32"
+   ],
+   [
+    "ArmorBody",
+    "Int32"
+   ],
+   [
+    "ArmorHead",
+    "Int32"
+   ],
+   [
+    "ArmorLeg",
+    "Int32"
+   ],
+   [
+    "ArmorWaist",
+    "Int32"
+   ],
+   [
+    "CharmMain",
+    "Int32"
+   ],
+   [
+    "CharmSeikret",
+    "Int32"
+   ],
+   [
+    "CharmSub",
+    "Int32"
+   ],
+   [
+    "Handler1",
+    "Int32"
+   ],
+   [
+    "Handler2",
+    "Int32"
+   ],
+   [
+    "Handler3",
+    "Int32"
+   ],
+   [
+    "LayeredArm",
+    "Int32"
+   ],
+   [
+    "LayeredBody",
+    "Int32"
+   ],
+   [
+    "LayeredHead",
+    "Int32"
+   ],
+   [
+    "LayeredLeg",
+    "Int32"
+   ],
+   [
+    "LayeredOtomoBody",
+    "Int32"
+   ],
+   [
+    "LayeredOtomoHead",
+    "Int32"
+   ],
+   [
+    "LayeredOtomoWeapon",
+    "Int32"
+   ],
+   [
+    "LayeredWaist",
+    "Int32"
+   ],
+   [
+    "LayeredWeaponMain",
+    "Int32"
+   ],
+   [
+    "LayeredWeaponSub",
+    "Int32"
+   ],
+   [
+    "OtomoBody",
+    "Int32"
+   ],
+   [
+    "OtomoHead",
+    "Int32"
+   ],
+   [
+    "OtomoWeapon",
+    "Int32"
+   ],
+   [
+    "Seikret",
+    "Int32"
+   ],
+   [
+    "WeaponMain",
+    "Int32"
+   ],
+   [
+    "WeaponMainType",
+    "Int32"
+   ],
+   [
+    "WeaponSub",
+    "Int32"
+   ],
+   [
+    "WeaponSubType",
+    "Int32"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/session/end",
+  "method": "postQuestSessionEnd",
+  "req": [
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/session/join",
+  "method": "postQuestSessionJoin",
+  "req": [
+   [
+    "ClientEnvId",
+    "String"
+   ],
+   [
+    "JoinHunterInfos",
+    "Collections.Generic.List`1<cCommonQuest.QuestHunter>"
+   ],
+   [
+    "Password",
+    "String"
+   ],
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "QuestEndpoint",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/session/start",
+  "method": "postQuestSessionStart",
+  "req": [
+   [
+    "ClientEnvId",
+    "String"
+   ],
+   [
+    "JoinHunterInfos",
+    "Collections.Generic.List`1<cCommonQuest.QuestHunter>"
+   ],
+   [
+    "MemberLimit",
+    "Int32"
+   ],
+   [
+    "Password",
+    "String"
+   ],
+   [
+    "QuestEndpoint",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/session/update",
+  "method": "postQuestSessionUpdate",
+  "req": [
+   [
+    "ClientEnvId",
+    "String"
+   ],
+   [
+    "JoinHunterInfos",
+    "Collections.Generic.List`1<cCommonQuest.QuestHunter>"
+   ],
+   [
+    "MemberLimit",
+    "Int32"
+   ],
+   [
+    "Password",
+    "String"
+   ],
+   [
+    "QuestEndpoint",
+    "String"
+   ],
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/signal/auto_join",
+  "method": "postQuestSignalAutoJoin",
+  "req": [
+   [
+    "JoinHunterInfos",
+    "Collections.Generic.List`1<cCommonQuest.QuestHunter>"
+   ],
+   [
+    "SearchCondition",
+    "cCommonQuest.QuestSignalSearchCondition"
+   ]
+  ],
+  "resp": [
+   [
+    "QuestEndpoint",
+    "String"
+   ],
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/signal/create",
+  "method": "postQuestSignalCreate",
+  "req": [
+   [
+    "AcceptedAt",
+    "Int64"
+   ],
+   [
+    "AdvancedGameMinute",
+    "Int32"
+   ],
+   [
+    "ClientEnvId",
+    "String"
+   ],
+   [
+    "DefaultStartPosType",
+    "SByte"
+   ],
+   [
+    "EventList",
+    "Collections.Generic.List`1<cCommonQuest.QuestEventInfo>"
+   ],
+   [
+    "FieldId",
+    "Int32"
+   ],
+   [
+    "HostTime",
+    "Single"
+   ],
+   [
+    "HuntingType",
+    "SByte"
+   ],
+   [
+    "IsAutoAccept",
+    "Boolean"
+   ],
+   [
+    "IsBoost",
+    "Boolean"
+   ],
+   [
+    "IsSamePlatform",
+    "Boolean"
+   ],
+   [
+    "MultiplaySetting",
+    "SByte"
+   ],
+   [
+    "ProgressNum",
+    "Int32"
+   ],
+   [
+    "QuestDifficulty",
+    "Int32"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "QuestLevelId",
+    "Int32"
+   ],
+   [
+    "QuestSessionId",
+    "String"
+   ],
+   [
+    "QuestTimeLimit",
+    "Int32"
+   ],
+   [
+    "QuestType",
+    "SByte"
+   ],
+   [
+    "RescueComment",
+    "SByte"
+   ],
+   [
+    "RewardList",
+    "Collections.Generic.List`1<cCommonQuest.QuestExReward>"
+   ],
+   [
+    "Season",
+    "SByte"
+   ],
+   [
+    "SeasonList",
+    "Collections.Generic.List`1<SByte>"
+   ],
+   [
+    "SeasonProgress",
+    "Single"
+   ],
+   [
+    "StartedAt",
+    "Int64"
+   ],
+   [
+    "TargetList",
+    "Collections.Generic.List`1<cCommonQuest.QuestTargetMonster>"
+   ],
+   [
+    "TargetMonsterId1",
+    "UInt32"
+   ],
+   [
+    "TargetMonsterId2",
+    "UInt32"
+   ],
+   [
+    "TargetMonsterId3",
+    "UInt32"
+   ],
+   [
+    "TargetMonsterId4",
+    "UInt32"
+   ],
+   [
+    "TargetMonsterId5",
+    "UInt32"
+   ],
+   [
+    "TentListValue",
+    "Int16"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/signal/delete",
+  "method": "postQuestSignalDelete",
+  "req": [
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/signal/search",
+  "method": "postQuestSignalSearch",
+  "req": [
+   [
+    "SearchCondition",
+    "cCommonQuest.QuestSignalSearchCondition"
+   ]
+  ],
+  "resp": [
+   [
+    "SearchResults",
+    "Collections.Generic.List`1<cCommonQuest.QuestSignal>"
+   ]
+  ]
+ },
+ {
+  "category": "cQuest",
+  "verb": "POST",
+  "path": "/quest/signal/touch",
+  "method": "postQuestSignalTouch",
+  "req": [
+   [
+    "QuestSessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/animal/best_record",
+  "method": "postRankingAnimalBestRecord",
+  "req": [
+   [
+    "AnimalId",
+    "Int32"
+   ],
+   [
+    "BoardNo",
+    "Int32"
+   ],
+   [
+    "Category",
+    "ace_network.EnumRankingCategory"
+   ],
+   [
+    "Period",
+    "ace_network.EnumRankingPeriod"
+   ]
+  ],
+  "resp": [
+   [
+    "Content",
+    "Nullable`1<cCommonRanking.RankingAnimalBoardContent>"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/animal/board",
+  "method": "postRankingAnimalBoard",
+  "req": [
+   [
+    "AnimalId",
+    "Int32"
+   ],
+   [
+    "BoardNo",
+    "Int32"
+   ],
+   [
+    "Category",
+    "ace_network.EnumRankingCategory"
+   ],
+   [
+    "Page",
+    "Int32"
+   ],
+   [
+    "Period",
+    "ace_network.EnumRankingPeriod"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonRanking.RankingAnimalBoardContent>"
+   ],
+   [
+    "TotalCount",
+    "Int32"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/animal/board_circle",
+  "method": "postRankingAnimalBoardCircle",
+  "req": [
+   [
+    "AnimalId",
+    "Int32"
+   ],
+   [
+    "BoardNo",
+    "Int32"
+   ],
+   [
+    "Category",
+    "ace_network.EnumRankingCategory"
+   ],
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "Period",
+    "ace_network.EnumRankingPeriod"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonRanking.RankingAnimalBoardContent>"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/animal/register",
+  "method": "postRankingAnimalRegister",
+  "req": [
+   [
+    "NameplateId",
+    "Int32"
+   ],
+   [
+    "Scores",
+    "Collections.Generic.List`1<cCommonRanking.RankingScoreInfo>"
+   ],
+   [
+    "Timestamp",
+    "Int64"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/best_record",
+  "method": "postRankingQuestTimeBestRecord",
+  "req": [
+   [
+    "IsOldRanking",
+    "Boolean"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": [
+   [
+    "Content",
+    "Nullable`1<cCommonRanking.RankingQuestTimeBoardContent>"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/board",
+  "method": "postRankingQuestTimeBoard",
+  "req": [
+   [
+    "IsOldRanking",
+    "Boolean"
+   ],
+   [
+    "Page",
+    "Int32"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>"
+   ],
+   [
+    "TotalCount",
+    "Int32"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/board_circle",
+  "method": "postRankingQuestTimeBoardCircle",
+  "req": [
+   [
+    "CircleId",
+    "String"
+   ],
+   [
+    "IsOldRanking",
+    "Boolean"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/board_friend",
+  "method": "postRankingQuestTimeBoardFriend",
+  "req": [
+   [
+    "IsOldRanking",
+    "Boolean"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": [
+   [
+    "Contents",
+    "Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>"
+   ]
+  ]
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/register",
+  "method": "postRankingQuestTimeRegister",
+  "req": [
+   [
+    "ClearRank",
+    "ace_network.EnumQuestClearRank"
+   ],
+   [
+    "ClearTime",
+    "UInt32"
+   ],
+   [
+    "MaxHpInEnd",
+    "Int32"
+   ],
+   [
+    "MaxHpInStart",
+    "Int32"
+   ],
+   [
+    "MemberInfos",
+    "Collections.Generic.List`1<cCommonRanking.RankingRegisterMemberInfo>"
+   ],
+   [
+    "ProgressTimes",
+    "Collections.Generic.List`1<UInt32>"
+   ],
+   [
+    "QuestId",
+    "Int32"
+   ],
+   [
+    "RankingSessionId",
+    "String"
+   ],
+   [
+    "Timestamp",
+    "Int64"
+   ],
+   [
+    "Type",
+    "ace_network.EnumRankingQuestTimeType"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/session/join",
+  "method": "postRankingQuestTimeSessionJoin",
+  "req": [
+   [
+    "RankingSessionId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cRanking",
+  "verb": "POST",
+  "path": "/ranking/quest_time/session/start",
+  "method": "postRankingQuestTimeSessionStart",
+  "req": [
+   [
+    "QuestId",
+    "Int32"
+   ]
+  ],
+  "resp": [
+   [
+    "RankingSessionId",
+    "String"
+   ]
+  ]
+ },
+ {
+  "category": "cReport",
+  "verb": "POST",
+  "path": "/report",
+  "method": "postReport",
+  "req": [
+   [
+    "ReportText",
+    "String"
+   ],
+   [
+    "ReportTypes",
+    "Collections.Generic.List`1<ace_network.EnumReportReportType>"
+   ],
+   [
+    "TargetHunterId",
+    "String"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cReport",
+  "verb": "POST",
+  "path": "/report/quest/bol",
+  "method": "postReportQuestBol",
+  "req": [
+   [
+    "Bol",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Continuous",
+    "Boolean"
+   ]
+  ]
+ },
+ {
+  "category": "cSetting",
+  "verb": "POST",
+  "path": "/setting/analysis",
+  "method": "postSettingAnalysis",
+  "req": [
+   [
+    "IsEnableAnalysis",
+    "Boolean"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cSetting",
+  "verb": "POST",
+  "path": "/setting/crossplay",
+  "method": "postSettingCrossplay",
+  "req": [
+   [
+    "CrossplayEnabled",
+    "Boolean"
+   ]
+  ],
+  "resp": []
+ },
+ {
+  "category": "cSteam",
+  "verb": "POST",
+  "path": "/steam/price",
+  "method": "postSteamPrice",
+  "req": [
+   [
+    "AppIds",
+    "Collections.Generic.List`1<UInt64>"
+   ],
+   [
+    "PlatformId",
+    "String"
+   ]
+  ],
+  "resp": [
+   [
+    "Prices",
+    "Collections.Generic.List`1<cCommonSteam.SteamPackagePrice>"
+   ]
+  ]
+ },
+ {
+  "category": "cSys",
+  "verb": "GET",
+  "path": "/sys/health",
+  "method": "getSysHealth",
+  "req": [],
+  "resp": []
+ },
+ {
+  "category": "cSys",
+  "verb": "GET",
+  "path": "/sys/speed",
+  "method": "getSysSpeed",
+  "req": [],
+  "resp": []
+ }
+]

@@ -1,0 +1,21 @@
+{
+  "_readme": [
+    "Games that come ready for co-op. Each entry is applied once per install, the first time the game is downloaded or launched, and never over an online-mode choice already made. See gamePresets.js.",
+    "To add one: copy an entry, set the Steam appid and name, list its steps, then publish an update (dev/release.cjs). A step added to an existing entry later reaches installs that already had the others.",
+    "Steps: online = real Steam session under Spacewar (Valheim also gets its adapter); peakMod = PEAK join-a-friend plugin; photonMod = generic join-a-friend engine for Unity/Photon games."
+  ],
+  "presets": [
+    {
+      "appid": "892970",
+      "name": "Valheim",
+      "steps": ["online"],
+      "note": "Online mode with the Valheim adapter: host or join friends through Steam."
+    },
+    {
+      "appid": "3527290",
+      "name": "PEAK",
+      "steps": ["online", "peakMod"],
+      "note": "Online mode, plus the join-a-friend plugin (F7 at the main menu) for friends who own the real game."
+    }
+  ]
+}

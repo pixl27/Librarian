@@ -1,0 +1,563 @@
+### cAuth  (line 42)  parent=Object
+  POST /auth/login   [postAuthLogin]
+      REQ cAuth.PostAuthLoginRequest: CrossplayEnabled:Boolean, IsEnableAnalysis:Boolean, IsPsPlus:Boolean, MachineDetail:String, MainLanguage:ace_network.EnumPlayerLanguage, OsVersion:String, RebeToken:String, RomRegion:String, RomRevision:Int32, RomVersion:Int32, SocialRestriction:Boolean, UtcOffsetMinutes:Int32
+      RESP cAuth.PostAuthLoginResponse: IpAddress:String, IpAddressHash:String, IsInCommunityBan:Boolean, SessionId:String, SubHash:String, UserId:String
+  POST /auth/register   [postAuthRegister]
+      REQ cAuth.PostAuthRegisterRequest: CrossplayEnabled:Boolean, IsEnableAnalysis:Boolean, IsPsPlus:Boolean, MachineDetail:String, MainLanguage:ace_network.EnumPlayerLanguage, OsVersion:String, RebeToken:String, RomVersion:Int32, SocialRestriction:Boolean, UniqueId:String, UtcOffsetMinutes:Int32
+      RESP cAuth.PostAuthRegisterResponse: SessionId:String, UserId:String
+  POST /auth/ticket   [postAuthTicket]
+      REQ cAuth.PostAuthTicketRequest: (empty)
+      RESP cAuth.PostAuthTicketResponse: Ticket:String
+### cBan  (line 105)  parent=Object
+  POST /ban/info   [postBanInfo]
+      REQ cBan.PostBanInfoRequest: (empty)
+      RESP cBan.PostBanInfoResponse: UnlockTime:Int64, BanReasons:Collections.Generic.List`1<ace_network.EnumReportBanReason>, Status:ace_network.EnumUserBanType
+### cBlock  (line 121)  parent=Object
+  POST /block/block   [postBlockBlock]
+      REQ cBlock.PostBlockBlockRequest: TargetHunterId:String
+      RESP cBlock.PostBlockBlockResponse: OperationId:UInt32
+  POST /block/list   [postBlockList]
+      REQ cBlock.PostBlockListRequest: LastOperationId:UInt32
+      RESP cBlock.PostBlockListResponse: BlockedHunter:Collections.Generic.List`1<cCommonBlock.BlockBlockedHunter>, IsConsistent:Boolean, OperationId:UInt32
+  POST /block/unblock   [postBlockUnblock]
+      REQ cBlock.PostBlockUnblockRequest: TargetUserId:String
+      RESP cBlock.PostBlockUnblockResponse: OperationId:UInt32
+### cChat  (line 160)  parent=Object
+  POST /chat/circle/log   [postChatCircleLog]
+      REQ cChat.PostChatCircleLogRequest: CircleId:String
+      RESP cChat.PostChatCircleLogResponse: CircleChatLogs:Collections.Generic.List`1<cCommonChat.ChatCircleChatLog>
+  POST /chat/circle/send   [postChatCircleSend]
+      REQ cChat.PostChatCircleSendRequest: Message:Collections.Generic.List`1<Byte>, TargetCircleId:String
+      RESP cChat.PostChatCircleSendResponse: (empty)
+  POST /chat/private/send   [postChatPrivateSend]
+      REQ cChat.PostChatPrivateSendRequest: Message:Collections.Generic.List`1<Byte>, TargetHunterId:String
+      RESP cChat.PostChatPrivateSendResponse: (empty)
+  POST /chat/system/send   [postChatSystemSend]
+      REQ cChat.PostChatSystemSendRequest: Message:Collections.Generic.List`1<Byte>, TargetHunterId:String
+      RESP cChat.PostChatSystemSendResponse: (empty)
+### cCircle  (line 208)  parent=Object
+  POST /circle/active/set   [postCircleActiveSet]
+      REQ cCircle.PostCircleActiveSetRequest: CircleId:String
+      RESP cCircle.PostCircleActiveSetResponse: (empty)
+  POST /circle/active/unset   [postCircleActiveUnset]
+      REQ cCircle.PostCircleActiveUnsetRequest: (empty)
+      RESP cCircle.PostCircleActiveUnsetResponse: (empty)
+  POST /circle/change_leader   [postCircleChangeLeader]
+      REQ cCircle.PostCircleChangeLeaderRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleChangeLeaderResponse: MemberList:Collections.Generic.List`1<cCommonCircle.CircleMember>
+  POST /circle/create   [postCircleCreate]
+      REQ cCircle.PostCircleCreateRequest: AutoAcceptJoinRequests:Boolean, Comment:String, Icon:UInt64, LeaderComment:String, Name:String, PlatformType:ace_network.EnumAuthPlatformType, Policy:ace_network.EnumCirclePolicy, Requirements:ace_network.EnumCircleRequirements, SameLanguage:Boolean
+      RESP cCircle.PostCircleCreateResponse: CircleInfo:cCommonCircle.CircleJoinedCircleInfo
+  POST /circle/delete   [postCircleDelete]
+      REQ cCircle.PostCircleDeleteRequest: CircleId:String
+      RESP cCircle.PostCircleDeleteResponse: (empty)
+  POST /circle/edit   [postCircleEdit]
+      REQ cCircle.PostCircleEditRequest: AutoAcceptJoinRequests:Boolean, CircleId:String, Comment:String, Icon:UInt64, Policy:ace_network.EnumCirclePolicy, Requirements:ace_network.EnumCircleRequirements, SameLanguage:Boolean
+      RESP cCircle.PostCircleEditResponse: (empty)
+  POST /circle/edit_leader_card   [postCircleEditLeaderCard]
+      REQ cCircle.PostCircleEditLeaderCardRequest: CircleId:String, LeaderComment:String
+      RESP cCircle.PostCircleEditLeaderCardResponse: (empty)
+  POST /circle/info   [postCircleInfo]
+      REQ cCircle.PostCircleInfoRequest: CircleId:String
+      RESP cCircle.PostCircleInfoResponse: CircleInfo:cCommonCircle.CircleInfo
+  POST /circle/info_by_short_id   [postCircleInfoByShortId]
+      REQ cCircle.PostCircleInfoByShortIdRequest: CircleShortId:String
+      RESP cCircle.PostCircleInfoByShortIdResponse: CircleInfo:cCommonCircle.CircleInfo
+  POST /circle/invite   [postCircleInvite]
+      REQ cCircle.PostCircleInviteRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleInviteResponse: SendInvite:cCommonCircle.CircleSendInvite
+  POST /circle/invite/received/accept   [postCircleInviteReceivedAccept]
+      REQ cCircle.PostCircleInviteReceivedAcceptRequest: CircleId:String
+      RESP cCircle.PostCircleInviteReceivedAcceptResponse: (empty)
+  POST /circle/invite/received/list   [postCircleInviteReceivedList]
+      REQ cCircle.PostCircleInviteReceivedListRequest: (empty)
+      RESP cCircle.PostCircleInviteReceivedListResponse: ReceivedInvites:Collections.Generic.List`1<cCommonCircle.CircleReceivedInvite>
+  POST /circle/invite/received/reject   [postCircleInviteReceivedReject]
+      REQ cCircle.PostCircleInviteReceivedRejectRequest: CircleId:String
+      RESP cCircle.PostCircleInviteReceivedRejectResponse: (empty)
+  POST /circle/invite/send/cancel   [postCircleInviteSendCancel]
+      REQ cCircle.PostCircleInviteSendCancelRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleInviteSendCancelResponse: (empty)
+  POST /circle/invite/send/list   [postCircleInviteSendList]
+      REQ cCircle.PostCircleInviteSendListRequest: CircleId:String
+      RESP cCircle.PostCircleInviteSendListResponse: SendInvites:Collections.Generic.List`1<cCommonCircle.CircleSendInvite>
+  POST /circle/join_request   [postCircleJoinRequest]
+      REQ cCircle.PostCircleJoinRequestRequest: CircleId:String
+      RESP cCircle.PostCircleJoinRequestResponse: SendJoinRequest:cCommonCircle.CircleSendJoinRequest
+  POST /circle/join_request/received/accept   [postCircleJoinRequestReceivedAccept]
+      REQ cCircle.PostCircleJoinRequestReceivedAcceptRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleJoinRequestReceivedAcceptResponse: (empty)
+  POST /circle/join_request/received/list   [postCircleJoinRequestReceivedList]
+      REQ cCircle.PostCircleJoinRequestReceivedListRequest: CircleId:String
+      RESP cCircle.PostCircleJoinRequestReceivedListResponse: ReceivedJoinRequests:Collections.Generic.List`1<cCommonCircle.CircleReceivedJoinRequest>
+  POST /circle/join_request/received/list_all   [postCircleJoinRequestReceivedListAll]
+      REQ cCircle.PostCircleJoinRequestReceivedListAllRequest: (empty)
+      RESP cCircle.PostCircleJoinRequestReceivedListAllResponse: ReceivedJoinRequests:Collections.Generic.List`1<cCommonCircle.CircleReceivedJoinRequestAll>
+  POST /circle/join_request/received/reject   [postCircleJoinRequestReceivedReject]
+      REQ cCircle.PostCircleJoinRequestReceivedRejectRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleJoinRequestReceivedRejectResponse: (empty)
+  POST /circle/join_request/send/cancel   [postCircleJoinRequestSendCancel]
+      REQ cCircle.PostCircleJoinRequestSendCancelRequest: CircleId:String
+      RESP cCircle.PostCircleJoinRequestSendCancelResponse: (empty)
+  POST /circle/join_request/send/list   [postCircleJoinRequestSendList]
+      REQ cCircle.PostCircleJoinRequestSendListRequest: (empty)
+      RESP cCircle.PostCircleJoinRequestSendListResponse: SendJoinRequests:Collections.Generic.List`1<cCommonCircle.CircleSendJoinRequest>
+  POST /circle/leader_info_get   [postCircleLeaderInfoGet]
+      REQ cCircle.PostCircleLeaderInfoGetRequest: CircleId:String
+      RESP cCircle.PostCircleLeaderInfoGetResponse: HideComments:Boolean, HunterInfo:cCommonHunter.HunterInfo
+  POST /circle/leader_info_get_by_circle_ids   [postCircleLeaderInfoGetByCircleIds]
+      REQ cCircle.PostCircleLeaderInfoGetByCircleIdsRequest: CircleIds:Collections.Generic.List`1<String>
+      RESP cCircle.PostCircleLeaderInfoGetByCircleIdsResponse: HunterInfos:Collections.Generic.List`1<cCircle.PostCircleLeaderInfoGetByCircleIdsResponse.HunterInfosValue>
+  POST /circle/list_joined   [postCircleListJoined]
+      REQ cCircle.PostCircleListJoinedRequest: (empty)
+      RESP cCircle.PostCircleListJoinedResponse: JoinedCircleInfo:Collections.Generic.List`1<cCommonCircle.CircleJoinedCircleInfo>
+  POST /circle/member/change_role   [postCircleMemberChangeRole]
+      REQ cCircle.PostCircleMemberChangeRoleRequest: CircleId:String, Role:ace_network.EnumCircleRole, TargetHunterId:String
+      RESP cCircle.PostCircleMemberChangeRoleResponse: (empty)
+  POST /circle/member/kick   [postCircleMemberKick]
+      REQ cCircle.PostCircleMemberKickRequest: CircleId:String, TargetHunterId:String
+      RESP cCircle.PostCircleMemberKickResponse: (empty)
+  POST /circle/member/leave   [postCircleMemberLeave]
+      REQ cCircle.PostCircleMemberLeaveRequest: CircleId:String
+      RESP cCircle.PostCircleMemberLeaveResponse: (empty)
+  POST /circle/member/list   [postCircleMemberList]
+      REQ cCircle.PostCircleMemberListRequest: CircleId:String
+      RESP cCircle.PostCircleMemberListResponse: MemberList:Collections.Generic.List`1<cCommonCircle.CircleMember>
+  POST /circle/new_leader_confirm   [postCircleNewLeaderConfirm]
+      REQ cCircle.PostCircleNewLeaderConfirmRequest: CircleId:String, DeletePreviousComments:Boolean
+      RESP cCircle.PostCircleNewLeaderConfirmResponse: (empty)
+  POST /circle/rename   [postCircleRename]
+      REQ cCircle.PostCircleRenameRequest: CircleId:String, NewName:String
+      RESP cCircle.PostCircleRenameResponse: (empty)
+  POST /circle/search   [postCircleSearch]
+      REQ cCircle.PostCircleSearchRequest: AutoAcceptJoinRequests:Boolean, Policy:ace_network.EnumCirclePolicy, Requirements:ace_network.EnumCircleRequirements, SameLanguage:Boolean, SamePlatform:Boolean
+      RESP cCircle.PostCircleSearchResponse: IsPartial:Boolean, SearchResults:Collections.Generic.List`1<cCommonCircle.CircleInfo>
+### cCommonBlock  (line 593)  parent=Object
+### cCommonChat  (line 618)  parent=Object
+### cCommonCircle  (line 641)  parent=Object
+### cCommonCommunity  (line 812)  parent=Object
+### cCommonDebug  (line 836)  parent=Object
+### cCommonDeliveryData  (line 861)  parent=Object
+### cCommonFollow  (line 1006)  parent=Object
+### cCommonFriend  (line 1047)  parent=Object
+### cCommonHunter  (line 1086)  parent=Object
+### cCommonLinkParty  (line 1249)  parent=Object
+### cCommonLobby  (line 1252)  parent=Object
+### cCommonOffline  (line 1387)  parent=Object
+### cCommonPresent  (line 1419)  parent=Object
+### cCommonQuest  (line 1465)  parent=Object
+### cCommonRanking  (line 1642)  parent=Object
+### cCommonSteam  (line 1763)  parent=Object
+### cCommonUser  (line 1785)  parent=Object
+### cCommunity  (line 1791)  parent=Object
+  POST /community/invitation/received_list   [postCommunityInvitationReceivedList]
+      REQ cCommunity.PostCommunityInvitationReceivedListRequest: (empty)
+      RESP cCommunity.PostCommunityInvitationReceivedListResponse: List:Collections.Generic.List`1<cCommonCommunity.CommunityInvitationInfo>
+  POST /community/invitation/send   [postCommunityInvitationSend]
+      REQ cCommunity.PostCommunityInvitationSendRequest: HunterId:String, InvitationType:ace_network.EnumCommunityInvitationType, SessionId:String
+      RESP cCommunity.PostCommunityInvitationSendResponse: (empty)
+  POST /community/invitation/send_list   [postCommunityInvitationSendList]
+      REQ cCommunity.PostCommunityInvitationSendListRequest: (empty)
+      RESP cCommunity.PostCommunityInvitationSendListResponse: List:Collections.Generic.List`1<cCommonCommunity.CommunityInvitationInfo>
+### cContsnt  (line 1827)  parent=Object
+  GET /v1/consent/countries/   [getConsentCountries]
+      REQ cContsnt.GetConsentCountriesRequest: <not found as struct>
+      RESP cContsnt.GetConsentCountriesResponse: <not found as struct>
+  GET /v1/consent/restrictions/   [getConsentRestrictions]
+      REQ cContsnt.GetConsentRestrictionsRequest: <not found as struct>
+      RESP cContsnt.GetConsentRestrictionsResponse: <not found as struct>
+  GET /v1/consent/documents/   [getConsentDocuments]
+      REQ cContsnt.GetConsentDocumentsRequest: <not found as struct>
+      RESP cContsnt.GetConsentDocumentsResponse: <not found as struct>
+  GET /v1/consent/parent/initialize   [getConsents]
+      REQ cContsnt.GetConsentsRequest: <not found as struct>
+      RESP cContsnt.GetConsentsResponse: <not found as struct>
+  GET /v1/consent/parent/finalize   [getParentConsent]
+      REQ cContsnt.GetParentConsentRequest: <not found as struct>
+      RESP cContsnt.GetParentConsentResponse: <not found as struct>
+### cDebug  (line 2015)  parent=Object
+  POST /debug/ban/community   [postDebugBanCommunity]
+      REQ cDebug.PostDebugBanCommunityRequest: UserId:String
+      RESP cDebug.PostDebugBanCommunityResponse: (empty)
+  POST /debug/cheat/data_upload   [postDebugCheatDataUpload]
+      REQ cDebug.PostDebugCheatDataUploadRequest: MasterDataChecksum:String
+      RESP cDebug.PostDebugCheatDataUploadResponse: (empty)
+  POST /debug/circle/join_force   [postDebugCircleJoinForce]
+      REQ cDebug.PostDebugCircleJoinForceRequest: CircleId:String
+      RESP cDebug.PostDebugCircleJoinForceResponse: (empty)
+  POST /debug/delivery/get_quest_by_id   [postDebugDeliveryGetQuestById]
+      REQ cDebug.PostDebugDeliveryGetQuestByIdRequest: MissionId:Int64
+      RESP cDebug.PostDebugDeliveryGetQuestByIdResponse: Quest:cCommonDeliveryData.DeliveryDataQuest
+  POST /debug/force_error/delete_code   [postDebugForceErrorDeleteCode]
+      REQ cDebug.PostDebugForceErrorDeleteCodeRequest: HunterId:String, Path:String
+      RESP cDebug.PostDebugForceErrorDeleteCodeResponse: (empty)
+  POST /debug/force_error/set_code   [postDebugForceErrorSetCode]
+      REQ cDebug.PostDebugForceErrorSetCodeRequest: Code:Int64, HunterId:String, Path:String
+      RESP cDebug.PostDebugForceErrorSetCodeResponse: (empty)
+  POST /debug/friend/add_force   [postDebugFriendAddForce]
+      REQ cDebug.PostDebugFriendAddForceRequest: TargetHunterId:String
+      RESP cDebug.PostDebugFriendAddForceResponse: (empty)
+  POST /debug/game_server/allocate   [postDebugGameServerAllocate]
+      REQ cDebug.PostDebugGameServerAllocateRequest: (empty)
+      RESP cDebug.PostDebugGameServerAllocateResponse: Address:String, GameServerName:String, NodeName:String, Ports:Collections.Generic.List`1<cCommonDebug.DebugLobbyPorts>, State:String
+  POST /debug/hunter/delete   [postDebugHunterDelete]
+      REQ cDebug.PostDebugHunterDeleteRequest: HunterId:String
+      RESP cDebug.PostDebugHunterDeleteResponse: (empty)
+  POST /debug/hunter/info_get   [postDebugHunterInfoGet]
+      REQ cDebug.PostDebugHunterInfoGetRequest: HunterId:String
+      RESP cDebug.PostDebugHunterInfoGetResponse: UserId:String
+  POST /debug/loader   [postDebugLoader]
+      REQ cDebug.PostDebugLoaderRequest: LoaderNum:Int64, LoaderType:String, ServerTarget:String
+      RESP cDebug.PostDebugLoaderResponse: Duration:Int64, EndTime:Int64, StartTime:Int64
+  POST /debug/lobby/auto_join   [postDebugLobbyAutoJoin]
+      REQ cDebug.PostDebugLobbyAutoJoinRequest: ClientEnvId:String
+      RESP cDebug.PostDebugLobbyAutoJoinResponse: Endpoints:Collections.Generic.List`1<String>
+  POST /debug/lobby/create   [postDebugLobbyCreate]
+      REQ cDebug.PostDebugLobbyCreateRequest: Alias:String, Language:ace_network.EnumPlayerLanguage, Passphrase:String, Type:Int32
+      RESP cDebug.PostDebugLobbyCreateResponse: LobbyId:String
+  POST /debug/lobby/domain/recreate   [postDebugLobbyDomainRecreate]
+      REQ cDebug.PostDebugLobbyDomainRecreateRequest: Address:String
+      RESP cDebug.PostDebugLobbyDomainRecreateResponse: (empty)
+  POST /debug/lobby/fleet/get   [postDebugLobbyFleetGet]
+      REQ cDebug.PostDebugLobbyFleetGetRequest: Language:ace_network.EnumPlayerLanguage, Type:Int32
+      RESP cDebug.PostDebugLobbyFleetGetResponse: GetFleets:Collections.Generic.List`1<cCommonLobby.LobbyGetFleet>
+  POST /debug/lobby/fleet_autoscaler/update   [postDebugLobbyFleetAutoscalerUpdate]
+      REQ cDebug.PostDebugLobbyFleetAutoscalerUpdateRequest: Endpoint:String, Scale:cCommonLobby.LobbyFleetAutoscalerInfo, Type:Int32
+      RESP cDebug.PostDebugLobbyFleetAutoscalerUpdateResponse: (empty)
+  POST /debug/lobby/hunter_jump   [postDebugLobbyHunterJump]
+      REQ cDebug.PostDebugLobbyHunterJumpRequest: TargetHunterId:String
+      RESP cDebug.PostDebugLobbyHunterJumpResponse: LobbyId:String
+  POST /debug/lobby/public/rate_get   [postDebugLobbyPublicRateGet]
+      REQ cDebug.PostDebugLobbyPublicRateGetRequest: IsFreeMatches:Collections.Generic.List`1<Boolean>, Languages:Collections.Generic.List`1<Int32>, Levels:Collections.Generic.List`1<Int32>, PlatformTypes:Collections.Generic.List`1<Int64>, PlayStyles:Collections.Generic.List`1<Int32>
+      RESP cDebug.PostDebugLobbyPublicRateGetResponse: RateInfos:Collections.Generic.List`1<cCommonLobby.LobbyRateInfo>
+  POST /debug/lobby/public/setting_delete   [postDebugLobbyPublicSettingDelete]
+      REQ cDebug.PostDebugLobbyPublicSettingDeleteRequest: IsFreeMatches:Collections.Generic.List`1<Boolean>, Languages:Collections.Generic.List`1<Int32>, Levels:Collections.Generic.List`1<Int32>, PlatformTypes:Collections.Generic.List`1<Int64>, PlayStyles:Collections.Generic.List`1<Int32>
+      RESP cDebug.PostDebugLobbyPublicSettingDeleteResponse: (empty)
+  POST /debug/lobby/public/setting_get   [postDebugLobbyPublicSettingGet]
+      REQ cDebug.PostDebugLobbyPublicSettingGetRequest: IsFreeMatches:Collections.Generic.List`1<Boolean>, Languages:Collections.Generic.List`1<Int32>, Levels:Collections.Generic.List`1<Int32>, PlatformTypes:Collections.Generic.List`1<Int64>, PlayStyles:Collections.Generic.List`1<Int32>
+      RESP cDebug.PostDebugLobbyPublicSettingGetResponse: ScalingSettings:Collections.Generic.List`1<cCommonLobby.LobbyScalingSetting>
+  POST /debug/lobby/public/setting_set   [postDebugLobbyPublicSettingSet]
+      REQ cDebug.PostDebugLobbyPublicSettingSetRequest: IsFreeMatches:Collections.Generic.List`1<Boolean>, Languages:Collections.Generic.List`1<Int32>, Levels:Collections.Generic.List`1<Int32>, PlatformTypes:Collections.Generic.List`1<Int64>, PlayStyles:Collections.Generic.List`1<Int32>, ScalingSetting:cCommonLobby.LobbyScalingSetting
+      RESP cDebug.PostDebugLobbyPublicSettingSetResponse: (empty)
+  POST /debug/lobby/search   [postDebugLobbySearch]
+      REQ cDebug.PostDebugLobbySearchRequest: IsFreeMatch:Boolean, Language:Int32, Level:Int32, PlayStyle:Int32
+      RESP cDebug.PostDebugLobbySearchResponse: SearchResults:Collections.Generic.List`1<cCommonLobby.LobbyInfo>
+  POST /debug/lobby/set_state   [postDebugLobbySetState]
+      REQ cDebug.PostDebugLobbySetStateRequest: CircleId:String, LobbyId:String, Passphrase:String
+      RESP cDebug.PostDebugLobbySetStateResponse: (empty)
+  POST /debug/lobby/single_clear   [postDebugLobbySingleClear]
+      REQ cDebug.PostDebugLobbySingleClearRequest: (empty)
+      RESP cDebug.PostDebugLobbySingleClearResponse: (empty)
+  POST /debug/lobby/single_get   [postDebugLobbySingleGet]
+      REQ cDebug.PostDebugLobbySingleGetRequest: (empty)
+      RESP cDebug.PostDebugLobbySingleGetResponse: LobbyId:String, Endpoint:String, ShortId:String
+  POST /debug/offline/notification_add   [postDebugOfflineNotificationAdd]
+      REQ cDebug.PostDebugOfflineNotificationAddRequest: FromCircleId:String, FromHunterId:String, Type:Int64
+      RESP cDebug.PostDebugOfflineNotificationAddResponse: (empty)
+  POST /debug/present/all_delete   [postDebugPresentAllDelete]
+      REQ cDebug.PostDebugPresentAllDeleteRequest: TargetContentId:String
+      RESP cDebug.PostDebugPresentAllDeleteResponse: (empty)
+  POST /debug/present/all_insert   [postDebugPresentAllInsert]
+      REQ cDebug.PostDebugPresentAllInsertRequest: Presents:Collections.Generic.List`1<cCommonPresent.PresentPresent>
+      RESP cDebug.PostDebugPresentAllInsertResponse: (empty)
+  POST /debug/present/all_update   [postDebugPresentAllUpdate]
+      REQ cDebug.PostDebugPresentAllUpdateRequest: Present:cCommonPresent.PresentPresent
+      RESP cDebug.PostDebugPresentAllUpdateResponse: (empty)
+  POST /debug/present/hunter_insert   [postDebugPresentHunterInsert]
+      REQ cDebug.PostDebugPresentHunterInsertRequest: Presents:Collections.Generic.List`1<cCommonPresent.PresentPresent>, TargetHunterId:String
+      RESP cDebug.PostDebugPresentHunterInsertResponse: (empty)
+  POST /debug/ranking/quest_time/board_delete   [postDebugRankingQuestTimeBoardDelete]
+      REQ cDebug.PostDebugRankingQuestTimeBoardDeleteRequest: LimitedRankingId:String, Type:ace_network.EnumRankingQuestTimeType
+      RESP cDebug.PostDebugRankingQuestTimeBoardDeleteResponse: (empty)
+  POST /debug/ranking/quest_time/border_set   [postDebugRankingQuestTimeBorderSet]
+      REQ cDebug.PostDebugRankingQuestTimeBorderSetRequest: BorderTime:Int64, LimitedRankingId:String, Type:ace_network.EnumRankingQuestTimeType
+      RESP cDebug.PostDebugRankingQuestTimeBorderSetResponse: (empty)
+  POST /debug/ranking/quest_time/fix   [postDebugRankingQuestTimeFix]
+      REQ cDebug.PostDebugRankingQuestTimeFixRequest: BoardType:Int32, IsReset:Boolean, QuestId:Int32, StartTime:Int32
+      RESP cDebug.PostDebugRankingQuestTimeFixResponse: (empty)
+  POST /debug/send_notify   [postDebugSendNotify]
+      REQ cDebug.PostDebugSendNotifyRequest: NotifyText:String
+      RESP cDebug.PostDebugSendNotifyResponse: (empty)
+  POST /debug/steam/price   [postDebugSteamPrice]
+      REQ cDebug.PostDebugSteamPriceRequest: AppIds:Collections.Generic.List`1<UInt64>, PlatformId:String, PlatformType:ace_network.EnumAuthPlatformType
+      RESP cDebug.PostDebugSteamPriceResponse: Prices:Collections.Generic.List`1<cCommonSteam.SteamPackagePrice>
+  POST /debug/user/dummy_ban_set   [postDebugUserDummyBanSet]
+      REQ cDebug.PostDebugUserDummyBanSetRequest: BanReasons:Collections.Generic.List`1<ace_network.EnumReportBanReason>, OnlineBanUnlockTime:Int64, UserId:String
+      RESP cDebug.PostDebugUserDummyBanSetResponse: (empty)
+  POST /debug/user/info_get   [postDebugUserInfoGet]
+      REQ cDebug.PostDebugUserInfoGetRequest: DummyRebeToken:String
+      RESP cDebug.PostDebugUserInfoGetResponse: RealRebeToken:String, UserId:String
+  POST /debug/user/ticket_create   [postDebugUserTicketCreate]
+      REQ cDebug.PostDebugUserTicketCreateRequest: CreateUserInfo:cCommonDebug.DebugCreateUserInfo
+      RESP cDebug.PostDebugUserTicketCreateResponse: CreateUserInfo:cCommonDebug.DebugCreateUserInfo, TicketId:String
+### cDeliveryData  (line 2467)  parent=Object
+  POST /delivery_data/get   [postDeliveryDataGet]
+      REQ cDeliveryData.PostDeliveryDataGetRequest: (empty)
+      RESP cDeliveryData.PostDeliveryDataGetResponse: BountyList:cCommonDeliveryData.DeliveryDataCompressDeliveryData, DlcProducts:cCommonDeliveryData.DeliveryDataCompressDeliveryData, DlcRecommendMessages:cCommonDeliveryData.DeliveryDataCompressDeliveryData, ExParamsInfo:cCommonDeliveryData.DeliveryDataExParams, LimitedEventList:cCommonDeliveryData.DeliveryDataCompressDeliveryData, Message:cCommonDeliveryData.DeliveryDataCompressDeliveryData, Quests:cCommonDeliveryData.DeliveryDataCompressDeliveryData, SeasonEvents:cCommonDeliveryData.DeliveryDataCompressDeliveryData, TitleBannerInfo:Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataTitleBanner>
+  POST /delivery_data/get_login_bonus   [postDeliveryDataGetLoginBonus]
+      REQ cDeliveryData.PostDeliveryDataGetLoginBonusRequest: (empty)
+      RESP cDeliveryData.PostDeliveryDataGetLoginBonusResponse: BeginnerLoginBonus:Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataBeginnerLoginBonus>, ComebackLoginBonus:Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataComebackLoginBonus>, DailyLoginBonus:Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataDailyLoginBonus>, GetDataAt:Int64, SpecialLoginBonus:Collections.Generic.List`1<cCommonDeliveryData.DeliveryDataSpecialLoginBonus>
+  POST /delivery_data/received_login_bonus   [postDeliveryDataReceivedLoginBonus]
+      REQ cDeliveryData.PostDeliveryDataReceivedLoginBonusRequest: ReceivedBeginnerLoginBonusIds:Collections.Generic.List`1<String>, ReceivedComebackLoginBonusIds:Collections.Generic.List`1<String>, ReceivedDailyLoginBonusIds:Collections.Generic.List`1<String>, ReceivedDataAt:Int64, ReceivedSpecialLoginBonusIds:Collections.Generic.List`1<String>
+      RESP cDeliveryData.PostDeliveryDataReceivedLoginBonusResponse: (empty)
+### cError  (line 2517)  parent=Object
+### cFollow  (line 2523)  parent=Object
+  POST /follow   [postFollow]
+      REQ cFollow.PostFollowRequest: TargetHunterId:String
+      RESP cFollow.PostFollowResponse: OperationId:String
+  POST /follow/delete   [postFollowDelete]
+      REQ cFollow.PostFollowDeleteRequest: TargetHunterId:String
+      RESP cFollow.PostFollowDeleteResponse: OperationId:String
+  POST /follow/follower/list   [postFollowFollowerList]
+      REQ cFollow.PostFollowFollowerListRequest: QueryKey:Int64
+      RESP cFollow.PostFollowFollowerListResponse: FollowerHunterNum:Int64, FollowerList:Collections.Generic.List`1<cCommonFollow.FollowHunterInfo>, NextQueryKey:Int64
+  POST /follow/list   [postFollowList]
+      REQ cFollow.PostFollowListRequest: QueryKey:Int64
+      RESP cFollow.PostFollowListResponse: FollowHunterNum:Int64, FollowList:Collections.Generic.List`1<cCommonFollow.FollowHunterInfo>, NextQueryKey:Int64
+  POST /follow/total_list   [postFollowTotalList]
+      REQ cFollow.PostFollowTotalListRequest: LastOperationId:String
+      RESP cFollow.PostFollowTotalListResponse: FollowList:Collections.Generic.List`1<cCommonFollow.FollowRelationshipHunterInfo>, FollowerNum:Int64, LastOperationId:String
+### cFriend  (line 2588)  parent=Object
+  POST /friend/delete   [postFriendDelete]
+      REQ cFriend.PostFriendDeleteRequest: TargetHunterId:String
+      RESP cFriend.PostFriendDeleteResponse: FriendList:Collections.Generic.List`1<cCommonFriend.FriendRequestHunterInfo>
+  POST /friend/list   [postFriendList]
+      REQ cFriend.PostFriendListRequest: (empty)
+      RESP cFriend.PostFriendListResponse: FriendList:Collections.Generic.List`1<cCommonFriend.FriendRequestHunterInfo>
+  POST /friend/relationship_list   [postFriendRelationshipList]
+      REQ cFriend.PostFriendRelationshipListRequest: (empty)
+      RESP cFriend.PostFriendRelationshipListResponse: FriendList:Collections.Generic.List`1<cCommonFriend.FriendRelationshipHunterInfo>
+  POST /friend/request   [postFriendRequest]
+      REQ cFriend.PostFriendRequestRequest: TargetHunterId:String
+      RESP cFriend.PostFriendRequestResponse: (empty)
+  POST /friend/request/accept   [postFriendRequestAccept]
+      REQ cFriend.PostFriendRequestAcceptRequest: TargetHunterId:String
+      RESP cFriend.PostFriendRequestAcceptResponse: AcceptedHunterInfo:cCommonFriend.FriendRequestHunterInfo
+  POST /friend/request/cancel   [postFriendRequestCancel]
+      REQ cFriend.PostFriendRequestCancelRequest: TargetHunterId:String
+      RESP cFriend.PostFriendRequestCancelResponse: (empty)
+  POST /friend/request/reject   [postFriendRequestReject]
+      REQ cFriend.PostFriendRequestRejectRequest: TargetHunterId:String
+      RESP cFriend.PostFriendRequestRejectResponse: (empty)
+### cHunter  (line 2664)  parent=Object
+  POST /hunter/chara_recipe/delete   [postHunterCharaRecipeDelete]
+      REQ cHunter.PostHunterCharaRecipeDeleteRequest: DownloadKey:String
+      RESP cHunter.PostHunterCharaRecipeDeleteResponse: (empty)
+  POST /hunter/chara_recipe/download   [postHunterCharaRecipeDownload]
+      REQ cHunter.PostHunterCharaRecipeDownloadRequest: DownloadKey:String
+      RESP cHunter.PostHunterCharaRecipeDownloadResponse: CharaRecipeType:ace_network.EnumHunterCharaRecipeType, CreateHunterInfo:cCommonHunter.HunterInfo, DownloadUrl:String
+  POST /hunter/chara_recipe/list   [postHunterCharaRecipeList]
+      REQ cHunter.PostHunterCharaRecipeListRequest: (empty)
+      RESP cHunter.PostHunterCharaRecipeListResponse: CharaRecipes:Collections.Generic.List`1<cCommonHunter.HunterCharaRecipe>
+  POST /hunter/chara_recipe/upload   [postHunterCharaRecipeUpload]
+      REQ cHunter.PostHunterCharaRecipeUploadRequest: CharaRecipeType:ace_network.EnumHunterCharaRecipeType, FileSize:Int64, HunterId:String
+      RESP cHunter.PostHunterCharaRecipeUploadResponse: DownloadKey:String, SignedHeaders:Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>, UploadUrl:String
+  POST /hunter/character_creation/get   [postHunterCharacterCreationGet]
+      REQ cHunter.PostHunterCharacterCreationGetRequest: (empty)
+      RESP cHunter.PostHunterCharacterCreationGetResponse: DownloadUrl:String
+  POST /hunter/character_creation/upload   [postHunterCharacterCreationUpload]
+      REQ cHunter.PostHunterCharacterCreationUploadRequest: FileSize:Int64
+      RESP cHunter.PostHunterCharacterCreationUploadResponse: SignedHeaders:Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>, UploadUrl:String
+  POST /hunter/delete   [postHunterDelete]
+      REQ cHunter.PostHunterDeleteRequest: HunterId:String
+      RESP cHunter.PostHunterDeleteResponse: (empty)
+  POST /hunter/hidden_status/set   [postHunterHiddenStatusSet]
+      REQ cHunter.PostHunterHiddenStatusSetRequest: IsHiddenStatus:Boolean
+      RESP cHunter.PostHunterHiddenStatusSetResponse: (empty)
+  POST /hunter/info_get   [postHunterInfoGet]
+      REQ cHunter.PostHunterInfoGetRequest: HunterId:String
+      RESP cHunter.PostHunterInfoGetResponse: HunterInfo:cCommonHunter.HunterInfo
+  POST /hunter/list   [postHunterList]
+      REQ cHunter.PostHunterListRequest: (empty)
+      RESP cHunter.PostHunterListResponse: HunterList:Collections.Generic.List`1<cCommonHunter.HunterInfoWithStatus>
+  POST /hunter/list_by_ids   [postHunterListByIds]
+      REQ cHunter.PostHunterListByIdsRequest: HunterIds:Collections.Generic.List`1<String>
+      RESP cHunter.PostHunterListByIdsResponse: HunterList:Collections.Generic.List`1<cCommonHunter.HunterInfoForMemberList>
+  POST /hunter/profile/get   [postHunterProfileGet]
+      REQ cHunter.PostHunterProfileGetRequest: TargetHunterId:String
+      RESP cHunter.PostHunterProfileGetResponse: DownloadUrl:String
+  POST /hunter/profile/update   [postHunterProfileUpdate]
+      REQ cHunter.PostHunterProfileUpdateRequest: FileSize:Int64
+      RESP cHunter.PostHunterProfileUpdateResponse: SignedHeaders:Collections.Generic.List`1<cCommonHunter.HunterSignedHeader>, UploadUrl:String
+  POST /hunter/search_by_id   [postHunterSearchById]
+      REQ cHunter.PostHunterSearchByIdRequest: TargetHunterId:String
+      RESP cHunter.PostHunterSearchByIdResponse: TargetHunterInfo:cCommonHunter.HunterInfoForMemberList
+  POST /hunter/search_by_short_id   [postHunterSearchByShortId]
+      REQ cHunter.PostHunterSearchByShortIdRequest: TargetShortId:String
+      RESP cHunter.PostHunterSearchByShortIdResponse: TargetHunterInfo:cCommonHunter.HunterInfoForMemberList
+  POST /hunter/sync   [postHunterSync]
+      REQ cHunter.PostHunterSyncRequest: HunterSaveList:Collections.Generic.List`1<cCommonHunter.HunterSaveSlotInfo>, MainLanguage:ace_network.EnumPlayerLanguage, UsingSaveSlot:Int32
+      RESP cHunter.PostHunterSyncResponse: SaveSlotInfoList:Collections.Generic.List`1<cCommonHunter.HunterSaveSlotInfoWithShortId>, InvalidClientHunterIdList:Collections.Generic.List`1<String>, InvalidSaveSlotInfoList:Collections.Generic.List`1<cCommonHunter.HunterInvalidSaveSlotInfo>
+  POST /hunter/update/name   [postHunterUpdateName]
+      REQ cHunter.PostHunterUpdateNameRequest: HunterId:String, Name:String
+      RESP cHunter.PostHunterUpdateNameResponse: (empty)
+  POST /hunter/update/otomo_name   [postHunterUpdateOtomoName]
+      REQ cHunter.PostHunterUpdateOtomoNameRequest: HunterId:String, OtomoName:String
+      RESP cHunter.PostHunterUpdateOtomoNameResponse: (empty)
+  POST /hunter/update/rank   [postHunterUpdateRank]
+      REQ cHunter.PostHunterUpdateRankRequest: Hr:Int32
+      RESP cHunter.PostHunterUpdateRankResponse: (empty)
+### cLinkParty  (line 2882)  parent=Object
+  POST /link_party/invite/received/accept   [postLinkPartyInviteReceivedAccept]
+      REQ cLinkParty.PostLinkPartyInviteReceivedAcceptRequest: LinkPartyId:String, SenderHunterId:String
+      RESP cLinkParty.PostLinkPartyInviteReceivedAcceptResponse: (empty)
+  POST /link_party/invite/received/reject   [postLinkPartyInviteReceivedReject]
+      REQ cLinkParty.PostLinkPartyInviteReceivedRejectRequest: LinkPartyId:String, Reason:ace_network.EnumLinkPartyInviteRejectReason, SenderHunterId:String
+      RESP cLinkParty.PostLinkPartyInviteReceivedRejectResponse: (empty)
+  POST /link_party/invite/received/reject_all   [postLinkPartyInviteReceivedRejectAll]
+      REQ cLinkParty.PostLinkPartyInviteReceivedRejectAllRequest: Reason:ace_network.EnumLinkPartyInviteRejectReason
+      RESP cLinkParty.PostLinkPartyInviteReceivedRejectAllResponse: (empty)
+  POST /link_party/invite/send/cancel   [postLinkPartyInviteSendCancel]
+      REQ cLinkParty.PostLinkPartyInviteSendCancelRequest: LinkPartyId:String, Reason:ace_network.EnumLinkPartyInviteCancelReason, ReceiverHunterId:String
+      RESP cLinkParty.PostLinkPartyInviteSendCancelResponse: (empty)
+  POST /link_party/invite/send/cancel_all   [postLinkPartyInviteSendCancelAll]
+      REQ cLinkParty.PostLinkPartyInviteSendCancelAllRequest: Reason:ace_network.EnumLinkPartyInviteCancelReason
+      RESP cLinkParty.PostLinkPartyInviteSendCancelAllResponse: (empty)
+  POST /link_party/recruit/delete   [postLinkPartyRecruitDelete]
+      REQ cLinkParty.PostLinkPartyRecruitDeleteRequest: LeaderHunterId:String
+      RESP cLinkParty.PostLinkPartyRecruitDeleteResponse: (empty)
+  POST /link_party/recruit/join   [postLinkPartyRecruitJoin]
+      REQ cLinkParty.PostLinkPartyRecruitJoinRequest: LeaderHunterId:String, Password:String
+      RESP cLinkParty.PostLinkPartyRecruitJoinResponse: SessionId:String
+  POST /link_party/recruit/update   [postLinkPartyRecruitUpdate]
+      REQ cLinkParty.PostLinkPartyRecruitUpdateRequest: Password:String, SessionId:String
+      RESP cLinkParty.PostLinkPartyRecruitUpdateResponse: (empty)
+### cLobby  (line 2974)  parent=Object
+  POST /lobby/auto_join   [postLobbyAutoJoin]
+      REQ cLobby.PostLobbyAutoJoinRequest: (empty)
+      RESP cLobby.PostLobbyAutoJoinResponse: Endpoints:Collections.Generic.List`1<String>
+  POST /lobby/circle/join   [postLobbyCircleJoin]
+      REQ cLobby.PostLobbyCircleJoinRequest: CircleId:String
+      RESP cLobby.PostLobbyCircleJoinResponse: DummyUpdateIntervalSec:Int32, Endpoint:String, LobbyId:String, WelcomeInfo:cCommonLobby.LobbyWelcomeInfo
+  POST /lobby/circle/list   [postLobbyCircleList]
+      REQ cLobby.PostLobbyCircleListRequest: (empty)
+      RESP cLobby.PostLobbyCircleListResponse: CircleLobbies:Collections.Generic.List`1<cCommonLobby.LobbyCircleLobby>
+  POST /lobby/dummy/touch   [postLobbyDummyTouch]
+      REQ cLobby.PostLobbyDummyTouchRequest: LobbyId:String
+      RESP cLobby.PostLobbyDummyTouchResponse: Endpoint:String
+  POST /lobby/friend/jump   [postLobbyFriendJump]
+      REQ cLobby.PostLobbyFriendJumpRequest: FriendHunterId:String
+      RESP cLobby.PostLobbyFriendJumpResponse: Endpoint:String
+  POST /lobby/join   [postLobbyJoin]
+      REQ cLobby.PostLobbyJoinRequest: LobbyId:String, LobbyShortId:String
+      RESP cLobby.PostLobbyJoinResponse: Endpoint:String
+  POST /lobby/private/create   [postLobbyPrivateCreate]
+      REQ cLobby.PostLobbyPrivateCreateRequest: IsFriendOpen:Boolean
+      RESP cLobby.PostLobbyPrivateCreateResponse: DummyUpdateIntervalSec:Int32, Endpoint:String, LobbyId:String, WelcomeInfo:cCommonLobby.LobbyWelcomeInfo
+  POST /lobby/search   [postLobbySearch]
+      REQ cLobby.PostLobbySearchRequest: IsFreeMatch:Boolean, Language:Int32, Level:Int32, PlayStyle:Int32
+      RESP cLobby.PostLobbySearchResponse: SearchResults:Collections.Generic.List`1<cCommonLobby.LobbyInfo>
+### cObt  (line 3074)  parent=Object
+  POST /obt/play   [postObtPlay]
+      REQ cObt.PostObtPlayRequest: PlayedObtNo:Int32
+      RESP cObt.PostObtPlayResponse: (empty)
+  POST /obt/played_info   [postObtPlayedInfo]
+      REQ cObt.PostObtPlayedInfoRequest: UserId:String
+      RESP cObt.PostObtPlayedInfoResponse: PlayedObtNos:Collections.Generic.List`1<Int32>
+  POST /obt/receive_reward   [postObtReceiveReward]
+      REQ cObt.PostObtReceiveRewardRequest: ObtNo:Int32
+      RESP cObt.PostObtReceiveRewardResponse: (empty)
+### cOffline  (line 3109)  parent=Object
+  POST /offline/notification_list   [postOfflineNotificationList]
+      REQ cOffline.PostOfflineNotificationListRequest: (empty)
+      RESP cOffline.PostOfflineNotificationListResponse: List:Collections.Generic.List`1<cCommonOffline.OfflineNotificationInfo>
+### cPresent  (line 3123)  parent=Object
+  POST /present/list   [postPresentList]
+      REQ cPresent.PostPresentListRequest: Page:Int32
+      RESP cPresent.PostPresentListResponse: Contents:Collections.Generic.List`1<cCommonPresent.PresentPresent>, PresentInfo:cPresent.PostPresentListResponse.PresentInfoValue
+  POST /present/receive   [postPresentReceive]
+      REQ cPresent.PostPresentReceiveRequest: ReceivedIds:Collections.Generic.List`1<String>
+      RESP cPresent.PostPresentReceiveResponse: ReceivedIds:Collections.Generic.List`1<String>
+### cQuest  (line 3154)  parent=Object
+  POST /quest/host_hunter/send   [postQuestHostHunterSend]
+      REQ cQuest.PostQuestHostHunterSendRequest: TargetHunterId:String
+      RESP cQuest.PostQuestHostHunterSendResponse: (empty)
+  POST /quest/log/send   [postQuestLogSend]
+      REQ cQuest.PostQuestLogSendRequest: ArmorArm:Int32, ArmorBody:Int32, ArmorHead:Int32, ArmorLeg:Int32, ArmorWaist:Int32, CharmMain:Int32, CharmSeikret:Int32, CharmSub:Int32, Handler1:Int32, Handler2:Int32, Handler3:Int32, LayeredArm:Int32, LayeredBody:Int32, LayeredHead:Int32, LayeredLeg:Int32, LayeredOtomoBody:Int32, LayeredOtomoHead:Int32, LayeredOtomoWeapon:Int32, LayeredWaist:Int32, LayeredWeaponMain:Int32, LayeredWeaponSub:Int32, OtomoBody:Int32, OtomoHead:Int32, OtomoWeapon:Int32, Seikret:Int32, WeaponMain:Int32, WeaponMainType:Int32, WeaponSub:Int32, WeaponSubType:Int32
+      RESP cQuest.PostQuestLogSendResponse: (empty)
+  POST /quest/session/end   [postQuestSessionEnd]
+      REQ cQuest.PostQuestSessionEndRequest: QuestSessionId:String
+      RESP cQuest.PostQuestSessionEndResponse: (empty)
+  POST /quest/session/join   [postQuestSessionJoin]
+      REQ cQuest.PostQuestSessionJoinRequest: ClientEnvId:String, JoinHunterInfos:Collections.Generic.List`1<cCommonQuest.QuestHunter>, Password:String, QuestSessionId:String
+      RESP cQuest.PostQuestSessionJoinResponse: QuestEndpoint:String
+  POST /quest/session/start   [postQuestSessionStart]
+      REQ cQuest.PostQuestSessionStartRequest: ClientEnvId:String, JoinHunterInfos:Collections.Generic.List`1<cCommonQuest.QuestHunter>, MemberLimit:Int32, Password:String, QuestEndpoint:String
+      RESP cQuest.PostQuestSessionStartResponse: QuestSessionId:String
+  POST /quest/session/update   [postQuestSessionUpdate]
+      REQ cQuest.PostQuestSessionUpdateRequest: ClientEnvId:String, JoinHunterInfos:Collections.Generic.List`1<cCommonQuest.QuestHunter>, MemberLimit:Int32, Password:String, QuestEndpoint:String, QuestSessionId:String
+      RESP cQuest.PostQuestSessionUpdateResponse: (empty)
+  POST /quest/signal/auto_join   [postQuestSignalAutoJoin]
+      REQ cQuest.PostQuestSignalAutoJoinRequest: JoinHunterInfos:Collections.Generic.List`1<cCommonQuest.QuestHunter>, SearchCondition:cCommonQuest.QuestSignalSearchCondition
+      RESP cQuest.PostQuestSignalAutoJoinResponse: QuestEndpoint:String, QuestSessionId:String
+  POST /quest/signal/create   [postQuestSignalCreate]
+      REQ cQuest.PostQuestSignalCreateRequest: AcceptedAt:Int64, AdvancedGameMinute:Int32, ClientEnvId:String, DefaultStartPosType:SByte, EventList:Collections.Generic.List`1<cCommonQuest.QuestEventInfo>, FieldId:Int32, HostTime:Single, HuntingType:SByte, IsAutoAccept:Boolean, IsBoost:Boolean, IsSamePlatform:Boolean, MultiplaySetting:SByte, ProgressNum:Int32, QuestDifficulty:Int32, QuestId:Int32, QuestLevelId:Int32, QuestSessionId:String, QuestTimeLimit:Int32, QuestType:SByte, RescueComment:SByte, RewardList:Collections.Generic.List`1<cCommonQuest.QuestExReward>, Season:SByte, SeasonList:Collections.Generic.List`1<SByte>, SeasonProgress:Single, StartedAt:Int64, TargetList:Collections.Generic.List`1<cCommonQuest.QuestTargetMonster>, TargetMonsterId1:UInt32, TargetMonsterId2:UInt32, TargetMonsterId3:UInt32, TargetMonsterId4:UInt32, TargetMonsterId5:UInt32, TentListValue:Int16
+      RESP cQuest.PostQuestSignalCreateResponse: (empty)
+  POST /quest/signal/delete   [postQuestSignalDelete]
+      REQ cQuest.PostQuestSignalDeleteRequest: QuestSessionId:String
+      RESP cQuest.PostQuestSignalDeleteResponse: (empty)
+  POST /quest/signal/search   [postQuestSignalSearch]
+      REQ cQuest.PostQuestSignalSearchRequest: SearchCondition:cCommonQuest.QuestSignalSearchCondition
+      RESP cQuest.PostQuestSignalSearchResponse: SearchResults:Collections.Generic.List`1<cCommonQuest.QuestSignal>
+  POST /quest/signal/touch   [postQuestSignalTouch]
+      REQ cQuest.PostQuestSignalTouchRequest: QuestSessionId:String
+      RESP cQuest.PostQuestSignalTouchResponse: (empty)
+### cRanking  (line 3345)  parent=Object
+  POST /ranking/animal/best_record   [postRankingAnimalBestRecord]
+      REQ cRanking.PostRankingAnimalBestRecordRequest: AnimalId:Int32, BoardNo:Int32, Category:ace_network.EnumRankingCategory, Period:ace_network.EnumRankingPeriod
+      RESP cRanking.PostRankingAnimalBestRecordResponse: Content:Nullable`1<cCommonRanking.RankingAnimalBoardContent>
+  POST /ranking/animal/board   [postRankingAnimalBoard]
+      REQ cRanking.PostRankingAnimalBoardRequest: AnimalId:Int32, BoardNo:Int32, Category:ace_network.EnumRankingCategory, Page:Int32, Period:ace_network.EnumRankingPeriod
+      RESP cRanking.PostRankingAnimalBoardResponse: Contents:Collections.Generic.List`1<cCommonRanking.RankingAnimalBoardContent>, TotalCount:Int32
+  POST /ranking/animal/board_circle   [postRankingAnimalBoardCircle]
+      REQ cRanking.PostRankingAnimalBoardCircleRequest: AnimalId:Int32, BoardNo:Int32, Category:ace_network.EnumRankingCategory, CircleId:String, Period:ace_network.EnumRankingPeriod
+      RESP cRanking.PostRankingAnimalBoardCircleResponse: Contents:Collections.Generic.List`1<cCommonRanking.RankingAnimalBoardContent>
+  POST /ranking/animal/register   [postRankingAnimalRegister]
+      REQ cRanking.PostRankingAnimalRegisterRequest: NameplateId:Int32, Scores:Collections.Generic.List`1<cCommonRanking.RankingScoreInfo>, Timestamp:Int64
+      RESP cRanking.PostRankingAnimalRegisterResponse: (empty)
+  POST /ranking/quest_time/best_record   [postRankingQuestTimeBestRecord]
+      REQ cRanking.PostRankingQuestTimeBestRecordRequest: IsOldRanking:Boolean, QuestId:Int32, Type:ace_network.EnumRankingQuestTimeType
+      RESP cRanking.PostRankingQuestTimeBestRecordResponse: Content:Nullable`1<cCommonRanking.RankingQuestTimeBoardContent>
+  POST /ranking/quest_time/board   [postRankingQuestTimeBoard]
+      REQ cRanking.PostRankingQuestTimeBoardRequest: IsOldRanking:Boolean, Page:Int32, QuestId:Int32, Type:ace_network.EnumRankingQuestTimeType
+      RESP cRanking.PostRankingQuestTimeBoardResponse: Contents:Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>, TotalCount:Int32
+  POST /ranking/quest_time/board_circle   [postRankingQuestTimeBoardCircle]
+      REQ cRanking.PostRankingQuestTimeBoardCircleRequest: CircleId:String, IsOldRanking:Boolean, QuestId:Int32, Type:ace_network.EnumRankingQuestTimeType
+      RESP cRanking.PostRankingQuestTimeBoardCircleResponse: Contents:Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>
+  POST /ranking/quest_time/board_friend   [postRankingQuestTimeBoardFriend]
+      REQ cRanking.PostRankingQuestTimeBoardFriendRequest: IsOldRanking:Boolean, QuestId:Int32, Type:ace_network.EnumRankingQuestTimeType
+      RESP cRanking.PostRankingQuestTimeBoardFriendResponse: Contents:Collections.Generic.List`1<cCommonRanking.RankingQuestTimeBoardContent>
+  POST /ranking/quest_time/register   [postRankingQuestTimeRegister]
+      REQ cRanking.PostRankingQuestTimeRegisterRequest: ClearRank:ace_network.EnumQuestClearRank, ClearTime:UInt32, MaxHpInEnd:Int32, MaxHpInStart:Int32, MemberInfos:Collections.Generic.List`1<cCommonRanking.RankingRegisterMemberInfo>, ProgressTimes:Collections.Generic.List`1<UInt32>, QuestId:Int32, RankingSessionId:String, Timestamp:Int64, Type:ace_network.EnumRankingQuestTimeType
+      RESP cRanking.PostRankingQuestTimeRegisterResponse: (empty)
+  POST /ranking/quest_time/session/join   [postRankingQuestTimeSessionJoin]
+      REQ cRanking.PostRankingQuestTimeSessionJoinRequest: RankingSessionId:String
+      RESP cRanking.PostRankingQuestTimeSessionJoinResponse: (empty)
+  POST /ranking/quest_time/session/start   [postRankingQuestTimeSessionStart]
+      REQ cRanking.PostRankingQuestTimeSessionStartRequest: QuestId:Int32
+      RESP cRanking.PostRankingQuestTimeSessionStartResponse: RankingSessionId:String
+### cReport  (line 3501)  parent=Object
+  POST /report   [postReport]
+      REQ cReport.PostReportRequest: ReportText:String, ReportTypes:Collections.Generic.List`1<ace_network.EnumReportReportType>, TargetHunterId:String
+      RESP cReport.PostReportResponse: (empty)
+  POST /report/quest/bol   [postReportQuestBol]
+      REQ cReport.PostReportQuestBolRequest: Bol:String
+      RESP cReport.PostReportQuestBolResponse: Continuous:Boolean
+### cSetting  (line 3528)  parent=Object
+  POST /setting/analysis   [postSettingAnalysis]
+      REQ cSetting.PostSettingAnalysisRequest: IsEnableAnalysis:Boolean
+      RESP cSetting.PostSettingAnalysisResponse: (empty)
+  POST /setting/crossplay   [postSettingCrossplay]
+      REQ cSetting.PostSettingCrossplayRequest: CrossplayEnabled:Boolean
+      RESP cSetting.PostSettingCrossplayResponse: (empty)
+### cSteam  (line 3552)  parent=Object
+  POST /steam/price   [postSteamPrice]
+      REQ cSteam.PostSteamPriceRequest: AppIds:Collections.Generic.List`1<UInt64>, PlatformId:String
+      RESP cSteam.PostSteamPriceResponse: Prices:Collections.Generic.List`1<cCommonSteam.SteamPackagePrice>
+### cSys  (line 3568)  parent=Object
+  GET /sys/health   [getSysHealth]
+      REQ cSys.GetSysHealthRequest: (empty)
+      RESP cSys.GetSysHealthResponse: (empty)
+  GET /sys/speed   [getSysSpeed]
+      REQ cSys.GetSysSpeedRequest: (empty)
+      RESP cSys.GetSysSpeedResponse: (empty)

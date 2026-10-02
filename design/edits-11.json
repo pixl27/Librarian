@@ -1,0 +1,4 @@
+[
+  { "file": "src/styles/main.css", "from": "  -webkit-font-smoothing: antialiased;\n  overflow: hidden;\n  user-select: none;\n}", "to": "  -webkit-font-smoothing: antialiased;\n  /* clip, not hidden: a hidden box can still be scrolled by scrollIntoView,\n     and one call on a settings section was enough to slide the whole shell\n     up under the top strip. A clipped box cannot scroll at all. */\n  overflow: clip;\n  user-select: none;\n}" },
+  { "file": "src/styles/main.css", "from": "  position: absolute; inset: 0; display: none; overflow: hidden;\n  padding: var(--top-h) var(--gutter) 0;", "to": "  position: absolute; inset: 0; display: none; overflow: clip;\n  padding: var(--top-h) var(--gutter) 0;" }
+]

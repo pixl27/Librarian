@@ -3,6 +3,11 @@ const path = require('path');
 const { findSteamInstall } = require('./src/core/steamHelpers');
 
 const steamPath = findSteamInstall();
+if (!steamPath) {
+  console.log('Steam install not found.');
+  process.exit(0);
+}
+
 const configPath = path.join(steamPath, 'config', 'config.vdf');
 
 if (fs.existsSync(configPath)) {

@@ -1,0 +1,33 @@
+{
+  "name": "steammanifest",
+  "version": "1.0.0",
+  "description": "Fetch Steam depot manifests from the Steam CDN (anonymous login by default)",
+  "main": "fetch-manifest.js",
+  "bin": {
+    "fetch-manifest": "fetch-manifest.js"
+  },
+  "scripts": {
+    "start": "node fetch-manifest.js",
+    "portal": "node portal.js",
+    "lua": "node fetch-lua.js",
+    "xyz": "node fetch-xyz.js",
+    "assemble": "node assemble.js",
+    "test": "node --test tests",
+    "re": "node re/fetch_raw.js",
+    "verify": "node re/verify_manifest.js"
+  },
+  "engines": {
+    "node": ">=18.3"
+  },
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "protobufjs": "^7.6.6",
+    "websocket13": "4.1.0",
+    "steam-user": "5.3.0"
+  },
+  "overrides": {
+    "adm-zip": "^0.6.1",
+    "protobufjs": "^7.6.6"
+  }
+}

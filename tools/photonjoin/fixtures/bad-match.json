@@ -1,0 +1,1 @@
+{ "schema": 1, "id": "x", "name": "X", "hotkey":"F7", "friends":"steam", "match":{}, "identity": {"strategy":"keep"}, "entry": {"strategy":"raw"} }

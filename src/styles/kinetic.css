@@ -1,0 +1,110 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Motion.
+
+   Everything here is scoped under html[data-kinetic="on"], which
+   kinetic.js sets only while the window is visible, the setting is on and
+   reduced motion is off. That scoping is what makes entrances from
+   opacity 0 safe: a hidden window paints no frames, and an entrance left
+   on its first keyframe there would be invisible content when you come
+   back. No rule in this file may exist outside that scope.
+
+   Two rules of the house:
+   - an entrance ends at the element's resting state and fills backwards
+     only, so it never fights a hover or a selection transform afterwards;
+   - nothing moves on its own except to answer something you did. The
+     only loops are the ones that show work in progress.
+
+   The durations of the exits are fixed by timers in the scripts:
+   palette 180 ms, tour 220 ms, modal 190 ms, plan 220 ms, setup banner
+   340 ms, queue reorder 420 ms, value roll 400 ms, click ring 900 ms.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Pages ─────────────────────────────────────────────── */
+html[data-kinetic="on"] .page.active { animation: k-page 300ms var(--ease-out) backwards; }
+html[data-kinetic="on"] .page.active[data-dir="back"] { animation-name: k-page-back; }
+@keyframes k-page { from { opacity: 0; transform: translateY(10px); } }
+@keyframes k-page-back { from { opacity: 0; transform: translateY(-10px); } }
+
+/* ── Tiles arrive in a short cascade as they scroll into view ── */
+html[data-kinetic="on"] .game-tile.reveal { opacity: 0; transform: translateY(14px); }
+html[data-kinetic="on"] .game-tile.reveal.shown { opacity: 1; transform: none; transition: opacity 420ms ease var(--reveal-delay, 0ms), transform 520ms var(--ease-out) var(--reveal-delay, 0ms); }
+html[data-kinetic="on"] .game-tile.reveal.shown:hover { transition-delay: 0ms; }
+
+/* ── Home hero: the copy re-enters when the featured game changes ── */
+html[data-kinetic="on"] #hero-title,
+html[data-kinetic="on"] #hero-badge,
+html[data-kinetic="on"] #hero-subtitle { animation: k-rise 520ms var(--ease-out) backwards; }
+html[data-kinetic="on"] #hero-logo:not(.hidden) { animation: k-rise 520ms var(--ease-out) backwards; }
+html[data-kinetic="on"] #hero-facts { animation: k-rise 520ms var(--ease-out) 60ms backwards; }
+html[data-kinetic="on"] #hero-actions { animation: k-rise 520ms var(--ease-out) 110ms backwards; }
+html[data-kinetic="on"] #hero-section.swapping #hero-content > * { animation: none; }
+@keyframes k-rise { from { opacity: 0; transform: translateY(16px); } }
+
+/* ── Game page: the head settles, then the columns ──────── */
+html[data-kinetic="on"] #game-flyout.flyout-open #flyout-head { animation: k-rise 460ms var(--ease-out) backwards; }
+html[data-kinetic="on"] #game-flyout.flyout-open #flyout-tabs { animation: k-rise 460ms var(--ease-out) 60ms backwards; }
+html[data-kinetic="on"] #game-flyout.flyout-open #flyout-cols { animation: k-rise 460ms var(--ease-out) 110ms backwards; }
+html[data-kinetic="on"] #game-flyout.flyout-open #flyout-hero-img { animation: k-art 900ms var(--ease-out) backwards; }
+@keyframes k-art { from { opacity: 0; transform: scale(1.05); } }
+
+/* ── Downloads focus view ──────────────────────────────── */
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > * { animation: k-rise 480ms var(--ease-out) backwards; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > *:nth-child(2) { animation-delay: 40ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > *:nth-child(3) { animation-delay: 80ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > *:nth-child(4) { animation-delay: 120ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > *:nth-child(5) { animation-delay: 160ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-main > *:nth-child(6) { animation-delay: 200ms; }
+/* The queue list is rebuilt on every progress tick: it must never animate in. */
+html[data-kinetic="on"] #dl-focus-queue-list .fq-item { animation: none; }
+/* Work in progress: a slow light crosses the poster and the track. */
+html[data-kinetic="on"] #dl-focus:not(.paused) .poster-sheen { animation: k-sheen 4.6s ease-in-out infinite; background-size: 220% 100%; }
+@keyframes k-sheen { from { background-position: 140% 0; } to { background-position: -60% 0; } }
+html[data-kinetic="on"] #dl-focus:not(.paused) #dl-focus-fill { background-image: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, var(--ground)), var(--accent) 60%, color-mix(in srgb, var(--accent) 60%, #fff) 80%, var(--accent)); background-size: 200% 100%; animation: k-flow 2.4s linear infinite; }
+@keyframes k-flow { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ── Lists that cascade: palette, context menu, settings, store ── */
+html[data-kinetic="on"] .cmd-item { animation: k-slide 260ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 16ms), 200ms); }
+html[data-kinetic="on"] .ctx-item { animation: k-slide 220ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 14ms), 160ms); }
+@keyframes k-slide { from { opacity: 0; transform: translateX(-10px); } }
+html[data-kinetic="on"] #page-settings.active .settings-section,
+html[data-kinetic="on"] #page-tuning.active .settings-section,
+html[data-kinetic="on"] #page-crack.active .settings-section { animation: k-rise 420ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 40ms), 320ms); }
+html[data-kinetic="on"] .sf-rail { animation: k-fade 460ms ease backwards; animation-delay: min(calc(var(--k-i, 0) * 70ms), 420ms); }
+html[data-kinetic="on"] .store-results:not(.settled) .sf-card,
+html[data-kinetic="on"] .sf-rail-scroll .sf-card { animation: k-pop 380ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 28ms), 360ms); }
+html[data-kinetic="on"] .store-results:not(.settled) .sf-lead { animation: k-pop 420ms var(--ease-out) backwards; }
+html[data-kinetic="on"] .store-chip { animation: k-pop 300ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 24ms), 280ms); }
+html[data-kinetic="on"] .sd-fact, html[data-kinetic="on"] .sd-tag, html[data-kinetic="on"] .sd-depot, html[data-kinetic="on"] .sd-shot { animation: k-fade 360ms ease backwards; animation-delay: min(calc(var(--k-i, 0) * 30ms), 300ms); }
+html[data-kinetic="on"] #plan:not(.hidden):not(.closing) .plan-card { animation: k-pop 360ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 30ms), 300ms); }
+html[data-kinetic="on"] .sc-grid > * { animation: k-rise 360ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 40ms), 240ms); }
+html[data-kinetic="on"] .ob-step { animation: k-rise 420ms var(--ease-out) backwards; animation-delay: calc(160ms + var(--k-i, 0) * 70ms); }
+html[data-kinetic="on"] .loc-row, html[data-kinetic="on"] #crack-scan-results > * { animation: k-fade 320ms ease backwards; animation-delay: min(calc(var(--k-i, 0) * 30ms), 240ms); }
+html[data-kinetic="on"] .fly-card, html[data-kinetic="on"] .fly-switch:not(.hidden) { animation: k-fade 380ms ease backwards; }
+html[data-kinetic="on"] .ach-row { animation: k-fade 300ms ease backwards; }
+@keyframes k-fade { from { opacity: 0; } }
+@keyframes k-pop { from { opacity: 0; transform: scale(.955); } }
+
+/* ── Feedback for a press ──────────────────────────────── */
+.k-burst { position: fixed; z-index: 700; width: var(--k-burst-size, 80px); height: var(--k-burst-size, 80px); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%) scale(.2); opacity: 0; }
+html[data-kinetic="on"] .k-burst { border: 1.5px solid var(--accent); animation: k-burst 440ms var(--ease-out) forwards; }
+@keyframes k-burst { 0% { opacity: .5; transform: translate(-50%, -50%) scale(.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+html[data-kinetic="on"] .k-roll { display: inline-block; animation: bump 280ms var(--ease-out); }
+html[data-kinetic="on"] .xbox-btn { position: relative; overflow: hidden; isolation: isolate; }
+html[data-kinetic="on"] .xbox-btn.rippling::before {
+  content: ''; position: absolute; left: var(--rx-x, 50%); top: var(--rx-y, 50%); width: 12px; height: 12px; border-radius: 50%; z-index: -1;
+  background: currentColor; opacity: 0; transform: translate(-50%, -50%); animation: k-ripple 520ms var(--ease-out);
+}
+@keyframes k-ripple { 0% { opacity: .22; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(22); } }
+html[data-kinetic="on"] .nav-tab.active svg { animation: k-nudge 380ms var(--ease-out); }
+@keyframes k-nudge { 40% { transform: scale(1.22); } }
+html[data-kinetic="on"] #dock #dl-hud:not(.hidden) { animation: k-rise 420ms var(--ease-out) backwards; }
+html[data-kinetic="on"] #home-notice:not(.hidden) { animation: k-rise 520ms var(--ease-out) 180ms backwards; }
+html[data-kinetic="on"] .toast { animation: toast-in 420ms var(--ease-out) backwards; }
+
+/* ── Librarian updates: the chip arrives once; a waiting update stays still
+   (it is not work in progress, so it gets no loop — the accent says enough) ── */
+html[data-kinetic="on"] #top-app-update:not(.hidden) { animation: k-rise 420ms var(--ease-out) backwards; }
+html[data-kinetic="on"] .cp-card { animation: k-rise 420ms var(--ease-out) backwards; animation-delay: min(calc(var(--k-i, 0) * 60ms), 360ms); }
+
+/* Tilt off: the tile still leans a little toward the hand. */
+html[data-kinetic="on"][data-tilt="off"] .game-grid .game-tile:hover .game-tile-img-wrap { transform: translateY(-6px) scale(1.03) rotate(-.4deg); }

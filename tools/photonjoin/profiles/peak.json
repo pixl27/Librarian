@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "peak",
+  "name": "PEAK",
+  "match": {
+    "appId": "3527290",
+    "product": "PEAK",
+    "types": ["Peak.Network.SteamLobbyAPI"]
+  },
+  "hotkey": "F7",
+  "friends": "steam",
+  "identity": {
+    "strategy": "prefix-host",
+    "prefix": "0"
+  },
+  "entry": {
+    "strategy": "raw",
+    "region": "$current"
+  },
+  "shield": {
+    "disconnectMessage": true,
+    "codes": [104],
+    "kickRpc": ["Player:RPC_GetKicked"]
+  },
+  "notes": "Profil de référence, pas le chemin recommandé. L'identité et le bouclier sont ceux qui ont été vérifiés en partie réelle : l'hôte convertit l'identifiant Photon en nombre pour vérifier l'appartenance à son salon Steam, alors que Photon compare des chaînes, et un zéro de tête satisfait le premier contrôle sans déclencher le second. L'entrée, en revanche, ne tient pas dans ce schéma : PEAK ne rejoint pas par un appel PUN mais par sa machine à états puis un chargement de scène construit avec des arguments, ce qu'un profil declaratif ne sait pas exprimer. Entrer en salle sans charger la scene laisse l'ecran noir. Sur PEAK, utiliser le greffon dedie PeakJoinFriend, qui suit ce chemin la."
+}

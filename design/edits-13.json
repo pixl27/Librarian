@@ -1,0 +1,4 @@
+[
+  { "file": "src/styles/main.css", "from": ".setting-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 16px; margin: 4px 0 12px; }", "to": ".setting-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; margin: 4px 0 12px; padding: 8px 0 0; }" },
+  { "file": "src/styles/main.css", "from": ".setting-row .setting-hint { grid-column: 1 / -1; margin: 0; }", "to": ".setting-row .setting-hint { grid-column: 1 / -1; margin: 2px 0 0 52px; }\n/* The switch leads, as in every toggle row; the markup has it after its label. */\n.setting-row input[type=\"checkbox\"] { order: -1; }" }
+]

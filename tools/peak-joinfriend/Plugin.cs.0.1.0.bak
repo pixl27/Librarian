@@ -1,0 +1,468 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using BepInEx;
+using BepInEx.Configuration;
+using Photon.Pun;
+using Photon.Realtime;
+using Steamworks;
+using HarmonyLib;
+using UnityEngine;
+
+namespace PeakJoinFriend
+{
+    /// <summary>
+    /// Rejoindre la partie d'un ami sans passer par l'overlay Steam.
+    ///
+    /// PEAK ne propose aucune interface d'invitation : tout passe par
+    /// ActivateGameOverlayInviteDialog, et l'overlay refuse un compte sans
+    /// licence. Mais la partie elle-même n'est pas sur Steam — elle est sur
+    /// Photon, qui ne connaît ni les licences ni les AppID.
+    ///
+    /// Et PEAK donne à Photon une identité qu'on peut deviner. Dans
+    /// NetworkingUtilities::GetBestUserID, l'IL enchaîne :
+    ///
+    ///     SteamUser::GetSteamID()  →  UInt64::ToString()  →  AuthValues.UserId
+    ///
+    /// Le UserId Photon d'un joueur est donc son SteamID64 en décimal. Comme
+    /// HostRoomOptions active PublishUserId, OpFindFriends peut retrouver
+    /// n'importe quel joueur à partir de ce seul identifiant — et renvoie le
+    /// nom de sa room, qui suffit à la rejoindre.
+    ///
+    /// Ce plugin ne fait donc rien d'exotique : il demande à Photon où se
+    /// trouve un SteamID, et rejoint la room qu'on lui répond. Aucune
+    /// modification du jeu, aucun contournement de vérification — le chemin
+    /// Steam est simplement laissé de côté, parce qu'il ne sert qu'à
+    /// transporter ce nom de room.
+    /// </summary>
+    [BepInPlugin(GUID, "PEAK — Rejoindre un ami", "0.1.0")]
+    public class Plugin : BaseUnityPlugin, ILobbyCallbacks, IMatchmakingCallbacks
+    {
+        public const string GUID = "librarian.peak.joinfriend";
+        private const uint SPACEWAR = 480;
+
+        private ConfigEntry<KeyCode> _hotkey;
+        private static ConfigEntry<bool> _ignoreKick;
+        private Harmony _harmony;
+        private bool _open;
+        private string _manualId = "";
+        private string _status = "";
+        private Rect _win = new Rect(60, 60, 520, 420);
+        private Vector2 _scroll;
+
+        private readonly List<FriendEntry> _friends = new List<FriendEntry>();
+        private string _pendingRoom;
+
+        private class FriendEntry
+        {
+            public string SteamId;
+            public string Name;
+            public bool InPeak;       // Steam dit qu'il joue à PEAK
+            public ulong Lobby;       // son lobby Steam, s'il en a un de joignable
+            public uint AppId;        // l'app sous laquelle Steam le voit
+            public string Room;       // Photon dit dans quelle room il est
+            public bool Searched;
+        }
+
+        private void Awake()
+        {
+            _hotkey = Config.Bind("Général", "Touche", KeyCode.F7,
+                "Ouvre et ferme la fenêtre « Rejoindre un ami ».");
+            _ignoreKick = Config.Bind("Général", "IgnorerLeKick", true,
+                "Ignore l'ordre d'expulsion envoyé par l'hôte. PEAK l'exécute côté client "
+                + "(Player::RPC_GetKicked → ChangeConnectionState<KickedState>), donc le "
+                + "refuser se fait chez soi. Sans effet si l'hôte n'expulse pas.");
+
+            Logger.LogInfo("Prêt. " + _hotkey.Value + " pour ouvrir la fenêtre.");
+            PhotonNetwork.AddCallbackTarget(this);
+
+            try
+            {
+                _harmony = new Harmony(GUID);
+                _harmony.PatchAll(typeof(KickPatch));
+                Logger.LogInfo("Patch RPC_GetKicked posé.");
+            }
+            catch (Exception e) { Logger.LogWarning("Patch impossible : " + e.Message); }
+        }
+
+        private void OnDestroy()
+        {
+            PhotonNetwork.RemoveCallbackTarget(this);
+            try { _harmony?.UnpatchSelf(); } catch { }
+        }
+
+        /// <summary>
+        /// L'expulsion de PEAK n'est pas imposée par le serveur : l'hôte envoie
+        /// un RPC, et c'est la machine du destinataire qui bascule en KickedState.
+        /// La seule vérification est que l'expéditeur soit MasterClient. Refuser
+        /// d'exécuter l'ordre est donc une décision purement locale — on ne
+        /// touche à rien chez l'hôte, on décline chez soi.
+        /// </summary>
+        // global:: pour lever l'ambiguïté avec Photon.Realtime.Player : le RPC
+        // appartient au Player du jeu, celui d'Assembly-CSharp.
+        [HarmonyPatch(typeof(global::Player))]
+        private static class KickPatch
+        {
+            [HarmonyPrefix]
+            [HarmonyPatch("RPC_GetKicked")]
+            private static bool Prefix()
+            {
+                if (_ignoreKick == null || !_ignoreKick.Value) return true;
+                Debug.LogWarning("[JoinFriend] Ordre d'expulsion reçu — ignoré.");
+                return false;   // la méthode d'origine ne s'exécute pas
+            }
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(_hotkey.Value))
+            {
+                _open = !_open;
+                if (_open) RefreshSteamFriends();
+            }
+        }
+
+        /// <summary>
+        /// Les amis Steam, et lesquels sont dans PEAK.
+        ///
+        /// L'API amis est liée au compte, pas à l'application : elle répond
+        /// normalement même quand la session tourne sous Spacewar. GetFriendGamePlayed
+        /// donne l'AppID auquel chacun joue, ce qui suffit à ne proposer que les
+        /// gens qu'on a une chance de rejoindre.
+        /// </summary>
+        private void RefreshSteamFriends()
+        {
+            _friends.Clear();
+            _status = "";
+            try
+            {
+                if (!SteamAPI.IsSteamRunning()) { _status = "Steam n'est pas lancé."; return; }
+
+                uint peak = PeakAppId();
+                int n = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate);
+                for (int i = 0; i < n; i++)
+                {
+                    CSteamID id = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
+                    FriendGameInfo_t info;
+                    bool playing = SteamFriends.GetFriendGamePlayed(id, out info);
+                    uint app = playing ? info.m_gameID.AppID().m_AppId : 0u;
+                    // Spacewar compte : un ami qui joue sous 480 est dans la même
+                    // app que nous, donc son lobby nous est ouvert.
+                    bool inPeak = playing && (app == peak || app == SPACEWAR);
+                    _friends.Add(new FriendEntry
+                    {
+                        SteamId = id.m_SteamID.ToString(),
+                        Name = SteamFriends.GetFriendPersonaName(id),
+                        InPeak = inPeak,
+                        AppId = app,
+                        Lobby = info.m_steamIDLobby.m_SteamID,
+                    });
+                }
+                // Ceux qui jouent à PEAK d'abord.
+                _friends.Sort((a, b) => a.InPeak == b.InPeak
+                    ? string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase)
+                    : (b.InPeak ? 1 : -1));
+                _status = _friends.Count + " contacts.";
+            }
+            catch (Exception e)
+            {
+                _status = "Steam : " + e.Message;
+            }
+        }
+
+        /// <summary>
+        /// L'AppID de PEAK, lu dans steam_appid.txt quand il n'est pas 480.
+        /// En mode Spacewar le fichier contient 480, auquel cas la constante
+        /// sert de repli — sinon on ne reconnaîtrait aucun ami « dans PEAK ».
+        /// </summary>
+        private static uint PeakAppId()
+        {
+            const uint PEAK = 3527290;
+            try
+            {
+                string p = System.IO.Path.Combine(Application.dataPath, "..", "steam_appid.txt");
+                if (System.IO.File.Exists(p))
+                {
+                    uint v;
+                    if (uint.TryParse(System.IO.File.ReadAllText(p).Trim(), out v) && v != 480) return v;
+                }
+            }
+            catch { /* le repli fait l'affaire */ }
+            return PEAK;
+        }
+
+        /// <summary>Le UserId que ce client a présenté à Photon.</summary>
+        private static string LocalUserId()
+        {
+            try
+            {
+                if (PhotonNetwork.AuthValues != null && !string.IsNullOrEmpty(PhotonNetwork.AuthValues.UserId))
+                    return PhotonNetwork.AuthValues.UserId;
+                if (PhotonNetwork.LocalPlayer != null) return PhotonNetwork.LocalPlayer.UserId;
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>Le SteamID64 du compte connecté, tel que le jeu le lirait.</summary>
+        private static string LocalSteamId()
+        {
+            try
+            {
+                if (!SteamAPI.IsSteamRunning() || !SteamUser.BLoggedOn()) return null;
+                return SteamUser.GetSteamID().m_SteamID.ToString();
+            }
+            catch { return null; }
+        }
+
+        /// <summary>
+        /// Demande à Photon où se trouve un joueur. La réponse arrive dans
+        /// OnFriendListUpdate.
+        /// </summary>
+        private void AskPhoton(string steamId64)
+        {
+            // Le mode hors-ligne met le jeu dans une room factice
+            // (NetworkConnector::Start appelle JoinDummyRoom quand OfflineMode
+            // est vrai). Sans cette distinction on dirait « quitte ta partie »
+            // à quelqu'un qui n'en a pas commencé une.
+            if (PhotonNetwork.OfflineMode)
+            {
+                _status = "Tu es en mode hors-ligne. Reviens au menu et choisis le mode en ligne.";
+                return;
+            }
+            if (PhotonNetwork.InRoom)
+            {
+                _status = "Tu es déjà dans une partie — quitte-la d'abord.";
+                return;
+            }
+            if (!PhotonNetwork.IsConnectedAndReady)
+            {
+                _status = "Photon connecte encore (" + PhotonNetwork.NetworkClientState + ") — réessaie dans un instant.";
+                return;
+            }
+            // Photon retire le UserId local de la liste avant de l'envoyer
+            // (LoadBalancingClient::OpFindFriends compare à get_UserId()), donc
+            // se chercher soi-même vide la requête et la fait échouer.
+            if (steamId64 == LocalUserId())
+            {
+                _status = "Photon refuse qu'on se cherche soi-même — il retire ton propre identifiant de la liste.";
+                return;
+            }
+            Send(new[] { steamId64 }, "Recherche de " + steamId64 + "…");
+        }
+
+        /// <summary>
+        /// Une seule requête pour tous les amis que Steam dit être dans PEAK.
+        /// OpFindFriends prend un tableau ; autant s'en servir plutôt que de
+        /// tirer une requête par personne.
+        /// </summary>
+        private void AskPhotonAll()
+        {
+            var ids = new List<string>();
+            string me = LocalUserId();
+            foreach (FriendEntry f in _friends)
+                if (f.InPeak && f.SteamId != me && !ids.Contains(f.SteamId)) ids.Add(f.SteamId);
+
+            if (ids.Count == 0)
+            {
+                _status = "Aucun contact n'est dans PEAK d'après Steam. Rafraîchis, ou tape un SteamID à la main.";
+                return;
+            }
+            Send(ids.ToArray(), "Recherche de " + ids.Count + " ami(s)…");
+        }
+
+        private void Send(string[] ids, string pending)
+        {
+            if (!PhotonNetwork.FindFriends(ids))
+                _status = "Photon a refusé la requête — voir Player.log pour la raison exacte.";
+            else
+                _status = pending;
+        }
+
+        public void OnFriendListUpdate(List<FriendInfo> list)
+        {
+            if (list == null) return;
+            foreach (FriendInfo f in list)
+            {
+                FriendEntry e = _friends.Find(x => x.SteamId == f.UserId);
+                if (e == null) { e = new FriendEntry { SteamId = f.UserId, Name = f.UserId }; _friends.Add(e); }
+                e.Searched = true;
+                e.Room = f.IsInRoom ? f.Room : null;
+            }
+            // « Pas trouvé » et « trouvé mais au menu » sont deux réponses très
+            // différentes : la première tue l'hypothèse du SteamID comme UserId,
+            // la seconde la confirme. Les confondre rendrait le test inutile.
+            foreach (FriendInfo f in list)
+            {
+                Logger.LogInfo("FindFriends → UserId=" + f.UserId + " IsOnline=" + f.IsOnline
+                    + " IsInRoom=" + f.IsInRoom + " Room=" + (f.Room ?? "(aucune)"));
+                if (f.IsInRoom && !string.IsNullOrEmpty(f.Room))
+                {
+                    _pendingRoom = f.Room;
+                    _status = "Trouvé dans la room " + f.Room + ".";
+                    return;
+                }
+            }
+            bool anyOnline = false;
+            foreach (FriendInfo f in list) if (f.IsOnline) anyOnline = true;
+            _status = anyOnline
+                ? "Connecté à Photon, mais dans aucune partie (au menu)."
+                : "Inconnu de Photon : pas connecté, ou l'identifiant n'est pas le bon.";
+        }
+
+        /// <summary>
+        /// Entrer par le lobby Steam de l'ami — la vraie porte.
+        ///
+        /// Une invitation ne fait que transporter un identifiant de lobby, puis
+        /// SteamMatchmaking::JoinLobby. Rien n'oblige à attendre l'invitation :
+        /// GetFriendGamePlayed donne déjà ce lobby, et un lobby de la même app
+        /// que la nôtre nous est ouvert sans autorisation particulière.
+        ///
+        /// Une fois dedans, le SteamLobbyHandler du jeu fait tout le reste : il
+        /// lit la room Photon et la région dans les données du lobby, remplit
+        /// JoinSpecificRoomState et charge la scène. C'est le chemin complet,
+        /// celui que le serveur du studio attend — et la seule façon d'être
+        /// réellement membre du lobby plutôt que de s'inviter dans la room.
+        /// </summary>
+        private void JoinSteamLobby(FriendEntry f)
+        {
+            if (f.Lobby == 0UL)
+            {
+                _status = f.Name + " n'est dans aucun lobby joignable pour le moment.";
+                return;
+            }
+            uint me = PeakAppId();
+            if (f.AppId != 0 && f.AppId != me)
+            {
+                _status = f.Name + " joue sous l'app " + f.AppId + ", nous sommes sous " + me
+                    + " — les lobbys Steam ne se croisent pas entre applications.";
+                return;
+            }
+            try
+            {
+                Logger.LogInfo("JoinLobby Steam " + f.Lobby + " (app " + f.AppId + ")");
+                SteamMatchmaking.JoinLobby(new CSteamID(f.Lobby));
+                _status = "Entrée dans le lobby de " + f.Name + "… le jeu prend le relais.";
+            }
+            catch (Exception e)
+            {
+                _status = "JoinLobby a échoué : " + e.Message;
+                Logger.LogError(_status);
+            }
+        }
+
+        /// <summary>
+        /// Rejoindre par le chemin du jeu, pas par-dessus lui.
+        ///
+        /// Appeler PhotonNetwork.JoinRoom directement met bien le client dans la
+        /// room et casse tout le reste : aucune scène n'est chargée, aucun
+        /// personnage ne naît, et le client se noie dans les
+        /// NullReferenceException jusqu'à ce que le serveur le ramasse.
+        ///
+        /// Basculer l'état ne suffit pas non plus : rien n'écoute ce changement.
+        /// HandleConnectionState n'est appelée que depuis NetworkConnector, et
+        /// ce composant n'existe pas au menu principal — il naît avec la scène
+        /// de jeu, et c'est son Start qui déclenche le join.
+        ///
+        /// La séquence ci-dessous est donc copiée sur SteamLobbyHandler::HandleMessage,
+        /// le chemin que PEAK emprunte quand il reçoit une invitation : remplir
+        /// l'état, puis charger la scène. Le reste — région, JoinRoom, spawn,
+        /// synchronisation — appartient au jeu et se déroule tout seul.
+        /// </summary>
+        private void Join(string room)
+        {
+            string region = PhotonNetwork.CloudRegion;
+            try
+            {
+                var machine = GameHandler.GetService<ConnectionService>().StateMachine;
+                var state = machine.SwitchState<JoinSpecificRoomState>(false);
+                state.RoomName = room;
+                state.RegionToJoin = region;
+
+                // "Airport" est le repli du jeu lui-même quand l'hôte ne précise
+                // pas de scène. Une partie déjà lancée en demanderait une autre,
+                // que seul le lobby Steam transporte.
+                var screen = LoadingScreenHandler.Instance;
+                screen.Load(LoadingScreen.LoadingScreenType.Basic, null,
+                    new IEnumerator[] { screen.LoadSceneProcess("Airport", false, true, 3f) });
+
+                Logger.LogInfo("Join : room=" + room + " region=" + region + " scene=Airport");
+                _status = "Chargement vers " + room + "…";
+                _open = false;
+            }
+            catch (Exception e)
+            {
+                _status = "Échec du join : " + e.Message;
+                Logger.LogError(_status + " | " + e);
+            }
+        }
+
+        public void OnJoinedRoom() { _status = "Dans la partie."; _open = false; }
+        public void OnJoinRoomFailed(short code, string msg) => _status = "Échec (" + code + ") : " + msg;
+        public void OnJoinRandomFailed(short code, string msg) { }
+        public void OnCreatedRoom() { }
+        public void OnCreateRoomFailed(short code, string msg) { }
+        public void OnLeftRoom() { }
+        public void OnJoinedLobby() { }
+        public void OnLeftLobby() { }
+        public void OnRoomListUpdate(List<RoomInfo> l) { }
+        public void OnLobbyStatisticsUpdate(List<TypedLobbyInfo> l) { }
+
+        private void OnGUI()
+        {
+            if (!_open) return;
+            _win = GUILayout.Window(GUID.GetHashCode(), _win, DrawWindow, "Rejoindre un ami");
+        }
+
+        private void DrawWindow(int id)
+        {
+            // L'hypothèse entière tient à une égalité : le UserId que PEAK donne
+            // à Photon est-il le SteamID64 ? Le client connaît les deux, donc il
+            // peut répondre seul, sans personne en face.
+            GUILayout.Label("UserId Photon : " + (LocalUserId() ?? "—"));
+            GUILayout.Label("SteamID64     : " + (LocalSteamId() ?? "—"));
+            bool match = LocalUserId() != null && LocalUserId() == LocalSteamId();
+            GUILayout.Label(match ? "→ identiques : l'hypothèse tient."
+                                  : "→ PAS identiques (ou pas encore connecté).");
+            GUILayout.Space(6);
+
+            GUILayout.Label("Photon : " + PhotonNetwork.NetworkClientState
+                + "   région " + (string.IsNullOrEmpty(PhotonNetwork.CloudRegion) ? "?" : PhotonNetwork.CloudRegion)
+                + (PhotonNetwork.OfflineMode ? "   [HORS-LIGNE]" : "")
+                + (PhotonNetwork.InRoom ? "   [dans une room]" : "   [au menu]"));
+
+            GUILayout.Space(6);
+            GUILayout.Label("SteamID64 à chercher :");
+            GUILayout.BeginHorizontal();
+            _manualId = GUILayout.TextField(_manualId ?? "", GUILayout.Width(280));
+            if (GUILayout.Button("Chercher", GUILayout.Width(100))) AskPhoton(_manualId.Trim());
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(6);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Rafraîchir les contacts", GUILayout.Width(200))) RefreshSteamFriends();
+            if (GUILayout.Button("Chercher tous les amis en jeu", GUILayout.Width(230))) AskPhotonAll();
+            if (!string.IsNullOrEmpty(_pendingRoom) && GUILayout.Button("Rejoindre " + _pendingRoom, GUILayout.Width(280)))
+                Join(_pendingRoom);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(6);
+            _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(230));
+            foreach (FriendEntry f in _friends)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label((f.InPeak ? "▶ " : "   ") + f.Name, GUILayout.Width(220));
+                if (f.Lobby != 0UL && GUILayout.Button("Lobby", GUILayout.Width(70))) JoinSteamLobby(f);
+                if (GUILayout.Button("Chercher", GUILayout.Width(90))) AskPhoton(f.SteamId);
+                if (!string.IsNullOrEmpty(f.Room) && GUILayout.Button("Rejoindre", GUILayout.Width(90))) Join(f.Room);
+                GUILayout.Label(f.Room ?? (f.Searched ? "—" : ""), GUILayout.Width(90));
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndScrollView();
+
+            GUILayout.Space(4);
+            GUILayout.Label(_status);
+            GUI.DragWindow();
+        }
+    }
+}

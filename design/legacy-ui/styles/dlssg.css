@@ -1,0 +1,66 @@
+/* The game's dedicated Graphics section, separate from Overview and #flyout-rail. */
+.fg-card { margin: 0 0 22px; padding: 18px 20px; border: 1px solid var(--border, #393932); border-radius: 12px; background: linear-gradient(115deg, rgba(116,187,171,.09), rgba(116,187,171,.015)); min-width: 0; }
+.fg-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.fg-identity { min-width: 0; }
+.fg-eyebrow { display: block; font: 10px var(--font-mono, monospace); color: var(--text-muted); letter-spacing: .12em; margin-bottom: 7px; }
+.fg-card h3 { margin: 0; font: 600 19px var(--font-body, sans-serif); color: var(--text-primary); }
+.fg-switch { flex: 0 0 48px; width: 48px; height: 28px; padding: 3px; border: 1px solid var(--border-hover, #666); border-radius: 20px; background: rgba(255,255,255,.06); cursor: pointer; }
+.fg-switch i { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--text-muted, #aaa); transition: transform .18s, background .18s; }
+.fg-switch[aria-checked="true"] { background: #4e897b; border-color: #74bbab; }
+.fg-switch[aria-checked="true"] i { transform: translateX(19px); background: #eeeae0; }
+.fg-switch:disabled { opacity: .45; cursor: default; }
+.fg-switch:focus-visible, .fg-link:focus-visible, .fg-details summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.fg-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px; }
+.fg-badge { padding: 3px 7px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; color: var(--text-secondary); }
+.fg-badge.fg-on { color: #99d6c8; border-color: #477c70; }
+.fg-hardware { color: var(--text-muted); font-size: 11px; }
+.fg-message { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.fg-error { color: #eaa69a; }
+.fg-footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.fg-evidence { font-size: 10px; color: var(--text-muted); }
+.fg-details { margin-top: 7px; font-size: 11px; color: var(--text-secondary); }
+.fg-details summary { cursor: pointer; width: fit-content; }
+.fg-detail-content { padding-top: 4px; line-height: 1.6; }
+.fg-detail-content p { margin: 7px 0; }
+.fg-path { overflow-wrap: anywhere; font-family: var(--font-mono, monospace); font-size: 10px; }
+.fg-link { padding: 4px 0; margin-right: 18px; color: var(--primary); font: inherit; background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.fg-choice { display: grid; gap: 6px; margin-top: 12px; color: var(--text-secondary); font-size: 12px; }
+.fg-choice select { width: 100%; min-width: 0; }
+#fg-recover { margin-top: 12px; }
+.fg-issues { display: grid; gap: 8px; margin-top: 12px; }
+.fg-issue { padding: 10px 12px; border-left: 2px solid var(--border-hover, #666); background: rgba(255,255,255,.025); border-radius: 0 6px 6px 0; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+.fg-issue strong { color: var(--text-primary); font-weight: 600; }
+.fg-issue p { margin: 4px 0 0; color: var(--text-secondary); }
+.fg-issue-error { border-color: #c98275; }
+.fg-issue-warning { border-color: var(--primary); }
+.fg-issue-info { border-color: #74bbab; }
+.fg-actions { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; font-size: 11px; }
+.fg-actions .fg-link { margin-right: 0; }
+.fg-diagnostics { padding-top: 10px; border-top: 1px solid var(--border); }
+.fg-checks { display: grid; gap: 10px; margin: 12px 0; }
+.fg-check { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 12px; }
+.fg-check dt { color: var(--text-primary); }
+.fg-check dd { margin: 0; }
+.fg-check-pass { color: #99d6c8; }
+.fg-check-unknown { color: #ddae8b; }
+.fg-check .fg-check-detail { grid-column: 1 / -1; color: var(--text-muted); overflow-wrap: anywhere; white-space: pre-line; font-size: 10px; }
+.fg-inspected { padding-top: 8px; border-top: 1px solid var(--border); }
+html.reduce-motion .fg-switch i { transition: none; }
+@media (prefers-reduced-motion: reduce) { .fg-switch i { transition: none; } }
+
+.fg-updates-intro { margin: 12px 0; max-width: 75ch; }
+.fg-update-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+#fg-updates-release { margin: 10px 0; color: var(--text-muted); }
+#fg-updates-progress { width: 100%; height: 8px; margin-top: 12px; accent-color: var(--primary); }
+#fg-updates-list { display: grid; gap: 0; margin-top: 12px; }
+.fg-update-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 13px 0; border-top: 1px solid var(--border); }
+.fg-update-identity { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.fg-update-identity strong { font-size: 12px; color: var(--text-primary); font-weight: 600; }
+.fg-update-identity .fg-path { color: var(--text-muted); }
+.fg-update-state { font-size: 11px; color: var(--text-secondary); align-self: start; }
+.fg-update-updated, .fg-update-current { color: #99d6c8; }
+.fg-update-failed, .fg-update-blocked { color: #eaa69a; }
+.fg-update-available, .fg-update-updating { color: var(--primary); }
+.fg-update-reason { grid-column: 1 / -1; margin: 0; font-size: 11px; line-height: 1.5; color: var(--text-secondary); overflow-wrap: anywhere; }
+.fg-update-backup { grid-column: 1 / -1; justify-self: start; font-size: 11px; }
+.fg-updates-note { margin: 14px 0 0; font-size: 11px; line-height: 1.6; color: var(--text-muted); }

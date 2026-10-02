@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Achievement</title>
+<style>
+  /* The window itself is transparent and click-through; only the toast paints.
+     Nothing here may take a background, or the game disappears behind a sheet
+     of colour. */
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  }
+
+  #stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 26px;
+    gap: 10px;
+  }
+
+  /* Fed to the in-game overlay rather than shown in a window. Every
+     transparent pixel here is quad the game pays for and nobody sees, so the
+     padding goes and the toast fills the bitmap. */
+  body.is-feed #stage { padding-top: 4px; }
+
+  /* ── The toast ────────────────────────────────────────────────
+     Xbox's shape: a wide pill, dark and slightly translucent, with the icon
+     riding in a circle on the left. It arrives by growing out of nothing at
+     the centre, which is the part that makes it feel like an event rather
+     than a notification. */
+  .toast {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 300px;
+    max-width: 560px;
+    padding: 12px 26px 12px 12px;
+    border-radius: 44px;
+    background: linear-gradient(180deg, rgba(28, 32, 30, 0.96), rgba(16, 19, 18, 0.97));
+    box-shadow:
+      0 10px 34px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.07) inset;
+    color: #fff;
+    overflow: hidden;
+    transform-origin: center;
+    animation: pop 620ms cubic-bezier(0.16, 1.02, 0.3, 1) both;
+  }
+
+  .toast.is-leaving { animation: away 420ms cubic-bezier(0.5, 0, 0.75, 0) both; }
+
+  @keyframes pop {
+    0%   { opacity: 0; transform: translateY(-14px) scale(0.86); }
+    55%  { opacity: 1; transform: translateY(2px) scale(1.03); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes away {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-12px) scale(0.94); }
+  }
+
+  /* ── Icon ─────────────────────────────────────────────────────
+     The ring sweeps once around the icon as the toast lands. */
+  .badge {
+    position: relative;
+    flex-shrink: 0;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+  }
+
+  .badge img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #23282a;
+  }
+
+  .badge .fallback {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 34% 28%, #7ee8c8, #1aa07f 68%);
+    color: #06251d;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid #6BE6B5;
+    opacity: 0;
+    animation: ring 900ms ease-out 180ms both;
+  }
+
+  @keyframes ring {
+    0%   { opacity: 0; transform: scale(0.72); }
+    35%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.28); }
+  }
+
+  /* ── Text ─────────────────────────────────────────────────────
+     Both lines slide up behind the pill's own edge, staggered, so the toast
+     reads as one object arriving rather than three. */
+  .body { min-width: 0; }
+
+  .kicker {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #6BE6B5;
+    margin-bottom: 2px;
+    animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) 140ms both;
+  }
+
+  .title {
+    font-size: 16.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) 210ms both;
+  }
+
+  .sub {
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) 280ms both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(9px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── Sheen ────────────────────────────────────────────────────
+     One pass of light across the pill, once, just after it lands. */
+  .toast::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 42%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+    transform: skewX(-18deg);
+    animation: sheen 1100ms ease-in-out 320ms both;
+  }
+
+  @keyframes sheen {
+    from { left: -50%; }
+    to   { left: 130%; }
+  }
+
+  /* A rarer achievement earns a warmer accent — the only thing that changes
+     between an ordinary unlock and one almost nobody has. */
+  .toast.is-rare { box-shadow: 0 10px 34px rgba(0,0,0,.55), 0 0 0 1px rgba(255,209,102,.28) inset; }
+  .toast.is-rare .kicker { color: #FFD166; }
+  .toast.is-rare .badge::after { border-color: #FFD166; }
+  .toast.is-rare .badge .fallback { background: radial-gradient(circle at 34% 28%, #ffe6a3, #d99b1f 68%); color: #2d1d00; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toast, .kicker, .title, .sub { animation-duration: 1ms !important; }
+    .toast::after, .badge::after { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+  <script>
+    // Toasts queue rather than overlap: two unlocks a second apart are common
+    // and a pile of pills on top of the game is worse than a short wait.
+    if (new URLSearchParams(location.search).get('feed') === '1') document.body.classList.add('is-feed');
+
+    const stage = document.getElementById('stage');
+    const queue = [];
+    let showing = false;
+
+    const HOLD_MS = 4200;
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+    }
+
+    function initials(text) {
+      const words = String(text || '?').split(/\s+/).filter(Boolean);
+      return (words.length > 1 ? words[0][0] + words[1][0] : (words[0] || '?').slice(0, 2)).toUpperCase();
+    }
+
+    function render(item) {
+      const rare = Number(item.rarity) > 0 && Number(item.rarity) < 10;
+      const el = document.createElement('div');
+      el.className = 'toast' + (rare ? ' is-rare' : '');
+      const art = item.icon
+        ? `<img src="${esc(item.icon)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'fallback',textContent:${JSON.stringify(initials(item.title))}}))">`
+        : `<div class="fallback">${esc(initials(item.title))}</div>`;
+
+      const sub = [item.description, rare ? `${Number(item.rarity).toFixed(1)}% of players` : '']
+        .filter(Boolean).join(' · ');
+
+      el.innerHTML = `
+        <div class="badge">${art}</div>
+        <div class="body">
+          <div class="kicker">Achievement unlocked</div>
+          <div class="title">${esc(item.title)}</div>
+          ${sub ? `<div class="sub">${esc(sub)}</div>` : ''}
+        </div>`;
+      return el;
+    }
+
+    function next() {
+      if (showing || !queue.length) {
+        if (!showing && !queue.length) window.overlayApi?.idle();
+        return;
+      }
+      showing = true;
+      const el = render(queue.shift());
+      stage.appendChild(el);
+
+      setTimeout(() => {
+        el.classList.add('is-leaving');
+        setTimeout(() => {
+          el.remove();
+          showing = false;
+          next();
+        }, 430);
+      }, HOLD_MS);
+    }
+
+    window.overlayApi?.onAchievement((item) => {
+      queue.push(item);
+      next();
+    });
+  </script>
+</body>
+</html>

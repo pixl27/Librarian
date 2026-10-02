@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Dialog bodies and sheets: install plan, destination picker, the
+   custom-game forms, and the small pieces every modal body shares.
+   The modal shell itself is in main.css.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Tokens the scripts still name in inline styles. */
+:root {
+  --accent-red: var(--bad);
+  --bg-input: var(--sunk);
+  --border: var(--line-strong);
+  --text-secondary: var(--soft);
+}
+
+#modal-body label { display: block; font-weight: 600; font-size: 13px; color: var(--soft); margin-bottom: 7px; }
+#modal-body .toggle-row { display: flex; font-weight: 500; font-size: 14px; color: var(--text); margin: 0; }
+#modal-body .form-input + .setting-hint, .form-group > .setting-hint { margin-left: 0; }
+.form-group > .xbox-btn-sm { margin-top: 8px; }
+.xbox-input { height: 40px; padding: 0 34px 0 13px; border-radius: var(--r-m); background: var(--sunk); border: 1px solid var(--line-strong); color: var(--text); }
+
+/* A destructive confirmation says so with the button itself. The script
+   marks it by colouring the label; the fill is what should carry it. */
+.confirm-modal #confirm-ok[style*="accent-red"] { background: var(--bad); color: #fff !important; box-shadow: 0 10px 28px -14px var(--bad); }
+.confirm-modal #confirm-ok[style*="accent-red"]:hover { background: color-mix(in srgb, var(--bad) 86%, #fff); }
+
+#settings-saved-hint { opacity: 0; transform: translateY(4px); transition: opacity var(--base), transform var(--base) var(--ease); }
+#settings-saved-hint.show { opacity: 1; transform: none; }
+
+/* ── Install folders (Settings and the destination picker) ── */
+.loc-row { transition: border-color var(--fast), background var(--fast); }
+.loc-row:hover { border-color: var(--line-strong); background: color-mix(in srgb, var(--sunk) 70%, var(--raised)); }
+.loc-row.missing { opacity: .55; }
+.loc-row.too-small .loc-meta b { color: var(--warn); }
+.loc-row.too-small .loc-bar i { background: var(--warn); }
+.dest-picker { display: flex; flex-direction: column; gap: 12px; }
+.dest-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.dest-game { font: 650 17px/1.2 var(--display); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dest-size { font-size: 13px; color: var(--soft); white-space: nowrap; }
+#dest-list { display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.dest-browse { height: 44px; border-radius: var(--r-m); border: 1px dashed var(--line-strong); color: var(--soft); font-weight: 500; transition: color var(--fast), border-color var(--fast); }
+.dest-browse:hover { color: var(--text); border-color: var(--accent-line); }
+#dest-ok.disabled { opacity: .45; pointer-events: none; }
+
+/* ── Custom games ──────────────────────────────────────── */
+.custom-update-form { display: grid; gap: 12px; }
+.custom-update-form > label { margin: 0 0 -6px; }
+.custom-update-path { font: 12.5px/1.5 var(--code); color: var(--soft); overflow-wrap: anywhere; }
+.custom-update-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.custom-update-row .custom-update-path { flex: 1 1 220px; }
+.custom-update-result { padding: 14px 16px; border-radius: var(--r-m); background: var(--sunk); border: 1px solid var(--line); font-size: 13.5px; line-height: 1.55; }
+.custom-update-result dl { display: grid; grid-template-columns: minmax(95px, 1fr) minmax(0, 2fr); gap: 6px 14px; margin: 10px 0; }
+.custom-update-result dt { color: var(--mute); }
+.custom-update-result dd { overflow-wrap: anywhere; }
+.cg-suggest-btn { border-radius: 10px !important; transition: border-color var(--fast); }
+.cg-suggest-btn:hover { border-color: var(--accent-line) !important; }
+#cg-banner-preview img { border-radius: 10px !important; }
+
+/* ═══ Install plan ═══════════════════════════════════════════════ */
+#plan { position: fixed; inset: 0; z-index: 240; display: grid; grid-template-rows: minmax(0, 1fr); place-items: center; padding: 26px; --accent-ink: #0d1020; }
+#plan-bg { position: absolute; inset: 0; background: rgba(6, 8, 14, .7); backdrop-filter: blur(12px); animation: fade var(--base) both; }
+#plan-scrim { display: none; }
+#plan-sheet {
+  position: relative; width: min(960px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 16px; padding: 24px 26px 20px; border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--ground) 88%, #8f9cff); border: 1px solid var(--line-strong); box-shadow: 0 40px 100px -30px #000;
+  animation: rise var(--slow) var(--ease-out) both;
+}
+#plan.closing #plan-bg { animation: fade 200ms reverse both; }
+#plan.closing #plan-sheet { animation: rise 200ms reverse both; }
+#plan-head { display: flex; align-items: center; gap: 18px; flex: none; }
+#plan-poster { position: relative; width: 62px; aspect-ratio: 2 / 3; border-radius: 9px; overflow: hidden; flex: none; background: var(--panel); box-shadow: 0 10px 24px -10px #000; }
+#plan-poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#plan-poster .art-mark { font-size: 40px; }
+#plan-poster .art-name { display: none; }
+#plan-heading { flex: 1; min-width: 0; }
+#plan-kicker { font-size: 13px; font-weight: 600; color: var(--accent-hi); }
+#plan-title { font: 700 28px/1.1 var(--display); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#plan-lead { color: var(--soft); margin-top: 4px; }
+#plan-close { width: 36px; height: 36px; border-radius: 10px; color: var(--soft); background: rgba(255, 255, 255, .05); align-self: flex-start; }
+#plan-close:hover { background: rgba(255, 255, 255, .12); color: var(--text); }
+#plan-meter { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex: none; }
+#plan-figures { display: flex; align-items: baseline; gap: 12px; }
+#plan-size { font: 800 64px/.85 var(--display); letter-spacing: -.05em; }
+#plan-size-num { display: inline-block; }
+#plan-size-unit { font-size: 24px; font-weight: 600; letter-spacing: 0; color: var(--soft); margin-left: 6px; }
+#plan-size-label { color: var(--mute); }
+#plan-savings { display: flex; align-items: baseline; gap: 12px; }
+#plan-savings.pop { animation: bump 320ms var(--ease-out); }
+#plan-full-size { color: var(--mute); text-decoration: line-through; }
+#plan-saved { color: var(--good); font-weight: 600; }
+#plan-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--sunk); flex: none; }
+.plan-seg { min-width: 3px; background: var(--seg, var(--accent)); transition: opacity var(--base), filter var(--base); }
+.plan-seg + .plan-seg { box-shadow: -1px 0 0 var(--ground); }
+.plan-seg.off { opacity: .16; filter: grayscale(1); }
+#plan-legend { font-size: 13px; color: var(--mute); flex: none; }
+#plan-groups { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); grid-auto-rows: min-content; gap: 10px; padding: 2px; margin: -2px; }
+.plan-card {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 2px; padding: 14px 16px 16px; border-radius: 16px; cursor: pointer;
+  background: var(--panel); border: 1px solid color-mix(in srgb, var(--seg, var(--accent)) 38%, transparent);
+  transition: opacity var(--base), border-color var(--base), transform var(--fast) var(--ease);
+}
+.plan-card.required { cursor: default; }
+.plan-card:not(.required):hover { transform: translateY(-2px); }
+.plan-card.off { border-color: var(--line); opacity: .6; }
+.plan-card.bump { animation: bump 300ms var(--ease-out); }
+.plan-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.plan-ico { font-size: 16px; }
+.plan-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plan-lock { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(255, 255, 255, .08); color: var(--soft); }
+.plan-switch { position: relative; width: 36px; height: 22px; border-radius: 11px; flex: none; background: color-mix(in srgb, var(--seg, var(--accent)) 34%, var(--sunk)); border: 1px solid color-mix(in srgb, var(--seg, var(--accent)) 55%, transparent); transition: background var(--base), border-color var(--base); }
+.plan-switch i { position: absolute; left: 16px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--seg, var(--accent)); transition: left var(--base) var(--ease), background var(--base); }
+.plan-card.off .plan-switch { background: var(--sunk); border-color: var(--line-strong); }
+.plan-card.off .plan-switch i { left: 2px; background: var(--mute); }
+.plan-card-size { font: 650 22px/1.2 var(--display); letter-spacing: -.01em; }
+.plan-card-meta { font-size: 12.5px; color: var(--soft); }
+.plan-card-hint { font-size: 12.5px; color: var(--mute); margin-top: 6px; line-height: 1.45; }
+.plan-card-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--seg, var(--accent)); transition: opacity var(--base); }
+.plan-card.off .plan-card-fill { opacity: 0; }
+#plan-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: none; padding-top: 4px; }
+#plan-foot-left, #plan-foot-right { display: flex; align-items: center; gap: 8px; }
+#plan-warn { font-size: 12.5px; color: var(--warn); max-width: 280px; text-align: right; }
+#plan-go { height: 46px; padding: 0 24px; font: 700 16px/1 var(--display); border-radius: 14px; }

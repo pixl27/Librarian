@@ -1,0 +1,23 @@
+steammanifest
+source E:\Github\steammanifest (no git repository; working copy)
+copied 2026-09-12T06:59:23.884Z by dev/vendor-steammanifest.cjs
+runtime packages protobufjs 7.6.6, websocket13 4.1.0
+closure @doctormckay/stdlib@2.10.0 @protobufjs/aspromise@1.1.2 @protobufjs/base64@1.1.2 @protobufjs/codegen@2.0.5 @protobufjs/eventemitter@1.1.1 @protobufjs/fetch@1.1.1 @protobufjs/float@1.0.2 @protobufjs/path@1.1.2 @protobufjs/pool@1.1.0 @protobufjs/utf8@1.1.2 bytebuffer@5.0.1 long@3.2.0 permessage-deflate@0.1.7 protobufjs@7.6.6 psl@1.15.0 punycode@2.3.1 safe-buffer@5.2.1 tiny-typed-emitter@2.1.0 websocket-extensions@0.1.4 websocket13@4.1.0
+package.json sha256 a622ecb853980ec7dd72f6ab6b9889cbcceca02904f844c93fd7ca8c812faad8 octets 799
+package-lock.json sha256 5383c95975488e1028f8c26860a71d6159e225ce45b06104c6d3c479bf9288f0 octets 19143
+README.md sha256 43ca762bea5d4e14e827d560f9b041adf44ef77896b55d8b3468fb0ef22f8bb4 octets 9579
+depot_keys.json sha256 fdc000be40cd9e7f15b975be6d73ca47d594943bcc419746b9b9fb6ba5230120 octets 322
+assemble.js sha256 f042d727dc42292832e44575aeccd7c2ee14bc12f80a69bf96e43f7fbd59ba0e octets 13252
+fetch-lua.js sha256 415401fc212d0f68ef11ba9141e792ae23d0f191919f5f8064a07622836acdd0 octets 12109
+fetch-manifest.js sha256 f81bf913548c110b957658a8f0a3a55bf026fb67faef5eac822c093e84cd03d2 octets 20893
+fetch-xyz.js sha256 79882b9679bc5f32c1b7f73b903132af0c8da71f32d3cc944a9c62bc3bc61235 octets 4731
+re/access_trace.js sha256 1b1ecea0ef52c3a2bdd21a2eee32b05636f72bcc518621156f416ef50fa5ddf9 octets 2308
+re/cm_client.js sha256 2a16d6c93fac5d94294a060e5d9e7302b34cdd292a1b5d646af5c58e12c84123 octets 14133
+re/cm_wire.js sha256 0155454d2c68f4041cea9469b17ff8725b0527d6e2c845995570e0c7f02da912 octets 24099
+re/http.js sha256 04497b09ae3e7f147200f03a78b6ed95ce4061c60ec479181920bc30c46d9586 octets 3585
+re/ids.js sha256 84eed446aa5874a504de995b61ba2a22543dd038d9b7cd5d78b528b665ea138b octets 821
+re/manifest_format.js sha256 fcbf6511b209f9f0c24c8a1efe5ee6c7942a73be939ee3e7a64ef311eee113e1 octets 21766
+re/vdf.js sha256 11a950ef59d9cc2e34f08ca6020f476c43720a038455953fe1a995b9bf04b014 octets 2461
+re/xyz_client.js sha256 4a784c31d540bbdd940dbd7adafd29d4db6f2a0a0fbba954d60116dcfe0c1d24 octets 6464
+re/PROTOCOL.md sha256 0c43237a4ca90854140ae5d19ba6669c396cb9a602fe8824ba00aedb446885fa octets 13819
+re/ACCESS_DENIED.md sha256 455f60dc70910bf4d3e3a0c8eb530b680654c74fe5158a6d72e705961abca480 octets 10684

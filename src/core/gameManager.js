@@ -3,8 +3,59 @@ const path = require('path');
 const os = require('os');
 const { getSteamLibraries, findSteamInstall } = require('./steamHelpers');
 
-function scanSteamLibraries() {
-  const libraries = getSteamLibraries();
+/**
+ * Extract the depot IDs from an ACF's "InstalledDepots" block only.
+ * Uses brace matching to bound the block, then captures quoted numeric keys
+ * that open a sub-block — avoiding false positives from numeric keys elsewhere
+ * in the file (e.g. DlcDownloads) and from manifest/size values inside a depot.
+ */
+/**
+ * { depotId: manifestId } for every depot the ACF says is installed.
+ *
+ * The depot list alone says *what* is on disk; this says *which build* of it,
+ * which is what an update check needs when the build id is missing.
+ */
+function parseInstalledManifests(content) {
+  const out = {};
+  const marker = content.match(/"InstalledDepots"\s*\{/i);
+  if (!marker) return out;
+  const start = marker.index + marker[0].length;
+  let end = start, depth = 1;
+  while (end < content.length && depth) {
+    if (content[end] === '{') depth++;
+    if (content[end] === '}') depth--;
+    end++;
+  }
+  const block = content.slice(start, end - 1);
+  const re = /"(\d{1,10})"\s*\{[^}]*?"manifest"\s*"(\d+)"/g;
+  let m;
+  while ((m = re.exec(block))) out[m[1]] = m[2];
+  return out;
+}
+
+function parseInstalledDepots(content) {
+  const marker = content.match(/"InstalledDepots"\s*\{/i);
+  if (!marker) return [];
+
+  let i = marker.index + marker[0].length;
+  const start = i;
+  let depth = 1;
+  while (i < content.length && depth > 0) {
+    const ch = content[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') depth--;
+    i++;
+  }
+  const block = content.slice(start, Math.max(start, i - 1));
+
+  const depots = [];
+  for (const m of block.matchAll(/"(\d+)"\s*\{/g)) {
+    depots.push(m[1]);
+  }
+  return depots;
+}
+
+function scanSteamLibraries(libraries = getSteamLibraries(), warnings = []) {
   if (!libraries.length) return [];
 
   const games = [];
@@ -13,14 +64,25 @@ function scanSteamLibraries() {
   for (const libPath of libraries) {
     const steamapps = path.join(libPath, 'steamapps');
     const common = path.join(steamapps, 'common');
-    if (!fs.existsSync(common)) continue;
-
     let dirs;
-    try { dirs = fs.readdirSync(common); } catch { continue; }
+    try { dirs = fs.readdirSync(common); }
+    catch (error) { warnings.push({ path: libPath, error: error.code || error.message }); continue; }
+    const manifestIndex = new Map();
+    try {
+      for (const filename of fs.readdirSync(steamapps).filter(f => /^appmanifest_\d+\.acf$/.test(f))) {
+        try {
+          const content = fs.readFileSync(path.join(steamapps, filename), 'utf-8');
+          const dir = content.match(/"installdir"\s+"([^"]+)"/i)?.[1];
+          if (dir) manifestIndex.set(process.platform === 'win32' ? dir.toLowerCase() : dir, { filename, content });
+        } catch (error) { warnings.push({ path: libPath, error: `${filename}: ${error.code || error.message}` }); }
+      }
+    } catch (error) { warnings.push({ path: libPath, error: error.code || error.message }); continue; }
 
     for (const gameName of dirs) {
       const gamePath = path.join(common, gameName);
-      if (!fs.statSync(gamePath).isDirectory()) continue;
+      let stat;
+      try { stat = fs.statSync(gamePath); } catch { continue; }
+      if (!stat.isDirectory()) continue;
 
       // Deduplicate by normalized path (case-insensitive on Windows)
       const normalizedPath = process.platform === 'win32'
@@ -32,11 +94,12 @@ function scanSteamLibraries() {
       if (!fs.existsSync(ddPath)) continue;
 
       // Check if folder has content beyond .DepotDownloader
-      const items = fs.readdirSync(gamePath).filter(i => i !== '.DepotDownloader');
+      let items;
+      try { items = fs.readdirSync(gamePath).filter(i => i !== '.DepotDownloader'); } catch { continue; }
       if (!items.length) continue;
 
       // Collect game data
-      const gameData = collectGameData(gamePath, gameName, libPath);
+      const gameData = collectGameData(gamePath, gameName, libPath, manifestIndex);
       if (gameData) games.push(gameData);
     }
   }
@@ -44,20 +107,16 @@ function scanSteamLibraries() {
   return games;
 }
 
-function collectGameData(gamePath, gameName, libraryPath) {
+function collectGameData(gamePath, gameName, libraryPath, manifestIndex) {
   try {
     const steamapps = path.join(libraryPath, 'steamapps');
     let appid = null;
     let acfData = {};
 
-    // Find matching ACF file
-    if (fs.existsSync(steamapps)) {
-      const files = fs.readdirSync(steamapps).filter(f => f.startsWith('appmanifest_') && f.endsWith('.acf'));
-      for (const filename of files) {
+    const match = manifestIndex.get(process.platform === 'win32' ? gameName.toLowerCase() : gameName);
+    if (match) {
+      const { filename, content } = match;
         try {
-          const content = fs.readFileSync(path.join(steamapps, filename), 'utf-8');
-          const installMatch = content.match(/"installdir"\s+"([^"]+)"/);
-          if (installMatch && installMatch[1] === gameName) {
             appid = filename.replace('appmanifest_', '').replace('.acf', '');
 
             const nameMatch = content.match(/"name"\s+"([^"]+)"/);
@@ -71,10 +130,21 @@ function collectGameData(gamePath, gameName, libraryPath) {
               const s = parseInt(sizeMatch[1]);
               if (s > 0) acfData.size_on_disk = s;
             }
-            break;
-          }
+
+            const installedDepots = parseInstalledDepots(content);
+            if (installedDepots.length) {
+              acfData.installed_depots = installedDepots;
+            }
+            const installedManifests = parseInstalledManifests(content);
+            if (Object.keys(installedManifests).length) {
+              acfData.installed_manifests = installedManifests;
+            }
         } catch {}
-      }
+    }
+
+    // Ignore partial Librarian downloads until the manifest exists.
+    if (!appid) {
+      return null;
     }
 
     // Calculate size if not in ACF
@@ -91,6 +161,8 @@ function collectGameData(gamePath, gameName, libraryPath) {
       library_path: libraryPath,
       size_on_disk: sizeOnDisk,
       buildid: acfData.buildid || null,
+      installed_depots: acfData.installed_depots || [],
+      installed_manifests: acfData.installed_manifests || {},
       source: 'Librarian',
       update_status: appid && appid !== '0' ? 'checking' : 'cannot_determine',
     };
@@ -99,18 +171,92 @@ function collectGameData(gamePath, gameName, libraryPath) {
   }
 }
 
-function getDirSize(dirPath) {
+function getDirSize(dirPath, visited = new Set()) {
   let total = 0;
   try {
+    const realPath = fs.realpathSync(dirPath);
+    const normalizedRealPath = process.platform === 'win32' ? realPath.toLowerCase() : realPath;
+    if (visited.has(normalizedRealPath)) return 0;
+    visited.add(normalizedRealPath);
+
     const items = fs.readdirSync(dirPath);
     for (const item of items) {
       const full = path.join(dirPath, item);
-      const stat = fs.statSync(full);
+      const stat = fs.lstatSync(full);
+      if (stat.isSymbolicLink()) continue;
       if (stat.isFile()) total += stat.size;
-      else if (stat.isDirectory()) total += getDirSize(full);
+      else if (stat.isDirectory()) total += getDirSize(full, visited);
     }
   } catch {}
   return total;
+}
+
+function normalizePathForCompare(value) {
+  const resolved = path.resolve(value);
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+}
+
+function isPathInside(parentPath, childPath) {
+  const relative = path.relative(parentPath, childPath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function readAcfInstallDir(acfPath) {
+  try {
+    const content = fs.readFileSync(acfPath, 'utf-8');
+    const installMatch = content.match(/"installdir"\s+"([^"]+)"/);
+    return installMatch ? installMatch[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveSafeInstallTarget(installPath, libraryPath, appid) {
+  if (typeof installPath !== 'string' || !installPath.trim()) {
+    throw new Error('Install path is missing.');
+  }
+
+  const resolvedInstallPath = path.resolve(installPath);
+  if (!fs.existsSync(resolvedInstallPath) || !fs.statSync(resolvedInstallPath).isDirectory()) {
+    throw new Error('Install path does not exist or is not a directory.');
+  }
+
+  const markerPath = path.join(resolvedInstallPath, '.DepotDownloader');
+  if (!fs.existsSync(markerPath)) {
+    throw new Error('Refusing to uninstall a folder that was not created by Librarian.');
+  }
+
+  const libraries = [];
+  try { libraries.push(...getSteamLibraries()); } catch {}
+  if (libraryPath) libraries.push(libraryPath);
+
+  const seen = new Set();
+  for (const lib of libraries) {
+    if (!lib) continue;
+    const resolvedLibrary = path.resolve(lib);
+    const key = normalizePathForCompare(resolvedLibrary);
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const commonDir = path.join(resolvedLibrary, 'steamapps', 'common');
+    if (!isPathInside(commonDir, resolvedInstallPath)) continue;
+
+    const safeAppId = String(appid || '').trim();
+    if (/^\d{1,20}$/.test(safeAppId) && safeAppId !== '0') {
+      const acfPath = path.join(resolvedLibrary, 'steamapps', `appmanifest_${safeAppId}.acf`);
+      const installDir = readAcfInstallDir(acfPath);
+      if (installDir && normalizePathForCompare(path.join(commonDir, installDir)) !== normalizePathForCompare(resolvedInstallPath)) {
+        throw new Error('Install path does not match the Steam app manifest.');
+      }
+    }
+
+    return {
+      installPath: resolvedInstallPath,
+      libraryPath: resolvedLibrary,
+    };
+  }
+
+  throw new Error('Install path is not inside a known Steam library.');
 }
 
 function formatSize(bytes) {
@@ -123,28 +269,22 @@ function formatSize(bytes) {
 function uninstallGame(gameData) {
   try {
     const { install_path, library_path, appid } = gameData;
+    const target = resolveSafeInstallTarget(install_path, library_path, appid);
 
     // Remove game folder
-    if (install_path && fs.existsSync(install_path)) {
-      fs.rmSync(install_path, { recursive: true, force: true });
+    if (fs.existsSync(target.installPath)) {
+      fs.rmSync(target.installPath, { recursive: true, force: true });
     }
 
     // Parse installed depots before removing ACF for GreenLuma cleanup
     let installedDepots = [];
     let acfPath = null;
-    if (library_path && appid && appid !== '0') {
-      acfPath = path.join(library_path, 'steamapps', `appmanifest_${appid}.acf`);
+    if (target.libraryPath && appid && appid !== '0') {
+      acfPath = path.join(target.libraryPath, 'steamapps', `appmanifest_${appid}.acf`);
       if (fs.existsSync(acfPath)) {
         try {
           const content = fs.readFileSync(acfPath, 'utf-8');
-          const match = content.match(/"InstalledDepots"\s*\{([\s\S]*?)\}/);
-          if (match) {
-            const lines = match[1].split('\n');
-            for (const line of lines) {
-              const dMatch = line.match(/"(\d+)"/);
-              if (dMatch) installedDepots.push(dMatch[1]);
-            }
-          }
+          installedDepots = parseInstalledDepots(content);
         } catch {}
       }
     }
@@ -262,6 +402,7 @@ function getUninstallMessage(gameData) {
  */
 function scanAllGames() {
   const customStore = require('./customGameStore');
+  const meta = require('./gameMetaStore');
   const steamGames = scanSteamLibraries();
   const customGames = customStore.getAll().map(cg => ({
     ...cg,
@@ -271,7 +412,11 @@ function scanAllGames() {
     source: 'Custom',
     update_status: cg.appid && cg.appid !== '0' && cg.appid !== '' ? 'checking' : 'custom',
   }));
-  return [...steamGames, ...customGames];
+  // Fold in launcher metadata (playtime, last played, exe override) so the
+  // renderer can show it without extra round-trips.
+  const games = [...steamGames, ...customGames];
+  meta.recordDiscovery(games);
+  return games.map(g => meta.decorate(g));
 }
 
 /**
@@ -341,5 +486,6 @@ module.exports = {
   addGreenLumaFiles,
   detectAppId,
   calculateFolderSize,
+  parseInstalledDepots,
+  parseInstalledManifests,
 };
-

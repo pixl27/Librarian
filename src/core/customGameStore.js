@@ -2,9 +2,25 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const crypto = require('crypto');
+const json = require('./jsonFile');
 
 let _data = null;
 let _filePath = null;
+
+function cleanString(value, maxLength = 2048) {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, maxLength);
+}
+
+function cleanAppId(value) {
+  const appId = cleanString(value, 20);
+  return /^\d{1,20}$/.test(appId) ? appId : '';
+}
+
+function cleanSize(value) {
+  const size = Number(value);
+  return Number.isFinite(size) && size > 0 ? Math.floor(size) : 0;
+}
 
 function getFilePath() {
   if (!_filePath) {
@@ -15,75 +31,80 @@ function getFilePath() {
 
 function load() {
   if (_data) return _data;
-  try {
-    const raw = fs.readFileSync(getFilePath(), 'utf-8');
-    _data = JSON.parse(raw);
-    if (!Array.isArray(_data)) _data = [];
-  } catch {
-    _data = [];
-  }
+  _data = json.read(getFilePath(), [], Array.isArray);
   return _data;
 }
 
-function save() {
-  try {
-    const dir = path.dirname(getFilePath());
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(getFilePath(), JSON.stringify(_data, null, 2), 'utf-8');
-  } catch (e) {
-    console.error('Failed to save custom games:', e);
-  }
+function save(next) {
+  json.write(getFilePath(), next);
+  _data = next;
 }
 
 function getAll() {
-  return [...load()];
+  return json.clone(load());
 }
 
 function getById(id) {
-  return load().find(g => g.id === id) || null;
+  return json.clone(load().find(g => g.id === id) || null);
 }
 
 function add(gameData) {
   load();
   const entry = {
     id: crypto.randomUUID(),
-    game_name: gameData.game_name || 'Unknown Game',
-    appid: gameData.appid || '',
-    install_path: gameData.install_path || '',
-    executable: gameData.executable || '',
-    banner_path: gameData.banner_path || '',
-    banner_url: gameData.banner_url || '',
-    size_on_disk: gameData.size_on_disk || 0,
+    game_name: cleanString(gameData.game_name, 160) || 'Unknown Game',
+    appid: cleanAppId(gameData.appid),
+    install_path: cleanString(gameData.install_path),
+    executable: cleanString(gameData.executable),
+    banner_path: cleanString(gameData.banner_path),
+    banner_url: cleanString(gameData.banner_url),
+    size_on_disk: cleanSize(gameData.size_on_disk),
     source: 'Custom',
     added_at: new Date().toISOString(),
   };
-  _data.push(entry);
-  save();
-  return entry;
+  save([..._data, entry]);
+  return json.clone(entry);
 }
 
 function update(id, updates) {
   load();
   const idx = _data.findIndex(g => g.id === id);
   if (idx === -1) return null;
+  const next = json.clone(_data);
   // Only update allowed fields
   const allowed = ['game_name', 'appid', 'install_path', 'executable', 'banner_path', 'banner_url', 'size_on_disk'];
   for (const key of allowed) {
-    if (updates[key] !== undefined) _data[idx][key] = updates[key];
+    if (updates[key] === undefined) continue;
+    if (key === 'appid') next[idx][key] = cleanAppId(updates[key]);
+    else if (key === 'size_on_disk') next[idx][key] = cleanSize(updates[key]);
+    else if (key === 'game_name') next[idx][key] = cleanString(updates[key], 160) || 'Unknown Game';
+    else next[idx][key] = cleanString(updates[key]);
   }
-  save();
-  return _data[idx];
+  if (next[idx].appid !== _data[idx].appid || next[idx].install_path !== _data[idx].install_path) delete next[idx].update_link;
+  save(next);
+  return json.clone(_data[idx]);
+}
+
+function setUpdateLink(id, appid, link) {
+  const next = json.clone(load());
+  const entry = next.find(game => game.id === id);
+  if (!entry) throw new Error('Custom game no longer exists.');
+  entry.appid = cleanAppId(appid);
+  if (link) entry.update_link = json.clone(link);
+  else delete entry.update_link;
+  save(next);
+  return json.clone(entry);
 }
 
 function remove(id) {
   load();
   const before = _data.length;
-  _data = _data.filter(g => g.id !== id);
-  if (_data.length < before) {
-    save();
+  const next = _data.filter(g => g.id !== id);
+  if (next.length < before) {
+    save(next);
     return true;
   }
   return false;
 }
 
-module.exports = { getAll, getById, add, update, remove };
+module.exports = { getAll, getById, add, update, remove, setUpdateLink };

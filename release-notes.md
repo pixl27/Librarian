@@ -1,0 +1,3 @@
+- Librarian now installs with one click and updates itself.
+- Valheim and PEAK come ready for co-op: online mode, the Valheim adapter and PEAK's join-a-friend plugin are set up on their own.
+- Settings › Co-op lists the games that are set up this way; Settings › Updates shows the version and what is new.

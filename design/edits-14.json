@@ -1,0 +1,4 @@
+[
+  { "file": "src/styles/enhance.css", "from": "#app:has(#game-flyout.flyout-open) #topbar-search { margin-left: 196px; }", "to": "/* The room is made on the drag strip, not on the search field inside it: the\n   strip is a window-drag region and sits above this page, so wherever it\n   reaches a click never arrives. It has to start after these buttons. */\n#app:has(#game-flyout.flyout-open) #topbar-drag { margin-left: 196px; }" },
+  { "file": "src/styles/store.css", "from": "#app:has(#page-store.active[data-mode=\"detail\"]) #topbar-search { margin-left: 178px; }", "to": "/* On the drag strip, not the search field: see the game page's Back button. */\n#app:has(#page-store.active[data-mode=\"detail\"]) #topbar-drag { margin-left: 178px; }" }
+]

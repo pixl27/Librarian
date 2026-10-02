@@ -1,0 +1,12 @@
+csrin-cli
+source https://github.com/pixl27/csrinru.git
+commit fd346978816ea8b43d737d9ad60e7ba8b8c85863
+built 2026-10-01 from a working tree with uncommitted changes:
+  download_extracted_links.py  Buzzheavier retry, HTML guard, curl -f, exit codes (2026-09-02);
+                               forum attachments (download/file.php?id=N) fetched with a logged-in
+                               session, account read from CSRIN_USERNAME / CSRIN_PASSWORD (2026-10-01)
+  search_game_posts.py         post body kept whole across nested divs; "attachments" [{url,name,size}]
+                               in the JSON; a post with an attachment counts as downloadable;
+                               default author ARTIFACT (2026-10-01)
+csrin-cli.exe sha256 558578da29c9e4669e5c7b3578bccb439a26962adbcdae6c52d9ad66204e9277 octets 8756442
+csrin-dl.exe sha256 522d41fa1ac135d5ad2db953b71da9f2e2d7be7a7fde837d45663354cc0b11c8 octets 8755641

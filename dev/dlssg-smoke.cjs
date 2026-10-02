@@ -1,0 +1,160 @@
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert/strict');
+const { executable } = require('./dlssg-fixture.cjs');
+
+module.exports = async ({ evaluate, fixture, capture, mainWindow, wait, report, queue, dlssg, target }) => {
+  const install = path.join(fixture, 'Graphics fixture'), exe = path.join(install, 'Game/Binaries/Win64/SM86Game.exe');
+  executable(exe); fs.writeFileSync(path.join(path.dirname(exe), 'nvngx_dlssg.dll'), 'Inert DLSSG marker');
+  const game = await evaluate(`api.addCustomGame(${JSON.stringify({ game_name: 'Frame Generation · Test Game', appid: '0', install_path: install, executable: exe })})`);
+  await evaluate(`window.fgFixtureId=${JSON.stringify(game.id)}; Librarian.scanAndRender()`);
+  const open = 'Librarian.openFlyout(Librarian.games.find(g=>g.id===fgFixtureId)); true;';
+  const ready = async () => {
+    for (let i = 0; i < 100; i++) {
+      if (await evaluate('Boolean(document.querySelector("#fg-toggle"))')) return;
+      await wait(40);
+    }
+    throw new Error('Frame generation card never appeared');
+  };
+  await evaluate(open); await ready();
+  assert.equal(await evaluate('document.querySelector("#flyout-tab-overview").contains(document.querySelector("#fg-toggle"))'), false);
+  assert.equal(await evaluate('document.querySelector("#flyout-tab-overview").classList.contains("active")'), true);
+  await evaluate('document.querySelector("#flyout-graphics-tab").click(); true;');
+  assert.equal(await evaluate('document.querySelector("#flyout-tab-graphics").classList.contains("active")'), true);
+  await evaluate('document.querySelector("#toast-stack").replaceChildren(); true;');
+  assert.equal(await evaluate('document.querySelector("#flyout-rail").contains(document.querySelector("#fg-toggle"))'), false);
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").disabled'), false);
+  await capture('dlssg-off-1280');
+  const stale = await evaluate('api.setDlssg({game:{source:"Custom",id:"not-in-library",install_path:"C:/Windows"},enabled:true})');
+  assert.equal(stale.success, false); assert(stale.error.includes('library'));
+  // Deliberately lie about the folder: main must use the persisted game record.
+  const spoofed = await evaluate('api.getDlssgStatus({...Librarian.games.find(g=>g.id===fgFixtureId),install_path:"C:/Windows"})');
+  assert.equal(spoofed.target, path.dirname(exe));
+  const library = require(path.join(target, 'src/core/libraryService.js')), cached = library.cached;
+  const sameApp = { ...game, source: 'Steam', appid: '4242' };
+  library.cached = () => ({ games: [{ ...sameApp, install_path: path.join(fixture, 'wrong-install') }, sameApp] });
+  try {
+    const chosen = await evaluate(`api.getDlssgStatus(${JSON.stringify(sameApp)})`);
+    assert.equal(chosen.target, path.dirname(exe));
+  } finally { library.cached = cached; }
+  queue.add({ id: 975, name: 'DLSSG lock fixture' });
+  queue.begin(975, { gameData: game, extractTo: install });
+  const locked = await evaluate('api.setDlssg({game:Librarian.games.find(g=>g.id===fgFixtureId),enabled:true})');
+  assert.equal(locked.success, false); assert(locked.error.includes('download'));
+  queue.finish('complete'); queue.remove(975);
+  report.checks.push('DLSSG resolves trusted library paths and refuses changes during a download');
+
+  const originalEnable = dlssg.setEnabled;
+  dlssg.setEnabled = async () => { throw Object.assign(new Error('Package download failed for version.dll: HTTP 503. No game files were changed.'), { code: 'DLSSG_DOWNLOAD_FAILED' }); };
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && !await evaluate('Boolean(document.querySelector("#fg-retry-install"))'); i++) await wait(40);
+  assert.equal(await evaluate('document.querySelector("#fg-retry-install").disabled'), false);
+  assert(!fs.existsSync(path.join(path.dirname(exe), 'version.dll')));
+  await capture('dlssg-download-retry-1280');
+  dlssg.setEnabled = originalEnable;
+  await evaluate('document.querySelector("#fg-retry-install").click(); true;');
+  for (let i = 0; i < 100 && !await evaluate('document.querySelector("#fg-toggle")?.getAttribute("aria-checked") === "true"'); i++) await wait(40);
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").getAttribute("aria-checked")'), 'true');
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && fs.existsSync(path.join(path.dirname(exe), 'version.dll')); i++) await wait(40);
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  report.checks.push('A failed DLSSG download offers Retry installation and the retry installs successfully through production IPC');
+
+  // Keyboard operation uses the same accessible button and production IPC as a click.
+  await evaluate('document.querySelector("#fg-toggle").focus(); true;');
+  mainWindow.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Space' });
+  mainWindow.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Space' });
+  for (let i = 0; i < 100; i++) {
+    if (await evaluate('document.querySelector("#fg-toggle")?.getAttribute("aria-checked") === "true"')) break;
+    await wait(40);
+  }
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").getAttribute("aria-checked")'), 'true');
+  assert(fs.existsSync(path.join(path.dirname(exe), 'version.dll')));
+  await capture('dlssg-enabled-1280');
+  await evaluate('document.querySelector(".fg-details").open=true; true;');
+  await capture('dlssg-details-1280');
+  mainWindow.setSize(1024, 600); mainWindow.webContents.setZoomFactor(1.25); await wait(120);
+  await evaluate('document.querySelector("#fg-toggle").scrollIntoView({block:"center"}); true;');
+  const bounds = await evaluate('(()=>{const c=document.querySelector("#flyout-dlssg").getBoundingClientRect(), t=document.querySelector("#fg-toggle").getBoundingClientRect();return {fits:c.left>=0&&c.right<=innerWidth+1,toggle:t.top>=0&&t.bottom<=innerHeight+1,overflow:document.documentElement.scrollWidth>innerWidth};})()');
+  assert(bounds.fits && bounds.toggle && !bounds.overflow, JSON.stringify(bounds));
+  await capture('dlssg-1024-125percent');
+  mainWindow.webContents.setZoomFactor(1); mainWindow.setSize(1280, 800); await wait(80);
+  mainWindow.webContents.reload(); await new Promise(resolve => mainWindow.webContents.once('did-finish-load', resolve));
+  for (let i = 0; i < 100 && !await evaluate('Boolean(window.Librarian?.games.length)'); i++) await wait(40);
+  await evaluate(`window.fgFixtureId=${JSON.stringify(game.id)}; ${open}`); await ready();
+  await evaluate('document.querySelector("#flyout-graphics-tab").click(); true;');
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").getAttribute("aria-checked")'), 'true');
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && fs.existsSync(path.join(path.dirname(exe), 'version.dll')); i++) await wait(40);
+  assert(!fs.existsSync(path.join(path.dirname(exe), 'version.dll')));
+  report.checks.push('DLSSG keyboard toggle installs, survives renderer reload and removes its own files; layout fits 1024px at 125% zoom');
+
+  // Slow responses for a previous game must not repaint a newly selected game.
+  const originalStatus = dlssg.status; let release;
+  dlssg.status = async (g, ...args) => { if (g.id === game.id) await new Promise(resolve => { release = resolve; }); return originalStatus(g, ...args); };
+  await evaluate(open);
+  for (let i = 0; i < 100 && !release; i++) await wait(10);
+  assert(release);
+  await evaluate('Librarian.openFlyout(Librarian.games.find(g=>g.id!==fgFixtureId)); true;');
+  release(); dlssg.status = originalStatus; await wait(200);
+  assert.equal(await evaluate('document.querySelector("#flyout-dlssg").classList.contains("hidden")'), true);
+  await evaluate(open); await ready();
+  await evaluate('document.querySelector("#flyout-graphics-tab").click(); true;');
+  fs.writeFileSync(path.join(path.dirname(exe), 'version.dll'), 'Pre-existing mod');
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").disabled'), true);
+  assert((await evaluate('document.querySelector("#fg-message").innerText')).includes('already exists'));
+  await capture('dlssg-conflict-1280');
+  assert.equal(fs.readFileSync(path.join(path.dirname(exe), 'version.dll'), 'utf8'), 'Pre-existing mod');
+  report.checks.push('DLSSG hides on unsupported games, ignores stale responses and explains existing mod conflicts');
+  fs.writeFileSync(path.join(path.dirname(exe), 'dlssg_sm86.ini'), 'Pre-existing config');
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelectorAll("[data-code=file-conflict]").length'), 2);
+  assert.equal(await evaluate('document.querySelector(".fg-diagnostics").open'), true);
+  assert.equal(await evaluate('document.querySelector("#fg-open-folder").disabled'), false);
+  fs.unlinkSync(path.join(path.dirname(exe), 'version.dll')); fs.unlinkSync(path.join(path.dirname(exe), 'dlssg_sm86.ini'));
+  const winmm = path.join(path.dirname(exe), 'winmm.dll'); fs.writeFileSync(winmm, 'Existing loader fixture');
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").disabled'), false);
+  assert((await evaluate('document.querySelector("[data-code=other-loader]").innerText')).includes('preserved'));
+  await capture('dlssg-winmm-warning-1280');
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && !await evaluate('document.querySelector("#fg-toggle")?.getAttribute("aria-checked") === "true"'); i++) await wait(40);
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").getAttribute("aria-checked")'), 'true');
+  fs.unlinkSync(path.join(path.dirname(exe), 'version.dll'));
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelector("#fg-recover").disabled'), false);
+  await evaluate('document.querySelector("#fg-recover").click(); true;');
+  for (let i = 0; i < 100 && fs.existsSync(path.join(path.dirname(exe), 'dlssg_sm86.ini')); i++) await wait(40);
+  assert(!fs.existsSync(path.join(path.dirname(exe), 'dlssg_sm86.ini')));
+  assert.equal(fs.readFileSync(winmm, 'utf8'), 'Existing loader fixture');
+  report.checks.push('DLSSG lists all collisions, preserves winmm through enable and incomplete-install recovery, and provides folder/recheck actions');
+  executable(exe, ['winmm.dll', 'd3d12.dll']);
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").disabled'), true);
+  assert((await evaluate('document.querySelector("[data-code=proxy-unavailable]").innerText')).includes('Renaming version.dll is not a substitute'));
+  await capture('dlssg-missing-proxy-1280');
+  mainWindow.setSize(1024, 600); mainWindow.webContents.setZoomFactor(1.25); await wait(120);
+  await evaluate('document.querySelector("#fg-recheck").scrollIntoView({block:"center"}); true;');
+  assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth'), false);
+  await capture('dlssg-diagnostics-1024-125percent');
+  mainWindow.webContents.setZoomFactor(1); mainWindow.setSize(1280, 800);
+  report.checks.push('DLSSG identifies the missing VERSION route with expanded diagnostics and a scrollable compact layout');
+  const dependency = path.join(install, 'Engine/Binaries/ThirdParty/NVIDIA/NVaftermath/Win64/GFSDK_Aftermath_Lib.x64.dll');
+  executable(dependency, ['version.dll']);
+  executable(exe, ['winmm.dll', 'd3d12.dll'], true, ['GFSDK_Aftermath_Lib.x64.dll']);
+  await evaluate('LibrarianDlssg.show(Librarian.state.flyoutGame)');
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").disabled'), false);
+  assert.equal(await evaluate('Boolean(document.querySelector("[data-code=proxy-unavailable]"))'), false);
+  await evaluate('document.querySelector(".fg-diagnostics").open=true; document.querySelector(".fg-diagnostics").scrollIntoView({block:"start"}); true;');
+  assert((await evaluate('document.querySelector(".fg-checks").innerText')).includes('GFSDK_Aftermath_Lib.x64.dll → version.dll'));
+  await capture('dlssg-engine-dependency-1280');
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && !await evaluate('document.querySelector("#fg-toggle")?.getAttribute("aria-checked") === "true"'); i++) await wait(40);
+  assert.equal(await evaluate('document.querySelector("#fg-toggle").getAttribute("aria-checked")'), 'true');
+  await evaluate('document.querySelector("#fg-toggle").click(); true;');
+  for (let i = 0; i < 100 && fs.existsSync(path.join(path.dirname(exe), 'version.dll')); i++) await wait(40);
+  assert(!fs.existsSync(path.join(path.dirname(exe), 'version.dll'))); assert(fs.existsSync(dependency));
+  report.checks.push('Unreal third-party delay dependency enables the Graphics toggle, displays its loading evidence, and installs/removes beside the rendering EXE');
+  await evaluate('Librarian.closeFlyout(); api.removeCustomGame(fgFixtureId)'); await evaluate('Librarian.scanAndRender()');
+};

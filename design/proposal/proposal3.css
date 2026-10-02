@@ -1,0 +1,7 @@
+/* Round two polish */
+.btn { white-space: nowrap; }
+.fstats b { white-space: nowrap; }
+.fstats div { padding: 0 16px; }
+.weeks { height: 150px; }
+.wire { text-align: right; }
+.ach-list { align-content: space-between; height: 100%; }

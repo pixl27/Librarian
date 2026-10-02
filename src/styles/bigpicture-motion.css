@@ -1,0 +1,550 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Big Picture motion.
+
+   Big Picture has not been redrawn yet and keeps the motion it had. These
+   rules were part of the previous kinetic.css; they are all scoped under
+   html[data-kinetic="on"] #bp-root, so they never reach the desktop
+   interface, whose motion now lives in kinetic.css.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Timing ────────────────────────────────────────────────────
+     Faster than the base motion system on purpose: this language is
+     about impact, and impact is short. --k-4 is the longest thing a
+     user waits on before content is readable.                      */
+  --k-1: 90ms;    /* press / release */
+  --k-2: 170ms;   /* hover states, small swaps */
+  --k-3: 280ms;   /* rows, chips, list items */
+  --k-4: 440ms;   /* panels, cards, page bodies */
+  --k-5: 720ms;   /* hero-scale reveals, wipes */
+
+  /* ── Curves ────────────────────────────────────────────────────
+     --k-slam is the house curve: most of the distance in the first
+     third, then a visible overshoot that settles. --k-elastic is the
+     same idea pushed to where it reads as a bounce, reserved for
+     things the user just asked for.                                */
+  --k-slam:    cubic-bezier(.16, 1.26, .30, 1);
+  --k-snap:    cubic-bezier(.20, .90, .16, 1);
+  --k-elastic: cubic-bezier(.18, 1.72, .40, 1);
+  --k-exit:    cubic-bezier(.55, 0, .85, .20);
+  --k-swipe:   cubic-bezier(.62, .02, .24, 1);
+
+  /* ── Geometry ──────────────────────────────────────────────────
+     The skew is what makes motion read as "kinetic" rather than
+     "sliding". Kept under 2deg on text so nothing looks broken at the
+     moment it lands.                                               */
+  --k-skew: 1.7deg;
+  --k-skew-hard: 7deg;
+  --k-travel: 34px;
+
+  /* Distance between successive items in a cascade, and the ceiling on
+     the whole cascade — a 200-tile grid must not take six seconds. */
+  --k-step: 32ms;
+  --k-cap: 420ms;
+}
+
+@keyframes kRise {
+  from { opacity: 0; transform: translate3d(0, var(--k-travel), 0) skewY(var(--k-skew)) scale(.965); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kDrop {
+  from { opacity: 0; transform: translate3d(0, calc(var(--k-travel) * -.7), 0) skewY(calc(var(--k-skew) * -1)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSlideL {
+  from { opacity: 0; transform: translate3d(calc(var(--k-travel) * -1.6), 0, 0) skewX(calc(var(--k-skew-hard) * -1)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSlideR {
+  from { opacity: 0; transform: translate3d(calc(var(--k-travel) * 1.6), 0, 0) skewX(var(--k-skew-hard)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPop {
+  from { opacity: 0; transform: scale(.68) rotate(-3.5deg); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kFlip {
+  from { opacity: 0; transform: perspective(900px) rotateX(-62deg) translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes kCut {
+  from { opacity: 0; clip-path: polygon(0 0, 0 0, -18% 100%, 0 100%); }
+  20%  { opacity: 1; }
+  to   { opacity: 1; clip-path: polygon(0 0, 130% 0, 112% 100%, 0 100%); }
+}
+@keyframes kBump {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(1.22) rotate(-2deg); }
+  100% { transform: scale(1); }
+}
+@keyframes kNudge {
+  0%   { transform: none; }
+  40%  { transform: translateY(-3px) skewX(calc(var(--k-skew-hard) * -.35)); }
+  100% { transform: none; }
+}
+@keyframes kShake {
+  0%, 100% { transform: none; }
+  16% { transform: translate3d(-5px, 1px, 0) rotate(-.4deg); }
+  34% { transform: translate3d(4px, -2px, 0) rotate(.35deg); }
+  54% { transform: translate3d(-3px, 1px, 0); }
+  76% { transform: translate3d(2px, 0, 0); }
+}
+@keyframes kBurst {
+  from { opacity: .55; transform: translate(-50%, -50%) scale(0); }
+  to   { opacity: 0;   transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes kSwipe {
+  0%   { opacity: 0; transform: translateX(-120%) skewX(calc(var(--k-skew-hard) * -1.6)); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(220%) skewX(calc(var(--k-skew-hard) * -1.6)); }
+}
+@keyframes kBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+@keyframes kFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes kTick {
+  0%, 88%, 100% { transform: none; }
+  92%           { transform: translateY(-2px) skewX(-3deg); }
+}
+@keyframes kGlowPulse {
+  0%, 100% { opacity: .35; }
+  50%      { opacity: .85; }
+}
+@keyframes kScan {
+  from { transform: translateY(-120%); }
+  to   { transform: translateY(320%); }
+}
+@keyframes kMarch { to { background-position: 28px 0; } }
+@keyframes kSpin  { to { transform: rotate(360deg); } }
+@keyframes kPageIn {
+  from { opacity: 0; transform: translate3d(46px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPageInBack {
+  from { opacity: 0; transform: translate3d(-46px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kBarGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes kLive {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(116, 187, 171, .30), 0 14px 34px rgba(0, 0, 0, .45); }
+  50%      { box-shadow: 0 0 0 2px rgba(116, 187, 171, .58), 0 14px 40px rgba(0, 0, 0, .5); }
+}
+@keyframes kResultIn {
+  from { opacity: 0; transform: translate3d(-26px, 30px, 0) skewX(-6deg) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kResultInAlt {
+  from { opacity: 0; transform: translate3d(26px, 30px, 0) skewX(6deg) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSkelBreathe {
+  0%, 100% { opacity: .45; transform: none; }
+  50%      { opacity: .85; transform: translateY(-2px); }
+}
+@keyframes kBarWide {
+  from { opacity: 0; transform: scaleX(.2); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPosterSway {
+  0%, 100% { transform: rotate(-.5deg) translateY(0); }
+  50%      { transform: rotate(.5deg)  translateY(-5px); }
+}
+@keyframes kQueueLive {
+  0%, 100% { box-shadow: 0 0 0 1px var(--primary-glow, rgba(210,166,92,.22)); }
+  50%      { box-shadow: 0 0 0 3px var(--primary-glow, rgba(210,166,92,.22)), 0 10px 30px rgba(0,0,0,.4); }
+}
+@keyframes kLogLine {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0) skewX(-5deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSheetIn {
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.94) skewY(1.2deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPaletteIn {
+  from { opacity: 0; transform: translate3d(0, -22px, 0) scale(.96) skewY(-1deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kMenuIn {
+  from { opacity: 0; transform: scale(.86) translate3d(-6px, -6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kToastIn {
+  from { opacity: 0; transform: translate3d(46px, 0, 0) skewX(8deg) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kToastOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translate3d(56px, 0, 0) skewX(10deg) scale(.92); }
+}
+@keyframes kFlash {
+  0%   { box-shadow: 0 0 0 0 var(--primary-glow-strong, rgba(210,166,92,.42)); transform: translateX(0); }
+  12%  { box-shadow: 0 0 0 4px var(--primary-glow-strong, rgba(210,166,92,.42)); transform: translateX(6px) skewX(-2deg); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: none; }
+}
+@keyframes kCardDeal {
+  from { opacity: 0; transform: translate3d(0, 6%, 0) scale(.86) rotate(-2.4deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kBpPanel {
+  from { opacity: 0; transform: translateY(2.4%) scale(.96) skewY(1deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kBpMarch { to { background-position: calc(var(--u) * 1.55) 0; } }
+@keyframes kCurtainArt {
+  from { opacity: 0; transform: scale(1.22) rotate(-1.6deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPlateIn {
+  from { opacity: 0; transform: scale(.965); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSpotDrift {
+  from { transform: scale(1.02) translate3d(0, 0, 0); }
+  to   { transform: scale(1.07) translate3d(-1.2%, -1%, 0); }
+}
+@keyframes kRailIn {
+  from { opacity: 0; transform: translate3d(-22px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kBarDrop {
+  from { opacity: 0; transform: translate3d(0, -14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kCallToAction {
+  0%, 82%, 100% { box-shadow: 0 0 0 0 var(--primary-glow, rgba(210,166,92,.22)); }
+  90%           { box-shadow: 0 0 0 5px transparent, 0 0 22px var(--primary-glow-strong, rgba(210,166,92,.42)); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ▓▓ BIG PICTURE ▓▓
+   ═══════════════════════════════════════════════════════════════════
+   Everything here is scoped under #bp-root, which already carries its own
+   .no-anim guard for the case where frames stop arriving — that guard
+   zeroes animation-duration on every descendant, so it covers this file
+   too and no extra stalling logic is needed.
+
+   Couch distance changes the arithmetic. A 3px lean that reads as crisp on
+   a desk is invisible from a sofa, so every amplitude below is expressed in
+   --u (1% of the stage width) and runs roughly twice the size of its
+   desktop counterpart.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The whole front-end cuts in on a diagonal rather than fading up. */
+/* The root gets nothing at all. bigpicture.css already opens it with its own
+   opacity + scale transition, and #bp-root is full-bleed over #bp-bg, which
+   carries will-change: transform, a live <video>, and two Ken Burns layers.
+   A second transform animation on that container re-rasterises the whole
+   stack against a moving parent — which is where the stale, ghosted frame of
+   the previous screen in the background came from. One transform on this
+   element, owned by the module that also owns the layers underneath it. */
+
+/* ═══ Rail ══════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-rail-item {
+  transition:
+    color .16s ease,
+    background .16s ease,
+    transform .26s var(--k-elastic);
+}
+html[data-kinetic="on"] #bp-root .bp-rail-item svg { transition: transform .26s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor { transform: translateX(calc(var(--u) * .35)) skewX(-4deg); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor svg { transform: scale(1.22) rotate(-8deg); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-active svg { animation: kTick 6s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-active::before { animation: kBarGrow .42s var(--k-slam) backwards; transform-origin: 50% 50%; }
+html[data-kinetic="on"] #bp-root .bp-rail-label { transition: transform .26s var(--k-slam), opacity .2s ease; }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor .bp-rail-label { transform: translateX(calc(var(--u) * .2)); }
+
+/* Rail items deal themselves in when the front-end opens. */
+html[data-kinetic="on"] #bp-root.is-open .bp-rail-item {
+  animation: kSlideL .44s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms + 120ms), 560ms);
+}
+
+/* ═══ Shelf and cards ═══════════════════════════════════════════════
+   The selected cover overshoots, throws a hard accent shadow and takes a
+   light swipe; its name plate lands a beat later so the two do not read as
+   one movement. Unselected covers sit back and stay quiet.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-card {
+  transition:
+    transform .34s var(--k-elastic),
+    box-shadow .3s ease,
+    outline-color .18s ease;
+}
+/* The selection scale stays exactly where bigpicture.css set it. moveTrack()
+   reserves the overhang as `first.offsetWidth * 0.05` when it works out how
+   far the shelf may travel, so 1.075 is not a taste value — it is the number
+   the scroll arithmetic is built around. Scaling to 1.09 and lifting the card
+   pushed it past that reserve and the shelf clipped its own selection. */
+html[data-kinetic="on"] #bp-root[data-zone="shelf"] .bp-card.is-sel,
+html[data-kinetic="on"] #bp-root[data-zone="grid"] .bp-card.is-sel {
+  box-shadow:
+    0 calc(var(--u) * .9) calc(var(--u) * 2.6) rgba(0, 0, 0, .68),
+    0 0 calc(var(--u) * 2.6) var(--bp-accent-soft);
+}
+html[data-kinetic="on"] #bp-root .bp-card.is-press { transform: scale(.94) !important; transition-duration: .09s; }
+html[data-kinetic="on"] #bp-root .bp-card-plate { transition: transform .38s var(--k-elastic), opacity .22s ease; }
+html[data-kinetic="on"] #bp-root .bp-card-name { transition: transform .3s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-card.is-sel .bp-card-name { transform: translateX(calc(var(--u) * .18)) skewX(-3deg); }
+
+/* The shelf itself travels with an overshoot, which is what makes holding
+   a direction feel like flicking through a rack rather than scrolling. */
+html[data-kinetic="on"] #bp-root #bp-track { transition: transform .42s var(--k-slam); }
+
+/* Cards deal in when the shelf is rebuilt.
+   This rides the mechanism bigpicture.js already has rather than adding one:
+   .is-enter is the parked state, .is-entering is the transition that releases
+   it, --d is the per-card delay, and both classes come off on a timer so a
+   stalled renderer still ends with every card visible. All that changes here
+   is how far the card travels and on what curve. */
+html[data-kinetic="on"] #bp-root .bp-card.is-enter {
+  transform: translateY(calc(var(--u) * 2.2)) scale(.88) rotate(-2.6deg);
+}
+html[data-kinetic="on"] #bp-root .bp-card.is-entering {
+  transition:
+    opacity .34s ease var(--d, 0s),
+    transform .56s var(--k-slam) var(--d, 0s);
+}
+
+/* Search results are built with the enter classes already stripped, so they
+   need an animation of their own. */
+
+
+/* Flags on a cover pop rather than appear, and a live one keeps beating. */
+html[data-kinetic="on"] #bp-root .bp-flag { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 60ms), 240ms); }
+html[data-kinetic="on"] #bp-root .bp-flag.is-live { animation: kPop .3s var(--k-elastic) backwards, kGlowPulse 1.6s ease-in-out infinite .3s; }
+
+/* ═══ Detail column ═════════════════════════════════════════════════
+   bigpicture.js flips .is-swap for ~95ms on every selection change. That
+   is the beat this hangs on: the column ducks out, and its contents deal
+   back in one after another rather than all together.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-detail { transition: opacity .2s ease, transform .3s var(--k-slam); }
+html[data-kinetic="on"] #bp-root #bp-detail.is-swap {
+  opacity: .001;
+  transform: translateY(calc(var(--u) * 1.1)) skewY(1.2deg);
+}
+/* kRise, not kCut: a clip-path wipe over a title that may already be
+   ellipsised is indistinguishable from the text being cut off, and this
+   column re-runs on every single shelf movement. */
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-logo,
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-title { animation: kRise .46s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-rule  { animation: kBarWide .46s var(--k-slam) backwards; animation-delay: 60ms; transform-origin: left center; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-meta  { animation: kSlideL .42s var(--k-slam) backwards; animation-delay: 90ms; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-desc  { animation: kRise .44s var(--k-slam) backwards; animation-delay: 130ms; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-name  { animation: kRise .46s var(--k-slam) backwards; }
+
+/* Meta pills and stat cells arrive as a set. */
+html[data-kinetic="on"] #bp-root .bp-pill {
+  animation: kPop .3s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 34ms + 90ms), 340ms);
+}
+/* Scoped to the stats column on purpose. tabular-nums widens digit glyphs,
+   and #bp-det-tags is a fixed max-height box that clips: one extra wrapped
+   line there is one more value cut off. The stats are the only cells with
+   numbers in them anyway. */
+html[data-kinetic="on"] #bp-root #bp-det-stats .bp-stat-value { font-variant-numeric: tabular-nums; }
+
+/* ═══ Details view ══════════════════════════════════════════════════
+   Deliberately the quietest screen in this file.
+
+   It is the busiest one in the app: a trailer, two cross-fading background
+   layers, a screenshot slideshow, a tab strip whose panels swap, and an
+   achievement fetch that lands whenever the network says so — all of them
+   already animating, several of them mid-flight when the view opens. An
+   entrance choreography layered on top of that fought the transitions
+   bigpicture.css already runs, and read as glitching rather than motion.
+
+   So there are no entrances here. What is left is the part that answers
+   input directly: the cursor leans, the press collapses, the bars fill.
+   The screen still moves; it just no longer moves twice.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-act {
+  transition: background .16s ease, color .16s ease, transform .26s var(--k-elastic), box-shadow .22s ease;
+}
+html[data-kinetic="on"] #bp-root .bp-act.is-press { transform: scale(.96); transition-duration: .09s; }
+
+/* Screenshot strip: the focused shot steps forward out of the row. */
+html[data-kinetic="on"] #bp-root .bp-shot { transition: filter .22s ease, opacity .22s ease; }
+
+/* Achievements: rows deal in, bars fill from empty, pips pop. */
+html[data-kinetic="on"] #bp-root .bp-ach-strip > *,
+html[data-kinetic="on"] #bp-root #bp-ach-list > * {
+  animation: kSlideL .4s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 30ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root .bp-ach-bar > *,
+html[data-kinetic="on"] #bp-root #bp-ach-fill,
+html[data-kinetic="on"] #bp-root #bp-det-achbar > * { transition: width .62s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-achpip { animation: kPop .28s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 18ms), 300ms); }
+html[data-kinetic="on"] #bp-root .bp-ach-pct { font-variant-numeric: tabular-nums; }
+
+/* News items behave like the achievement list: a deck being dealt. The
+   whole post travels, not its body text — the body is nested two levels
+   down and animating it alone would slide the paragraph out from under
+   its own headline. */
+html[data-kinetic="on"] #bp-root .bp-news-item,
+html[data-kinetic="on"] #bp-root .bp-detnews-item {
+  animation: kSlideL .42s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms), 440ms);
+}
+html[data-kinetic="on"] #bp-root .bp-news-empty { animation: kRise .42s var(--k-slam) backwards; }
+
+/* ═══ Panels — menu, system, filter, update ═════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-panel { animation: kBpPanel .42s var(--k-elastic) backwards; }
+
+html[data-kinetic="on"] #bp-root .bp-panel-head { animation: kSlideL .4s var(--k-slam) backwards; animation-delay: 60ms; }
+html[data-kinetic="on"] #bp-root .bp-panel-sub  { animation: kSlideL .4s var(--k-slam) backwards; animation-delay: 90ms; }
+/* Cursor feedback goes on every row, including the download sheet. */
+html[data-kinetic="on"] #bp-root .bp-row {
+  transition:
+    background .16s ease,
+    color .16s ease,
+    border-color .16s ease,
+    transform .24s var(--k-slam),
+    padding-left .2s var(--k-slam);
+}
+/* The deal-in does not: download rows are rebuilt on a progress tick rather
+   than on an interaction, so an entrance there restarts once a second. */
+html[data-kinetic="on"] #bp-root :not(#bp-dl-rows) > .bp-row {
+  animation: kSlideL .36s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 26ms + 110ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root .bp-row.is-cursor { transform: translateX(calc(var(--u) * .34)) skewX(-2.4deg); }
+html[data-kinetic="on"] #bp-root .bp-row.is-press  { transform: translateX(calc(var(--u) * .16)) scale(.985); transition-duration: .09s; }
+html[data-kinetic="on"] #bp-root .bp-row svg { transition: transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-row.is-cursor svg { transform: scale(1.18) rotate(-7deg); }
+
+/* ═══ Search ════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-search-box { transition: transform .3s var(--k-elastic), box-shadow .26s ease; }
+html[data-kinetic="on"] #bp-root #bp-search.is-on #bp-search-box { animation: kPop .42s var(--k-elastic) backwards; }
+html[data-kinetic="on"] #bp-root #bp-query-wrap { transition: transform .26s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-key {
+  transition: background .14s ease, color .14s ease, transform .22s var(--k-elastic), box-shadow .2s ease;
+  animation: kPop .3s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 8ms), 260ms);
+}
+html[data-kinetic="on"] #bp-root .bp-key.is-cursor { transform: scale(1.14) skewX(-3deg); z-index: 2; }
+html[data-kinetic="on"] #bp-root .bp-key.is-press { transform: scale(.88); transition-duration: .07s; }
+html[data-kinetic="on"] #bp-root #bp-results .bp-card {
+  animation: kCardDeal .46s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 30ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root #bp-results-empty { animation: kRise .44s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root .bp-skel { animation: kSkelBreathe 1.6s ease-in-out infinite; animation-delay: calc(var(--k-i, 0) * 70ms); }
+
+/* ═══ Downloads view ════════════════════════════════════════════════
+   Same story as the up-next list: paintDownloads() calls paintRows(), which
+   assigns innerHTML, and the librarian:download handler calls it on every
+   tick while this sheet is open. The rows are excluded from the .bp-row
+   entrance below rather than given one of their own.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-dl-pct,
+html[data-kinetic="on"] #bp-root #bp-dl-stats,
+html[data-kinetic="on"] #bp-root #bp-upd-stats,
+html[data-kinetic="on"] #bp-root #bp-clock { font-variant-numeric: tabular-nums; }
+html[data-kinetic="on"] #bp-root #bp-dl-bar > *,
+html[data-kinetic="on"] #bp-root #bp-upd-fill,
+html[data-kinetic="on"] #bp-root #bp-curtain-bar > * { transition: width .5s var(--k-slam); }
+
+/* The filled part of every Big Picture bar marches, at couch scale. */
+html[data-kinetic="on"] #bp-root #bp-dl-bar > *,
+html[data-kinetic="on"] #bp-root #bp-upd-fill,
+html[data-kinetic="on"] #bp-root #bp-ach-fill {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, .18) 0 calc(var(--u) * .45),
+    transparent calc(var(--u) * .45) calc(var(--u) * 1)
+  );
+  background-size: calc(var(--u) * 1.55) 100%;
+  animation: kBpMarch .7s linear infinite;
+}
+
+
+html[data-kinetic="on"] #bp-root #bp-upd-spin { animation: kSpin 1.05s linear infinite; }
+html[data-kinetic="on"] #bp-root .bp-ring-fill { transition: stroke-dashoffset .6s var(--k-slam); }
+html[data-kinetic="on"] #bp-root #bp-dl-live { animation: kGlowPulse 1.5s ease-in-out infinite; }
+
+/* ═══ Hint bar ══════════════════════════════════════════════════════
+   The glyphs tick on a long cycle. It is the only thing on screen while
+   you sit reading a description, and a dead hint bar makes the whole
+   front-end look frozen.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-hint { transition: color .16s ease, transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-hint:hover { transform: translateY(calc(var(--u) * -.2)) skewX(-4deg); }
+html[data-kinetic="on"] #bp-root .bp-hint.is-hit { animation: kBump .3s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-glyph { animation: kTick 7s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root .bp-hint:nth-child(2n) .bp-glyph { animation-delay: 1.4s; }
+html[data-kinetic="on"] #bp-root .bp-hint:nth-child(3n) .bp-glyph { animation-delay: 2.8s; }
+html[data-kinetic="on"] #bp-root #bp-hints { animation: kRise .5s var(--k-slam) backwards; animation-delay: .3s; }
+
+/* ═══ Top strip ═════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-top { animation: kDrop .5s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root .bp-top-btn { transition: color .16s ease, background .16s ease, transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-top-btn:hover  { transform: scale(1.14) rotate(-6deg); }
+html[data-kinetic="on"] #bp-root .bp-top-btn:active { transform: scale(.88); }
+html[data-kinetic="on"] #bp-root .bp-playing-dot { animation: kGlowPulse 1.8s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root #bp-playing { animation: kSlideR .5s var(--k-slam) backwards; }
+
+/* ═══ Launch curtain ════════════════════════════════════════════════
+   The last thing seen before a game takes the screen, so it gets the one
+   genuinely large movement in the front-end: the art punches in.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-curtain.is-on #bp-curtain-art  { animation: kCurtainArt .8s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-curtain.is-on #bp-curtain-text { animation: kRise .5s var(--k-slam) backwards; animation-delay: .18s; }
+
+
+/* ═══ Empty state ═══════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-empty { animation: kRise .5s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-empty-actions > * {
+  animation: kPop .38s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 60ms + 160ms), 400ms);
+}
+
+   Scoped inside #bp-root, which carries its own .no-anim guard for an
+   occluded window — so these are covered by it without extra work. */
+
+html[data-kinetic="on"] #bp-root #bp-sf-search { animation: kSlideL .44s var(--k-slam) backwards; animation-delay: .1s; }
+html[data-kinetic="on"] #bp-root #bp-sf-kicker { animation: kSlideL .44s var(--k-slam) backwards; animation-delay: .16s; }
+html[data-kinetic="on"] #bp-root #bp-sf-name   { animation: kSlideL .48s var(--k-slam) backwards; animation-delay: .2s; }
+html[data-kinetic="on"] #bp-root .bp-sf-rail {
+  animation: kRailIn .46s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 80ms + 240ms), 700ms);
+}
+html[data-kinetic="on"] #bp-root .bp-sf-card {
+  animation: kPop .4s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms + 300ms), 820ms);
+}
+/* The heading is rewritten on every step along a shelf, so it flinches
+   rather than sliding — a slide would restart mid-travel and stutter. */
+html[data-kinetic="on"] #bp-root .bp-sf-pill { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 50ms), 200ms); }
+
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-logo,
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-name  { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .12s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-sub   { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .18s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-facts { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .24s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-right { animation: kSlideR .55s var(--k-slam) backwards; animation-delay: .3s; }
+html[data-kinetic="on"] #bp-root .bp-store-tag { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 22ms + 340ms), 620ms); }
+html[data-kinetic="on"] #bp-root #bp-store-shots img { animation: kPop .34s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 44ms + 380ms), 700ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-kinetic="on"] #bp-root *,
+  html[data-kinetic="on"] #bp-root *::before,
+  html[data-kinetic="on"] #bp-root *::after {
+    animation-duration: .01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+  }
+}

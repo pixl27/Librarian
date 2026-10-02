@@ -1,0 +1,2526 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Librarian — Big Picture
+   A couch/controller front-end modelled on the Playnite "Modern UI"
+   fullscreen theme: full-bleed hero art, a narrow icon rail, a pinned-left
+   cover carousel (or a grid), and a button-hint bar.
+
+   Everything is sized from a single unit, --u, equal to 1% of the width of
+   a 16:9 stage fitted inside the window. That is what keeps the proportions
+   identical from a 1366×768 laptop to a 4K TV — the reference theme is
+   resolution-independent in exactly the same way.
+
+   Loaded last, scoped entirely under #bp-root, and never applies unless
+   js/bigpicture.js puts it on screen.
+   ═══════════════════════════════════════════════════════════════════ */
+
+#bp-root {
+  /* 1u = 1% of the 16:9 stage's width. min() picks whichever axis is the
+     constraint, so an ultrawide window letterboxes instead of stretching. */
+  --u: min(1vw, 1.7778vh);
+
+  --bp-accent: #17C8B6;
+  --bp-accent-soft: rgba(23, 200, 182, 0.24);
+  --bp-accent-glow: rgba(23, 200, 182, 0.42);
+  --bp-void: #08090A;
+  --bp-ink: #FFFFFF;
+  --bp-dim: rgba(255, 255, 255, 0.74);
+  --bp-mute: rgba(255, 255, 255, 0.46);
+  --bp-tan: #D8B98C;
+  --bp-sheet: rgba(18, 20, 22, 0.92);
+  --bp-line: rgba(255, 255, 255, 0.14);
+
+  --bp-rail: calc(var(--u) * 4.3);
+  --bp-gutter: calc(var(--u) * 5.6);
+  --bp-card-w: calc(var(--u) * 15.7);
+  --bp-card-h: calc(var(--u) * 23.55);
+  --bp-card-gap: calc(var(--u) * 0.42);
+  --bp-radius: calc(var(--u) * 0.55);
+
+  --bp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --bp-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+  background: var(--bp-void);
+  color: var(--bp-ink);
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  font-size: var(--u);
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+
+  /* Entrance/exit. Held at pointer-events:none while closed so the desktop UI
+     underneath stays clickable. */
+  opacity: 0;
+  transform: scale(1.028);
+  pointer-events: none;
+  transition: opacity 0.34s ease, transform 0.52s var(--bp-spring);
+}
+
+#bp-root.is-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* When the window is occluded, animation frames stop arriving and a
+   mid-flight transition would freeze. The module adds .no-anim in that case
+   so the UI lands on its final state immediately instead. */
+#bp-root.no-anim,
+#bp-root.no-anim * {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+#bp-root[hidden] { display: none; }
+
+/* [hidden] is a UA rule (display:none) and loses to any explicit display of
+   our own — which the wordmark and the titles all set. Restate it so hiding
+   one of a logo/title pair actually hides it. */
+#bp-root [hidden] { display: none !important; }
+
+/* Big Picture owns the screen: nothing of the desktop chrome shows through,
+   and the page must not scroll behind it. */
+html[data-bp="on"] { overflow: hidden; }
+html[data-bp="on"] #topbar,
+html[data-bp="on"] #magic-sidebar { pointer-events: none; }
+
+/* Launch feedback is worth keeping — lift it above the overlay and out of the
+   way of the hint bar. */
+html[data-bp="on"] #toast-stack {
+  z-index: 9800;
+  right: calc(var(--u, 12px) * 2.2);
+  bottom: calc(var(--u, 12px) * 5.4);
+}
+
+/* ─── Stage ─────────────────────────────────────────────────────── */
+/* A 16:9 box centred in the window. Everything lives inside it, so the
+   layout can never drift out of proportion. */
+#bp-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(var(--u) * 100);
+  height: calc(var(--u) * 56.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Background ────────────────────────────────────────────────── */
+#bp-bg {
+  position: absolute;
+  /* Deliberately larger than the window. This element both clips the drifting
+     layers *and* carries the parallax offset, so at inset:0 the clip box slid
+     with it and left a strip of bare background down one edge. The overscan is
+     comfortably wider than the largest offset (--bp-par maxes out at 2.2%). */
+  inset: calc(var(--u) * -6);
+  overflow: hidden;
+  background: #06070800;
+  /* Two independent motions live here rather than on the layers, which already
+     use `transform` for their Ken Burns drift:
+       --bp-par   parallax, driven by the position in the shelf
+       --bp-zoom  a short push-in on every background swap */
+  transform: translate3d(calc(var(--bp-par, 0) * -2.2%), 0, 0) scale(var(--bp-zoom, 1));
+  transition: transform 0.62s var(--bp-ease);
+  will-change: transform;
+}
+
+/* Trailer behind the covers. Sits above the stills and below every scrim, so
+   the same gradients that make the artwork readable make the video readable. */
+#bp-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+
+#bp-bg-video.is-on { opacity: 1; }
+
+.bp-layer {
+  position: absolute;
+  inset: calc(var(--u) * -3);
+  background-size: cover;
+  background-position: 72% 26%;
+  opacity: 0;
+  transition: opacity 0.72s ease;
+  will-change: opacity, transform;
+}
+
+.bp-layer.is-on { opacity: 1; }
+
+/* A very slow drift keeps a static still from looking like a screenshot.
+   Transform-only, so a frozen animation degrades to "not moving". */
+.bp-layer.is-on { animation: bpDrift 34s ease-in-out infinite alternate; }
+
+@keyframes bpDrift {
+  from { transform: scale(1.04) translate3d(0, 0, 0); }
+  to   { transform: scale(1.11) translate3d(-1.4%, -1.1%, 0); }
+}
+
+/* Scrims. Two stacked gradients: one across, one up — the reference theme
+   keeps the right third of the art readable and buries the left under text. */
+#bp-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right,
+      rgba(8, 9, 10, 0.9) 0%,
+      rgba(8, 9, 10, 0.78) 20%,
+      rgba(8, 9, 10, 0.5) 38%,
+      rgba(8, 9, 10, 0.24) 52%,
+      rgba(8, 9, 10, 0) 66%),
+    linear-gradient(100deg,
+      rgba(8, 9, 10, 0.9) 0%,
+      rgba(8, 9, 10, 0.8) 24%,
+      rgba(8, 9, 10, 0.44) 44%,
+      rgba(8, 9, 10, 0.14) 64%,
+      rgba(8, 9, 10, 0.04) 82%,
+      rgba(8, 9, 10, 0.22) 100%),
+    linear-gradient(to top,
+      rgba(8, 9, 10, 0.95) 0%,
+      rgba(8, 9, 10, 0.66) 15%,
+      rgba(8, 9, 10, 0.18) 36%,
+      rgba(8, 9, 10, 0) 56%);
+  transition: opacity 0.5s ease;
+}
+
+/* Grid layout puts covers over the right half, so that half needs holding down. */
+#bp-root[data-layout="grid"] #bp-scrim {
+  background:
+    linear-gradient(100deg,
+      rgba(8, 9, 10, 0.95) 0%,
+      rgba(8, 9, 10, 0.9) 26%,
+      rgba(8, 9, 10, 0.74) 46%,
+      rgba(8, 9, 10, 0.56) 70%,
+      rgba(8, 9, 10, 0.5) 100%),
+    linear-gradient(to top,
+      rgba(8, 9, 10, 0.86) 0%,
+      rgba(8, 9, 10, 0.38) 18%,
+      rgba(8, 9, 10, 0) 46%);
+}
+
+/* Grain + vignette. Cheap, and it stops large flat gradients from banding. */
+#bp-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(120% 90% at 50% 45%, transparent 52%, rgba(0, 0, 0, 0.5) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ─── Left rail ─────────────────────────────────────────────────── */
+#bp-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--bp-rail);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--u) * 0.35);
+  padding: calc(var(--u) * 0.55) 0;
+  overflow: hidden;
+  z-index: 6;
+  background: linear-gradient(to right, rgba(6, 7, 8, 0.6), transparent);
+  transition: width 0.34s var(--bp-spring), background 0.34s ease;
+}
+
+/* Focusing the rail widens it and lets the labels in — the one place the
+   reference theme's icon-only rail needs help on a first run. */
+#bp-root[data-zone="rail"] #bp-rail {
+  width: calc(var(--u) * 21);
+  background: linear-gradient(to right,
+    rgba(6, 7, 8, 0.985) 0%,
+    rgba(6, 7, 8, 0.965) 74%,
+    rgba(6, 7, 8, 0) 100%);
+  backdrop-filter: blur(calc(var(--u) * 0.5));
+}
+
+/* The rail names the group while it is open, so the heading would only be the
+   same word twice — printed straight through the panel. */
+#bp-title { transition: opacity 0.26s ease, transform 0.3s var(--bp-ease); }
+
+#bp-root[data-zone="rail"] #bp-title {
+  opacity: 0;
+  transform: translateX(calc(var(--u) * 1.4));
+}
+
+.bp-rail-scroll {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.35);
+  overflow: hidden;
+}
+
+.bp-rail-item {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.9);
+  width: 100%;
+  height: calc(var(--u) * 3.05);
+  padding-left: calc((var(--bp-rail) - var(--u) * 1.4) / 2);
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.52);
+  font: inherit;
+  font-size: calc(var(--u) * 0.98);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+  font-weight: 500;
+}
+
+.bp-rail-item svg {
+  flex-shrink: 0;
+  width: calc(var(--u) * 1.4);
+  height: calc(var(--u) * 1.4);
+  fill: currentColor;
+  transition: transform 0.24s var(--bp-spring);
+}
+
+.bp-rail-item .bp-rail-label {
+  opacity: 0;
+  transform: translateX(calc(var(--u) * -0.6));
+  transition: opacity 0.22s ease, transform 0.28s var(--bp-spring);
+}
+
+#bp-root[data-zone="rail"] .bp-rail-label {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger the labels in, so the rail unfurls rather than snapping. */
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(1) .bp-rail-label { transition-delay: 0.02s; }
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(2) .bp-rail-label { transition-delay: 0.05s; }
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(3) .bp-rail-label { transition-delay: 0.08s; }
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(4) .bp-rail-label { transition-delay: 0.11s; }
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(5) .bp-rail-label { transition-delay: 0.14s; }
+#bp-root[data-zone="rail"] .bp-rail-item:nth-child(n+6) .bp-rail-label { transition-delay: 0.17s; }
+
+.bp-rail-item:hover { color: rgba(255, 255, 255, 0.9); }
+
+.bp-rail-item.is-active {
+  color: var(--bp-ink);
+}
+
+/* The active group gets the theme's filled accent chip behind its glyph. */
+.bp-rail-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: calc((var(--bp-rail) - var(--u) * 2.35) / 2);
+  top: 50%;
+  width: calc(var(--u) * 2.35);
+  height: calc(var(--u) * 2.35);
+  transform: translateY(-50%);
+  border-radius: calc(var(--u) * 0.3);
+  background: var(--bp-accent);
+  z-index: -1;
+  animation: bpChip 0.34s var(--bp-spring);
+}
+
+@keyframes bpChip {
+  from { transform: translateY(-50%) scale(0.4); opacity: 0; }
+  to   { transform: translateY(-50%) scale(1); opacity: 1; }
+}
+
+/* Cursor within the rail while the rail has focus. */
+#bp-root[data-zone="rail"] .bp-rail-item.is-cursor {
+  color: var(--bp-ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#bp-root[data-zone="rail"] .bp-rail-item.is-cursor svg { transform: scale(1.12); }
+
+/* ─── Top bar ───────────────────────────────────────────────────── */
+#bp-top {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(var(--u) * 4.4);
+  padding: calc(var(--u) * 1.3) var(--bp-gutter) 0 var(--bp-gutter);
+  z-index: 4;
+}
+
+#bp-title {
+  position: relative;
+  font-size: calc(var(--u) * 1.70);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding-bottom: calc(var(--u) * 0.42);
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+/* The accent underline, animated in from the left on every group change. */
+#bp-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: calc(var(--u) * 0.13);
+  width: 100%;
+  background: var(--bp-accent);
+  transform-origin: left center;
+  animation: bpUnderline 0.42s var(--bp-spring);
+}
+
+@keyframes bpUnderline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+#bp-top-right {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.3);
+}
+
+#bp-clock {
+  font-size: calc(var(--u) * 1.02);
+  color: var(--bp-dim);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+.bp-top-btn {
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 2.2);
+  height: calc(var(--u) * 2.2);
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: transform 0.22s var(--bp-spring), color 0.2s ease, background 0.2s ease;
+}
+
+.bp-top-btn svg {
+  width: calc(var(--u) * 1.5);
+  height: calc(var(--u) * 1.5);
+  fill: currentColor;
+}
+
+.bp-top-btn:hover { color: #fff; transform: scale(1.1); }
+.bp-top-btn:active { transform: scale(0.94); }
+
+/* The grid-view toggle carries a ring when the grid is the active layout —
+   the "handy Grid View button" from the theme's own documentation. */
+.bp-top-btn.is-on {
+  color: var(--bp-accent);
+  box-shadow: 0 0 0 calc(var(--u) * 0.14) var(--bp-accent);
+  background: rgba(23, 200, 182, 0.12);
+}
+
+/* ─── Detail block (hero text) ──────────────────────────────────── */
+#bp-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  z-index: 3;
+}
+
+#bp-detail {
+  padding: calc(var(--u) * 4) 0 0 var(--bp-gutter);
+  width: calc(var(--u) * 48);
+  flex-shrink: 0;
+  /* Retriggered on every selection change by toggling .is-swap. */
+  transition: opacity 0.26s ease, transform 0.34s var(--bp-ease);
+}
+
+#bp-detail.is-swap {
+  opacity: 0.001;
+  transform: translateY(calc(var(--u) * 0.9));
+}
+
+#bp-logo {
+  display: block;
+  max-width: calc(var(--u) * 24);
+  max-height: calc(var(--u) * 5.4);
+  object-fit: contain;
+  object-position: left bottom;
+  margin-bottom: calc(var(--u) * 0.7);
+}
+
+#bp-name {
+  font-size: calc(var(--u) * 2.32);
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.004em;
+  max-width: calc(var(--u) * 40);
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#bp-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.85);
+  margin-top: calc(var(--u) * 0.9);
+  font-size: calc(var(--u) * 1.02);
+  color: var(--bp-dim);
+  font-weight: 500;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-meta .bp-star {
+  width: calc(var(--u) * 1.05);
+  height: calc(var(--u) * 1.05);
+  fill: #fff;
+  flex-shrink: 0;
+  transition: transform 0.3s var(--bp-spring), fill 0.2s ease;
+}
+
+#bp-meta .bp-star.is-off { fill: rgba(255, 255, 255, 0.28); }
+#bp-meta .bp-star.is-pop { transform: scale(1.45) rotate(12deg); }
+
+#bp-meta .bp-pill {
+  padding: calc(var(--u) * 0.08) calc(var(--u) * 0.5);
+  border: 1px solid var(--bp-line);
+  border-radius: calc(var(--u) * 0.25);
+  font-size: calc(var(--u) * 0.84);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bp-dim);
+}
+
+#bp-meta .bp-pill.is-live {
+  border-color: var(--bp-accent);
+  color: var(--bp-accent);
+  animation: bpPulse 2.2s ease-in-out infinite;
+}
+
+#bp-meta .bp-pill.is-warn { border-color: #E5A93C; color: #E5A93C; }
+
+@keyframes bpPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+#bp-desc {
+  margin-top: calc(var(--u) * 1.15);
+  max-width: calc(var(--u) * 42);
+  font-size: calc(var(--u) * 1.0);
+  line-height: 1.52;
+  color: rgba(255, 255, 255, 0.86);
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(var(--u) * 0.85 * 1.52 * 4);
+  font-weight: 450;
+}
+
+/* Grid layout: the detail column narrows, gains the theme's hairline rule
+   under the title, and the description grows taller. */
+#bp-root[data-layout="grid"] #bp-detail {
+  width: calc(var(--u) * 29.5);
+  padding-top: calc(var(--u) * 3.4);
+}
+
+#bp-root[data-layout="grid"] #bp-name {
+  font-size: calc(var(--u) * 2.05);
+  -webkit-line-clamp: 3;
+  max-width: calc(var(--u) * 21);
+}
+
+#bp-root[data-layout="grid"] #bp-desc {
+  max-width: calc(var(--u) * 20);
+  -webkit-line-clamp: 9;
+  font-size: calc(var(--u) * 0.92);
+  min-height: 0;
+}
+
+#bp-rule {
+  display: none;
+  width: calc(var(--u) * 19);
+  height: 1px;
+  margin-top: calc(var(--u) * 1.05);
+  background: rgba(255, 255, 255, 0.66);
+  transform-origin: left center;
+  animation: bpUnderline 0.5s var(--bp-spring);
+}
+
+#bp-root[data-layout="grid"] #bp-rule { display: block; }
+
+/* ─── Carousel (horizontal layout) ──────────────────────────────── */
+#bp-shelf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--u) * 6.3);
+  height: calc(var(--bp-card-h) + var(--u) * 2.2);
+  z-index: 3;
+  overflow: hidden;
+  /* Overflow-hidden would clip the focused card's glow, so pad the box and
+     pull it back with a negative offset instead of clipping the art. */
+  padding: calc(var(--u) * 1.1) 0;
+  display: flex;
+  align-items: center;
+}
+
+#bp-root[data-layout="grid"] #bp-shelf { display: none; }
+
+#bp-track {
+  display: flex;
+  gap: var(--bp-card-gap);
+  padding-left: var(--bp-gutter);
+  padding-right: var(--bp-gutter);
+  will-change: transform;
+  transition: transform 0.44s var(--bp-ease);
+}
+
+/* ─── Grid layout ───────────────────────────────────────────────── */
+#bp-grid-wrap {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 2.5) calc(var(--u) * 1) calc(var(--u) * 1.75);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--u) * 1.6), #000 calc(100% - var(--u) * 4.4), transparent 100%);
+}
+
+#bp-grid-wrap::-webkit-scrollbar { width: 0; }
+
+#bp-root[data-layout="grid"] #bp-grid-wrap { display: block; }
+
+#bp-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: calc(var(--u) * 0.35);
+  padding-bottom: calc(var(--u) * 5.5);
+}
+
+#bp-grid .bp-card {
+  width: auto;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+/* ─── Cover card ────────────────────────────────────────────────── */
+.bp-card {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--bp-card-w);
+  height: var(--bp-card-h);
+  border: 0;
+  padding: 0;
+  background: #14171A;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 calc(var(--u) * 0.3) calc(var(--u) * 1.1) rgba(0, 0, 0, 0.5);
+  transition:
+    transform 0.3s var(--bp-spring),
+    box-shadow 0.3s ease,
+    outline-color 0.18s ease;
+  outline: calc(var(--u) * 0.17) solid transparent;
+  outline-offset: calc(var(--u) * -0.17);
+  will-change: transform;
+}
+
+#bp-root[data-rounded="on"] .bp-card { border-radius: var(--bp-radius); }
+
+.bp-card-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.bp-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s var(--bp-ease), filter 0.3s ease;
+  /* Unselected covers sit back a touch; the reference theme keeps the whole
+     shelf legible without making the selection shout. */
+  filter: brightness(0.86) saturate(0.94);
+}
+
+.bp-card:hover .bp-card-art img { filter: brightness(1) saturate(1); }
+
+/* Selection: the theme's teal frame, a lift, and a soft accent bloom. */
+.bp-card.is-sel {
+  outline-color: var(--bp-accent);
+  box-shadow:
+    0 calc(var(--u) * 0.7) calc(var(--u) * 2.2) rgba(0, 0, 0, 0.62),
+    0 0 calc(var(--u) * 2.4) var(--bp-accent-soft);
+  z-index: 2;
+}
+
+#bp-root[data-zone="shelf"] .bp-card.is-sel,
+#bp-root[data-zone="grid"] .bp-card.is-sel {
+  transform: scale(1.075);
+}
+
+.bp-card.is-sel .bp-card-art img {
+  filter: brightness(1.02) saturate(1.04);
+  transform: scale(1.03) translateY(-1.2%);
+}
+
+/* A one-shot specular sweep as the selection lands. */
+.bp-card.is-sel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(104deg, transparent 34%, rgba(255, 255, 255, 0.16) 50%, transparent 66%);
+  transform: translateX(-120%);
+  animation: bpSheen 0.72s var(--bp-ease) 1;
+}
+
+@keyframes bpSheen {
+  to { transform: translateX(120%); }
+}
+
+.bp-card.is-press { transform: scale(0.965) !important; }
+
+/* Name plate — hidden until the card is selected, then it rises into place. */
+.bp-card-plate {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: calc(var(--u) * 0.55) calc(var(--u) * 0.6) calc(var(--u) * 0.5);
+  /* Dark enough to read the name on, short enough to leave the cover alone —
+     it used to reach 60% up the card at three-quarter opacity, which buried
+     the bottom half of every piece of artwork on the shelf. */
+  background: linear-gradient(to top, rgba(8, 9, 10, 0.92) 0%, rgba(8, 9, 10, 0.55) 55%, transparent 100%);
+  transform: translateY(112%);
+  opacity: 0;
+  transition: transform 0.34s var(--bp-spring), opacity 0.24s ease;
+}
+
+.bp-card.is-sel .bp-card-plate {
+  transform: none;
+  opacity: 1;
+}
+
+.bp-card-plate::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-bottom: calc(var(--u) * 0.4);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.bp-card-name {
+  display: block;
+  font-size: calc(var(--u) * 0.86);
+  line-height: 1.25;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+/* Corner badges: running, update available, favourite. */
+.bp-card-flags {
+  position: absolute;
+  top: calc(var(--u) * 0.42);
+  right: calc(var(--u) * 0.42);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.3);
+  align-items: flex-end;
+}
+
+.bp-flag {
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--u) * 1.35);
+  height: calc(var(--u) * 1.35);
+  padding: 0 calc(var(--u) * 0.28);
+  border-radius: calc(var(--u) * 0.7);
+  background: rgba(8, 9, 10, 0.76);
+  backdrop-filter: blur(calc(var(--u) * 0.4));
+  font-size: calc(var(--u) * 0.62);
+  letter-spacing: 0.04em;
+}
+
+.bp-flag svg { width: calc(var(--u) * 0.78); height: calc(var(--u) * 0.78); fill: currentColor; }
+.bp-flag.is-live { background: var(--bp-accent); color: #04201E; }
+.bp-flag.is-update { background: #E5A93C; color: #241703; }
+.bp-flag.is-fav { color: #fff; }
+
+/* Generated cover for titles with no art on the CDN. Mirrors the desktop
+   library's .art-fallback so the same game looks the same in both. */
+.bp-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--u) * 0.6);
+  padding: calc(var(--u) * 1);
+  background:
+    radial-gradient(120% 80% at 30% 10%, var(--art-a, #23303a), transparent 70%),
+    linear-gradient(150deg, var(--art-a, #23303a), var(--art-b, #0d1116));
+  text-align: center;
+}
+
+.bp-fallback .bp-fb-mark {
+  font-size: calc(var(--u) * 3.4);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--art-c, #9fd6cd);
+  opacity: 0.92;
+}
+
+.bp-fallback .bp-fb-name {
+  font-size: calc(var(--u) * 0.76);
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.72);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Entrance stagger for a freshly rendered shelf/grid. Transform+opacity, but
+   the class is removed on a timer, so a stalled renderer still ends visible. */
+.bp-card.is-enter {
+  opacity: 0.001;
+  transform: translateY(calc(var(--u) * 1.6)) scale(0.97);
+}
+
+.bp-card.is-entering {
+  transition: opacity 0.36s ease var(--d, 0s), transform 0.52s var(--bp-spring) var(--d, 0s);
+}
+
+
+/* ─── Update screen ───────────────────────────────────────────── */
+/* Its own screen rather than the downloads panel: an update that turns out to
+   be unnecessary has to say so, and a queued one should show its own game
+   rather than a generic row. */
+#bp-update { place-items: center; }
+
+.bp-panel.is-update {
+  width: min(calc(var(--u) * 46), 88vw);
+  padding: calc(var(--u) * 1.7);
+  border-radius: calc(var(--u) * 0.8);
+  display: flex;
+  gap: calc(var(--u) * 1.5);
+  align-items: center;
+  transform: translateY(calc(var(--u) * 2)) scale(0.97);
+  opacity: 0.001;
+  transition: transform 0.36s var(--bp-spring), opacity 0.26s ease;
+}
+
+#bp-update.is-on .bp-panel { transform: none; opacity: 1; }
+
+#bp-upd-art {
+  flex-shrink: 0;
+  width: calc(var(--u) * 7.4);
+  height: calc(var(--u) * 11.1);
+  border-radius: calc(var(--u) * 0.45);
+  background: #14171A center / cover;
+  box-shadow: 0 calc(var(--u) * 0.5) calc(var(--u) * 1.4) rgba(0, 0, 0, 0.55);
+}
+
+#bp-upd-body { flex: 1; min-width: 0; }
+
+#bp-upd-name {
+  font-size: calc(var(--u) * 1.32);
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: calc(var(--u) * 0.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#bp-upd-status {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.6);
+  font-size: calc(var(--u) * 0.96);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  min-height: calc(var(--u) * 1.5);
+}
+
+/* The spinner only exists while something is actually happening. */
+#bp-upd-spin {
+  flex-shrink: 0;
+  width: calc(var(--u) * 0.95);
+  height: calc(var(--u) * 0.95);
+  border-radius: 50%;
+  border: calc(var(--u) * 0.13) solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--bp-accent);
+  animation: bpSpin 0.85s linear infinite;
+}
+
+#bp-update[data-mode="done"] #bp-upd-spin,
+#bp-update[data-mode="error"] #bp-upd-spin { display: none; }
+
+#bp-update[data-mode="done"] #bp-upd-text { color: var(--bp-accent); }
+#bp-update[data-mode="error"] #bp-upd-text { color: #F0A0A0; }
+
+/* The bar is meaningless until there is a real percentage to show. */
+#bp-upd-bar {
+  height: calc(var(--u) * 0.36);
+  margin-top: calc(var(--u) * 0.9);
+  border-radius: calc(var(--u) * 0.18);
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#bp-update[data-mode="live"] #bp-upd-bar { opacity: 1; }
+
+#bp-upd-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bp-accent), #7FE9DC);
+  transition: width 0.4s var(--bp-ease);
+}
+
+/* A moving sheen, so a stalled percentage still reads as "working". */
+#bp-update[data-mode="live"] #bp-upd-fill::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  animation: bpSheen 1.6s ease-in-out infinite;
+}
+
+#bp-upd-stats {
+  margin-top: calc(var(--u) * 0.55);
+  font-size: calc(var(--u) * 0.84);
+  color: var(--bp-mute);
+  font-variant-numeric: tabular-nums;
+  min-height: calc(var(--u) * 1.1);
+}
+
+@keyframes bpSpin { to { transform: rotate(360deg); } }
+
+@keyframes bpSheen {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ─── Achievements ────────────────────────────────────────────── */
+#bp-ach { place-items: center; }
+
+#bp-ach .bp-panel {
+  border-radius: calc(var(--u) * 0.7);
+  transform: translateY(calc(var(--u) * 2.2)) scale(0.97);
+  opacity: 0.001;
+}
+
+#bp-ach.is-on .bp-panel { transform: none; opacity: 1; }
+
+/* Progress across the whole game, above the list rather than beside it: the
+   number people look for first is how far off the full set they are. */
+#bp-ach-bar {
+  height: calc(var(--u) * 0.34);
+  margin: calc(var(--u) * 0.9) 0 calc(var(--u) * 0.4);
+  border-radius: calc(var(--u) * 0.17);
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#bp-ach-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bp-accent), #7FE9DC);
+  transition: width 0.6s var(--bp-ease);
+}
+
+#bp-ach-list {
+  margin-top: calc(var(--u) * 0.6);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.bp-ach-item {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.9);
+  padding: calc(var(--u) * 0.75) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.bp-ach-item:first-child { border-top: 0; }
+
+/* Locked entries are dimmed rather than hidden — the shape of what is left to
+   do is the point of the list. */
+.bp-ach-item:not(.is-on) { opacity: 0.42; }
+
+.bp-ach-icon {
+  flex-shrink: 0;
+  width: calc(var(--u) * 2.6);
+  height: calc(var(--u) * 2.6);
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: calc(var(--u) * 0.9);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bp-ach-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+.bp-ach-item.is-on .bp-ach-icon { box-shadow: 0 0 0 2px var(--bp-accent); }
+
+.bp-ach-body { flex: 1; min-width: 0; }
+
+.bp-ach-name {
+  font-size: calc(var(--u) * 1);
+  font-weight: 600;
+  color: #fff;
+}
+
+.bp-ach-desc {
+  font-size: calc(var(--u) * 0.84);
+  color: rgba(255, 255, 255, 0.66);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bp-ach-when {
+  flex-shrink: 0;
+  font-size: calc(var(--u) * 0.8);
+  color: var(--bp-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.bp-ach-fetch {
+  margin-top: calc(var(--u) * 0.9);
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1.5);
+  border: 0;
+  border-radius: calc(var(--u) * 1.1);
+  background: var(--bp-accent);
+  color: #04211F;
+  font: inherit;
+  font-size: calc(var(--u) * 0.92);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bp-ach-hint {
+  display: block;
+  margin-top: calc(var(--u) * 0.5);
+  font-size: calc(var(--u) * 0.82);
+  color: var(--bp-mute);
+}
+
+/* ─── Patch notes ─────────────────────────────────────────────── */
+/* A reading pane. Wider than the option sheets because this is prose, and
+   capped at a comfortable measure so lines do not run the width of a TV. */
+.bp-panel.is-wide {
+  width: min(calc(var(--u) * 58), 88vw);
+  max-height: 74vh;
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 2.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.bp-panel.is-wide .bp-panel-head,
+.bp-panel.is-wide .bp-panel-sub { padding-left: 0; padding-right: 0; }
+
+#bp-news-list {
+  margin-top: calc(var(--u) * 1.1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.bp-news-item {
+  padding: calc(var(--u) * 1.2) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.bp-news-item:first-child { border-top: 0; padding-top: calc(var(--u) * 0.3); }
+
+.bp-news-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.6);
+  color: var(--bp-mute);
+  font-size: calc(var(--u) * 0.82);
+  margin-bottom: calc(var(--u) * 0.42);
+}
+
+.bp-news-tag {
+  padding: calc(var(--u) * 0.1) calc(var(--u) * 0.5);
+  border-radius: calc(var(--u) * 0.3);
+  background: rgba(23, 200, 182, 0.18);
+  color: var(--bp-accent);
+  font-size: calc(var(--u) * 0.72);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bp-news-title {
+  margin: 0 0 calc(var(--u) * 0.5);
+  font-size: calc(var(--u) * 1.16);
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.bp-news-body {
+  margin: 0;
+  font-size: calc(var(--u) * 0.94);
+  font-weight: 450;
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.bp-news-empty {
+  padding: calc(var(--u) * 2) 0;
+  color: var(--bp-mute);
+  font-size: calc(var(--u) * 0.96);
+  text-align: center;
+}
+
+/* ─── Cover → details morph ────────────────────────────────────── */
+/* A clone of the selected card, scaled up to fill the stage while the details
+   page fades in behind it. transform + opacity only, so it composites on the
+   GPU and a stalled renderer simply skips it. */
+.bp-fly {
+  position: fixed;
+  z-index: 26;
+  background-size: cover;
+  background-position: center;
+  background-color: #14171A;
+  transform-origin: center center;
+  pointer-events: none;
+  box-shadow: 0 calc(var(--u) * 0.7) calc(var(--u) * 2.2) rgba(0, 0, 0, 0.6);
+  will-change: transform, opacity;
+}
+
+.bp-fly.is-flying {
+  transition: transform 0.56s var(--bp-spring), opacity 0.5s ease 0.06s;
+}
+
+/* ─── Now playing ─────────────────────────────────────────────── */
+.bp-playing {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.55);
+  height: calc(var(--u) * 2.1);
+  max-width: calc(var(--u) * 22);
+  padding: 0 calc(var(--u) * 0.9);
+  border: 1px solid var(--bp-accent);
+  border-radius: calc(var(--u) * 1.05);
+  background: rgba(23, 200, 182, 0.12);
+  color: #fff;
+  font: inherit;
+  font-size: calc(var(--u) * 0.9);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.22s var(--bp-spring), background 0.2s ease;
+  animation: bpPillIn 0.42s var(--bp-spring);
+}
+
+.bp-playing:hover { transform: scale(1.04); background: rgba(23, 200, 182, 0.2); }
+
+.bp-playing-dot {
+  flex-shrink: 0;
+  width: calc(var(--u) * 0.46);
+  height: calc(var(--u) * 0.46);
+  border-radius: 50%;
+  background: var(--bp-accent);
+  animation: bpBeat 1.8s ease-in-out infinite;
+}
+
+.bp-playing-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bp-playing-time {
+  flex-shrink: 0;
+  color: var(--bp-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes bpPillIn {
+  from { transform: translateY(calc(var(--u) * -0.7)); opacity: 0; }
+}
+
+@keyframes bpBeat {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+
+/* ─── Cover skeletons ─────────────────────────────────────────── */
+/* Shown while the artwork lookup is in flight. Committing to the generated
+   cover straight away and swapping it a second later reads as a glitch. */
+.bp-skel {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.03) 38%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.03) 62%,
+    rgba(255, 255, 255, 0.03) 100%);
+  background-size: 260% 100%;
+  animation: bpShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes bpShimmer {
+  from { background-position: 130% 0; }
+  to { background-position: -130% 0; }
+}
+
+/* ─── Hint bar ──────────────────────────────────────────────────── */
+#bp-hints {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--u) * 3.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--bp-gutter);
+  z-index: 5;
+  font-size: calc(var(--u) * 0.94);
+  color: var(--bp-dim);
+  font-weight: 500;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-hint-note {
+  font-size: calc(var(--u) * 0.9);
+  color: rgba(255, 255, 255, 0.56);
+}
+
+#bp-hint-list {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.5);
+}
+
+.bp-hint {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.42);
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.18s ease, transform 0.2s var(--bp-spring);
+}
+
+.bp-hint:hover { color: #fff; }
+
+.bp-glyph {
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 1.28);
+  height: calc(var(--u) * 1.28);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
+  font-size: calc(var(--u) * 0.8);
+  line-height: 1;
+  color: #fff;
+  flex-shrink: 0;
+  transition: background 0.16s ease, transform 0.2s var(--bp-spring), border-color 0.16s ease;
+}
+
+.bp-glyph svg { width: calc(var(--u) * 0.8); height: calc(var(--u) * 0.8); fill: currentColor; }
+.bp-glyph.is-square { border-radius: calc(var(--u) * 0.22); }
+
+/* Fired whenever the matching button is actually pressed. */
+.bp-hint.is-hit { color: #fff; }
+.bp-hint.is-hit .bp-glyph {
+  background: var(--bp-accent);
+  border-color: var(--bp-accent);
+  color: #04201E;
+  transform: scale(1.22);
+}
+
+/* ─── Details view ──────────────────────────────────────────────── */
+#bp-details {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+}
+
+#bp-details.is-on { opacity: 1; pointer-events: auto; }
+
+/* Two identical background layers. Screenshots crossfade between them rather
+   than one element swapping its image, which would flash. Both are driven by
+   the same `is-on` class so neither is a special case. */
+#bp-det-bg,
+#bp-det-bg2 {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: 66% 22%;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: transform 0.9s var(--bp-ease), opacity 1.5s ease;
+}
+
+#bp-det-bg.is-on,
+#bp-det-bg2.is-on { opacity: 1; }
+
+#bp-details.is-on #bp-det-bg,
+#bp-details.is-on #bp-det-bg2 { transform: scale(1); }
+
+/* Update: an amber call to action, so it never reads as a second Play. */
+.bp-act.is-update {
+  background: linear-gradient(180deg, #E0A33C, #C9832A);
+  color: #201401;
+  font-weight: 600;
+}
+
+/* Online mode carries its state in a lamp rather than in the label alone. */
+.bp-act.is-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.62);
+  padding-left: calc(var(--u) * 1.5);
+}
+
+.bp-act.is-toggle::before {
+  content: '';
+  width: calc(var(--u) * 0.5);
+  height: calc(var(--u) * 0.5);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.34);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.bp-act.is-toggle-on::before {
+  background: var(--bp-accent);
+  box-shadow: 0 0 calc(var(--u) * 0.6) var(--bp-accent);
+}
+
+/* Why a game cannot use online mode — silence would read as a missing feature. */
+#bp-det-note {
+  margin-top: calc(var(--u) * 0.7);
+  min-height: calc(var(--u) * 1.1);
+  color: var(--bp-mute);
+  font-size: calc(var(--u) * 0.88);
+}
+
+#bp-det-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  background: #06070800;
+}
+
+#bp-det-video.is-on { opacity: 1; }
+
+/* Text has to stay readable over a trailer whose next frame might be a white
+   sky. The left wedge is the one doing the work — it is opaque under the whole
+   column the page writes in and only lets go past the middle, so the artwork
+   still breathes on the right. */
+#bp-det-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top,
+      rgba(6, 8, 9, 0.86) 0%,
+      rgba(6, 8, 9, 0.6) 16%,
+      rgba(6, 8, 9, 0.3) 38%,
+      rgba(6, 8, 9, 0.1) 62%,
+      transparent 88%),
+    linear-gradient(100deg,
+      rgba(6, 8, 9, 0.94) 0%,
+      rgba(6, 8, 9, 0.88) 22%,
+      rgba(6, 8, 9, 0.52) 42%,
+      rgba(6, 8, 9, 0.16) 60%,
+      transparent 78%);
+}
+
+#bp-det-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(var(--u) * 100);
+  height: calc(var(--u) * 56.25);
+  padding: calc(var(--u) * 2.4) var(--bp-gutter) calc(var(--u) * 1.6);
+  display: flex;
+  flex-direction: column;
+}
+
+#bp-det-topname {
+  align-self: center;
+  font-size: calc(var(--u) * 0.92);
+  color: rgba(255, 255, 255, 0.62);
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-det-head {
+  margin-top: calc(var(--u) * 6.4);
+  transform: translateY(calc(var(--u) * 1.4));
+  opacity: 0.001;
+  transition: transform 0.5s var(--bp-spring) 0.06s, opacity 0.4s ease 0.06s;
+}
+
+#bp-details.is-on #bp-det-head { transform: none; opacity: 1; }
+
+/* The game's own logo, when it has one — the thing that makes a shelf of
+   titles read as a shelf of games. Larger than the text it replaces, because
+   a wordmark carries at three metres in a way 2.6u of Segoe does not. */
+#bp-det-logo {
+  display: block;
+  max-width: calc(var(--u) * 38);
+  max-height: calc(var(--u) * 9.5);
+  object-fit: contain;
+  object-position: left bottom;
+  margin-bottom: calc(var(--u) * 0.9);
+  filter: drop-shadow(0 calc(var(--u) * 0.14) calc(var(--u) * 0.7) rgba(0, 0, 0, 0.75));
+}
+
+#bp-det-name {
+  font-size: calc(var(--u) * 2.6);
+  font-weight: 500;
+  line-height: 1.1;
+  max-width: calc(var(--u) * 56);
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-det-sub {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.7);
+  margin-top: calc(var(--u) * 0.7);
+  font-size: calc(var(--u) * 1.06);
+  color: var(--bp-dim);
+  font-weight: 500;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-det-sub .bp-star { width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); fill: #fff; }
+#bp-det-sub .bp-star.is-off { fill: rgba(255, 255, 255, 0.3); }
+
+/* Action row: the teal Play pill, a secondary pill, then the round
+   trailer controls — stop, mute, expand. */
+#bp-det-actions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.75);
+  margin-top: calc(var(--u) * 2.4);
+  transform: translateY(calc(var(--u) * 1.4));
+  opacity: 0.001;
+  transition: transform 0.5s var(--bp-spring) 0.12s, opacity 0.4s ease 0.12s;
+}
+
+#bp-details.is-on #bp-det-actions { transform: none; opacity: 1; }
+
+.bp-act {
+  height: calc(var(--u) * 2.9);
+  padding: 0 calc(var(--u) * 2.2);
+  border: 0;
+  border-radius: calc(var(--u) * 1.45);
+  background: rgba(52, 56, 60, 0.86);
+  color: #fff;
+  font: inherit;
+  font-size: calc(var(--u) * 1.02);
+  cursor: pointer;
+  backdrop-filter: blur(calc(var(--u) * 0.5));
+  transition: transform 0.22s var(--bp-spring), background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  font-weight: 600;
+}
+
+.bp-act.is-primary { background: var(--bp-accent); color: #04211F; }
+
+.bp-act.is-round {
+  width: calc(var(--u) * 2.9);
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.bp-act.is-round svg { width: calc(var(--u) * 1.15); height: calc(var(--u) * 1.15); fill: currentColor; }
+
+/* Focus reads as light rather than as a drawn line: a hard ring disappears on
+   a bright frame and looks like a rendering fault on a dark one, while a glow
+   is legible across the room and survives whatever the trailer is doing. */
+.bp-act.is-cursor {
+  transform: scale(1.07);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.1) rgba(255, 255, 255, 0.9),
+    0 0 calc(var(--u) * 1.1) calc(var(--u) * 0.12) var(--bp-accent-glow),
+    0 0 calc(var(--u) * 2.6) calc(var(--u) * 0.3) var(--bp-accent-soft),
+    0 calc(var(--u) * 0.5) calc(var(--u) * 1.4) rgba(0, 0, 0, 0.5);
+}
+
+/* The round trailer controls say what they are once you are on them — three
+   unlabelled circles is a guessing game from a sofa. */
+.bp-act.is-round { position: relative; overflow: visible; }
+
+.bp-act.is-round.is-cursor::after {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + var(--u) * 0.55);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: calc(var(--u) * 0.2) calc(var(--u) * 0.6);
+  border-radius: calc(var(--u) * 0.35);
+  background: rgba(8, 9, 10, 0.9);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: calc(var(--u) * 0.82);
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.bp-act.is-press { transform: scale(0.94); }
+.bp-act:disabled { opacity: 0.38; cursor: default; }
+
+/* Lower half: description + the metadata columns. */
+/* The entrance used to live here. It now belongs to .bp-det-panel, which owns
+   the same properties — leaving both meant an id selector holding the overview
+   at opacity 1 on top of whichever tab was actually open. */
+#bp-det-foot {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.2);
+  padding-top: calc(var(--u) * 1.4);
+}
+
+#bp-det-cols {
+  display: flex;
+  gap: calc(var(--u) * 3.4);
+  min-width: 0;
+  width: 100%;
+}
+
+/* Achievements are the one thing here that moves while you play, so the
+   overview carries the count, the bar and the last few earned. The tab keeps
+   the full list; this is the glance. */
+#bp-det-achbar {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+}
+
+#bp-det-achbar[hidden] { display: none; }
+
+#bp-det-achbar .bp-ach-head {
+  margin-bottom: 0;
+  flex: 0 0 auto;
+  gap: calc(var(--u) * 0.8);
+}
+
+/* Only the rail itself is played down. The count and the icons carry the
+   information and keep their weight; a full-width bar beside them was just a
+   long empty gutter running across the page. */
+#bp-det-achbar .bp-ach-bar {
+  flex: 0 0 auto;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 0.24);
+  border-radius: calc(var(--u) * 0.12);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+#bp-det-achbar .bp-ach-bar i { box-shadow: none; }
+
+.bp-achpips { display: flex; gap: calc(var(--u) * 0.4); }
+
+.bp-achpip {
+  width: calc(var(--u) * 2.1);
+  height: calc(var(--u) * 2.1);
+  border-radius: calc(var(--u) * 0.3);
+  background: rgba(0, 0, 0, 0.4) center / cover no-repeat;
+  box-shadow: 0 0 0 1px rgba(23, 200, 182, 0.45);
+}
+
+#bp-det-desc {
+  width: calc(var(--u) * 37);
+  flex-shrink: 0;
+  font-size: calc(var(--u) * 1.02);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 450;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+#bp-det-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(calc(var(--u) * 9), auto));
+  gap: calc(var(--u) * 1.1) calc(var(--u) * 2.2);
+  align-content: start;
+  flex-shrink: 0;
+}
+
+.bp-stat-label {
+  font-size: calc(var(--u) * 0.9);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+.bp-stat-value {
+  font-size: calc(var(--u) * 0.98);
+  color: var(--bp-tan);
+  font-weight: 600;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+/* Right-hand column is right-aligned in the reference layout. */
+#bp-det-stats > div:nth-child(even) { text-align: right; }
+
+#bp-det-tags {
+  flex: 1;
+  min-width: 0;
+  padding-left: calc(var(--u) * 1.6);
+  border-left: 1px solid rgba(255, 255, 255, 0.24);
+  display: grid;
+  align-content: start;
+  gap: calc(var(--u) * 0.5);
+  max-height: calc(var(--u) * 16);
+  overflow: hidden;
+}
+
+/* A long feature list used to wrap to four lines and then get sliced through
+   the middle of a word by the column's own overflow. Bounding each value
+   instead means the cut is a decision — two lines and an ellipsis — rather
+   than wherever the box happened to end. */
+#bp-det-tags .bp-stat-value {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Each fact arrives just after the one before it. Thirty milliseconds is
+   enough to read as a sweep across the row and short enough that the whole
+   set is settled before anyone could call it slow. */
+@keyframes bpStatIn {
+  from { opacity: 0; transform: translateY(calc(var(--u) * 0.5)); }
+  to   { opacity: 1; transform: none; }
+}
+
+#bp-det-stats > div,
+#bp-det-tags > div {
+  opacity: 0;
+  animation: bpStatIn 0.34s var(--bp-spring) forwards;
+}
+
+#bp-root.no-anim #bp-det-stats > div,
+#bp-root.no-anim #bp-det-tags > div { opacity: 1; animation: none; }
+
+/* ─── Details: tab bar ──────────────────────────────────────────── */
+#bp-det-tabs {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  margin-top: calc(var(--u) * 1.8);
+  transform: translateY(calc(var(--u) * 1.4));
+  opacity: 0.001;
+  transition: transform 0.5s var(--bp-spring) 0.15s, opacity 0.4s ease 0.15s;
+}
+
+#bp-details.is-on #bp-det-tabs { transform: none; opacity: 1; }
+#bp-det-tabs[hidden] { display: none; }
+
+.bp-tab {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.45);
+  height: calc(var(--u) * 2.1);
+  padding: 0 calc(var(--u) * 1.15);
+  border: 0;
+  border-radius: calc(var(--u) * 1.05);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: calc(var(--u) * 0.94);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s var(--bp-spring);
+}
+
+.bp-tab.is-on { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+.bp-tab.is-cursor {
+  transform: scale(1.05);
+  color: #fff;
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.08) rgba(255, 255, 255, 0.85),
+    0 0 calc(var(--u) * 1) calc(var(--u) * 0.1) var(--bp-accent-glow);
+}
+
+.bp-tab-badge {
+  font-style: normal;
+  font-size: calc(var(--u) * 0.78);
+  font-weight: 700;
+  padding: 0 calc(var(--u) * 0.34);
+  border-radius: calc(var(--u) * 0.3);
+  background: rgba(0, 0, 0, 0.42);
+  color: var(--bp-tan);
+}
+
+/* ─── Details: panels ───────────────────────────────────────────── */
+#bp-det-panels {
+  margin-top: auto;
+  min-height: calc(var(--u) * 17);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Every one of these has to be told it may not grow past the stage. A grid
+   area stretches, but a flex row inside it sizes to its content unless each
+   link in the chain carries min-width: 0 — and one long Features line was
+   enough to push the column 12,000px wide and run the text off the screen. */
+.bp-det-panel {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(var(--u) * 0.7));
+  transition: opacity 0.24s ease, transform 0.3s var(--bp-spring);
+}
+
+.bp-det-panel.is-on { opacity: 1; pointer-events: auto; transform: none; }
+
+/* ─── Details: achievements ─────────────────────────────────────── */
+.bp-ach-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  margin-bottom: calc(var(--u) * 0.9);
+}
+
+.bp-ach-count {
+  font-size: calc(var(--u) * 1.5);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 calc(var(--u) * 0.06) calc(var(--u) * 0.5) rgba(0, 0, 0, 0.85);
+}
+
+.bp-ach-count span { font-size: calc(var(--u) * 1); font-weight: 500; color: var(--bp-mute); }
+
+.bp-ach-bar {
+  flex: 1;
+  max-width: calc(var(--u) * 34);
+  height: calc(var(--u) * 0.42);
+  border-radius: calc(var(--u) * 0.21);
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.bp-ach-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bp-accent), #7de6d9);
+  box-shadow: 0 0 calc(var(--u) * 0.8) var(--bp-accent-glow);
+  transition: width 0.6s var(--bp-spring);
+}
+
+.bp-ach-pct { font-size: calc(var(--u) * 1.02); font-weight: 700; color: var(--bp-tan); }
+
+.bp-ach-strip,
+.bp-shot-strip {
+  display: flex;
+  gap: calc(var(--u) * 0.7);
+  overflow-x: auto;
+  padding-bottom: calc(var(--u) * 0.4);
+  scrollbar-width: none;
+}
+
+.bp-ach-strip::-webkit-scrollbar,
+.bp-shot-strip::-webkit-scrollbar { display: none; }
+
+.bp-ach-tile {
+  flex: 0 0 auto;
+  width: calc(var(--u) * 17);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.65);
+  padding: calc(var(--u) * 0.55);
+  border-radius: calc(var(--u) * 0.5);
+  background: rgba(255, 255, 255, 0.07);
+  transition: transform 0.22s var(--bp-spring), background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Locked achievements are present but quiet — the eye should land on what was
+   earned, and the rest is there for the ones you are chasing. */
+.bp-ach-tile:not(.is-got) { opacity: 0.5; }
+.bp-ach-tile.is-got { background: rgba(23, 200, 182, 0.12); }
+
+.bp-ach-tile.is-cursor {
+  transform: scale(1.04);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.08) rgba(255, 255, 255, 0.85),
+    0 0 calc(var(--u) * 1.2) calc(var(--u) * 0.12) var(--bp-accent-glow);
+}
+
+.bp-ach-ico {
+  flex: 0 0 auto;
+  width: calc(var(--u) * 2.5);
+  height: calc(var(--u) * 2.5);
+  border-radius: calc(var(--u) * 0.32);
+  background: rgba(0, 0, 0, 0.4) center / cover no-repeat;
+}
+
+.bp-ach-txt { min-width: 0; }
+
+.bp-ach-name {
+  font-size: calc(var(--u) * 0.92);
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bp-ach-desc {
+  font-size: calc(var(--u) * 0.8);
+  color: var(--bp-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Details: screenshots ──────────────────────────────────────── */
+.bp-shot {
+  flex: 0 0 auto;
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 8.44);
+  border: 0;
+  padding: 0;
+  border-radius: calc(var(--u) * 0.45);
+  background: rgba(0, 0, 0, 0.4) center / cover no-repeat;
+  cursor: pointer;
+  transition: transform 0.22s var(--bp-spring), box-shadow 0.2s ease;
+}
+
+.bp-shot.is-cursor {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.1) rgba(255, 255, 255, 0.9),
+    0 0 calc(var(--u) * 1.4) calc(var(--u) * 0.14) var(--bp-accent-glow);
+}
+
+/* ─── Details: what's new ───────────────────────────────────────── */
+.bp-detnews-list {
+  display: flex;
+  gap: calc(var(--u) * 0.8);
+  overflow-x: auto;
+  padding-bottom: calc(var(--u) * 0.4);
+  scrollbar-width: none;
+}
+
+.bp-detnews-list::-webkit-scrollbar { display: none; }
+
+.bp-detnews-item {
+  flex: 0 0 auto;
+  width: calc(var(--u) * 24);
+  max-height: calc(var(--u) * 13);
+  overflow: hidden;
+  padding: calc(var(--u) * 0.85);
+  border-radius: calc(var(--u) * 0.5);
+  background: rgba(255, 255, 255, 0.07);
+  transition: transform 0.22s var(--bp-spring), background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bp-detnews-item.is-cursor {
+  transform: scale(1.03);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.08) rgba(255, 255, 255, 0.85),
+    0 0 calc(var(--u) * 1.2) calc(var(--u) * 0.12) var(--bp-accent-glow);
+}
+
+.bp-detnews-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.45);
+  font-size: calc(var(--u) * 0.78);
+  color: var(--bp-mute);
+  margin-bottom: calc(var(--u) * 0.3);
+}
+
+.bp-detnews-title {
+  font-size: calc(var(--u) * 1);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: calc(var(--u) * 0.3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.bp-detnews-body {
+  font-size: calc(var(--u) * 0.84);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Sheets: options, filter, system ───────────────────────────── */
+.bp-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(5, 6, 7, 0.62);
+  backdrop-filter: blur(calc(var(--u) * 0.9)) saturate(120%);
+  transition: opacity 0.26s ease, backdrop-filter 0.26s ease;
+}
+
+.bp-sheet.is-on { opacity: 1; pointer-events: auto; }
+
+/* Options docks right; filter and system centre. */
+#bp-menu { place-items: stretch end; }
+#bp-filter, #bp-system, #bp-news { place-items: center; }
+
+.bp-panel {
+  background: var(--bp-sheet);
+  border: 1px solid var(--bp-line);
+  box-shadow: 0 calc(var(--u) * 1.4) calc(var(--u) * 4) rgba(0, 0, 0, 0.62);
+  padding: calc(var(--u) * 1.6) 0;
+  transition: transform 0.36s var(--bp-spring), opacity 0.26s ease;
+}
+
+#bp-menu .bp-panel {
+  width: calc(var(--u) * 27);
+  height: 100%;
+  border-right: 0;
+  border-top: 0;
+  border-bottom: 0;
+  transform: translateX(100%);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#bp-menu .bp-panel::-webkit-scrollbar { width: 0; }
+#bp-menu.is-on .bp-panel { transform: none; }
+
+#bp-news .bp-panel {
+  border-radius: calc(var(--u) * 0.7);
+  transform: translateY(calc(var(--u) * 2.2)) scale(0.97);
+  opacity: 0.001;
+}
+
+#bp-news.is-on .bp-panel { transform: none; opacity: 1; }
+
+#bp-filter .bp-panel,
+#bp-system .bp-panel {
+  width: calc(var(--u) * 40);
+  max-height: calc(var(--u) * 44);
+  border-radius: calc(var(--u) * 0.7);
+  transform: translateY(calc(var(--u) * 2.2)) scale(0.97);
+  opacity: 0.001;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#bp-filter .bp-panel::-webkit-scrollbar,
+#bp-system .bp-panel::-webkit-scrollbar { width: 0; }
+
+#bp-filter.is-on .bp-panel,
+#bp-system.is-on .bp-panel { transform: none; opacity: 1; }
+
+.bp-panel-head {
+  padding: 0 calc(var(--u) * 1.6) calc(var(--u) * 1);
+  font-size: calc(var(--u) * 1.28);
+  color: #fff;
+  font-weight: 600;
+}
+
+.bp-panel-sub {
+  padding: 0 calc(var(--u) * 1.6) calc(var(--u) * 1);
+  margin-top: calc(var(--u) * -0.6);
+  font-size: calc(var(--u) * 0.88);
+  color: var(--bp-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.9);
+  width: 100%;
+  min-height: calc(var(--u) * 3.1);
+  padding: calc(var(--u) * 0.4) calc(var(--u) * 1.6);
+  border: 0;
+  border-left: calc(var(--u) * 0.2) solid transparent;
+  background: none;
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: calc(var(--u) * 1.02);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, padding-left 0.2s var(--bp-ease);
+  font-weight: 500;
+}
+
+.bp-row svg {
+  width: calc(var(--u) * 1.2);
+  height: calc(var(--u) * 1.2);
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.bp-row-label { flex: 1; min-width: 0; }
+
+.bp-row-value {
+  color: var(--bp-tan);
+  font-size: calc(var(--u) * 0.95);
+  white-space: nowrap;
+}
+
+.bp-row.is-cursor {
+  background: rgba(255, 255, 255, 0.07);
+  border-left-color: var(--bp-accent);
+  color: #fff;
+  padding-left: calc(var(--u) * 1.85);
+}
+
+.bp-row.is-danger.is-cursor { border-left-color: #E5644C; color: #FFB3A6; }
+.bp-row.is-press { background: var(--bp-accent-soft); }
+.bp-row:disabled { opacity: 0.36; cursor: default; }
+
+.bp-row-sep {
+  height: 1px;
+  margin: calc(var(--u) * 0.7) calc(var(--u) * 1.6);
+  background: var(--bp-line);
+}
+
+.bp-switch {
+  width: calc(var(--u) * 2.5);
+  height: calc(var(--u) * 1.2);
+  border-radius: calc(var(--u) * 0.6);
+  background: rgba(255, 255, 255, 0.18);
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.22s ease;
+}
+
+.bp-switch::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--u) * 0.16);
+  left: calc(var(--u) * 0.16);
+  width: calc(var(--u) * 0.88);
+  height: calc(var(--u) * 0.88);
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.26s var(--bp-spring);
+}
+
+.bp-switch.is-on { background: var(--bp-accent); }
+.bp-switch.is-on::after { transform: translateX(calc(var(--u) * 1.3)); }
+
+/* ─── Search ────────────────────────────────────────────────────── */
+#bp-search { z-index: 32; place-items: center; }
+
+#bp-search-box {
+  width: calc(var(--u) * 82);
+  height: calc(var(--u) * 44);
+  display: grid;
+  grid-template-columns: calc(var(--u) * 38) 1fr;
+  gap: calc(var(--u) * 2.2);
+  transform: translateY(calc(var(--u) * 2)) scale(0.98);
+  opacity: 0.001;
+  transition: transform 0.4s var(--bp-spring), opacity 0.3s ease;
+}
+
+#bp-search.is-on #bp-search-box { transform: none; opacity: 1; }
+
+#bp-query-wrap {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.8);
+  height: calc(var(--u) * 3.4);
+  padding: 0 calc(var(--u) * 1.1);
+  border-bottom: calc(var(--u) * 0.14) solid var(--bp-accent);
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: calc(var(--u) * 1.3);
+}
+
+#bp-query-wrap svg { width: calc(var(--u) * 1.2); height: calc(var(--u) * 1.2); fill: var(--bp-accent); flex-shrink: 0; }
+
+#bp-query {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  color: #fff;
+  font: inherit;
+  font-size: calc(var(--u) * 1.1);
+  caret-color: var(--bp-accent);
+}
+
+#bp-query::placeholder { color: rgba(255, 255, 255, 0.34); }
+#bp-query { user-select: text; -webkit-user-select: text; }
+
+/* On-screen keyboard — a controller can't type without one. */
+#bp-keys {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: calc(var(--u) * 0.35);
+}
+
+.bp-key {
+  height: calc(var(--u) * 3);
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: calc(var(--u) * 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: calc(var(--u) * 1);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.16s var(--bp-spring), background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.bp-key.is-wide { grid-column: span 2; }
+.bp-key.is-fn { font-size: calc(var(--u) * 0.72); text-transform: none; letter-spacing: 0.02em; }
+
+.bp-key:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+
+.bp-key.is-cursor {
+  color: #04211F;
+  background: var(--bp-accent);
+  border-color: var(--bp-accent);
+  transform: scale(1.09);
+}
+
+.bp-key.is-press { transform: scale(0.9); }
+
+#bp-results-wrap {
+  min-width: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding-right: calc(var(--u) * 0.4);
+}
+
+#bp-results-wrap::-webkit-scrollbar { width: 0; }
+
+#bp-results {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(var(--u) * 0.7);
+}
+
+#bp-results .bp-card { width: auto; height: auto; aspect-ratio: 2 / 3; }
+
+#bp-results-empty {
+  padding: calc(var(--u) * 2) 0;
+  font-size: calc(var(--u) * 1.0);
+  color: var(--bp-mute);
+}
+
+/* ─── Empty library ────────────────────────────────────────────── */
+#bp-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--u) * 1);
+  text-align: center;
+}
+
+#bp-root[data-empty="1"] #bp-empty { display: flex; }
+#bp-root[data-empty="1"] #bp-body,
+#bp-root[data-empty="1"] #bp-shelf { visibility: hidden; }
+
+#bp-empty h2 { font-size: calc(var(--u) * 2.1); font-weight: 300; }
+#bp-empty p { font-size: calc(var(--u) * 1.02); color: var(--bp-mute); max-width: calc(var(--u) * 40); }
+
+/* ─── Launch curtain ───────────────────────────────────────────── */
+#bp-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  gap: calc(var(--u) * 1.4);
+  background: rgba(5, 6, 7, 0.86);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#bp-curtain.is-on { opacity: 1; pointer-events: auto; }
+
+#bp-curtain-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  transform: scale(0.94);
+  transition: transform 0.5s var(--bp-spring);
+}
+
+#bp-curtain.is-on #bp-curtain-inner { transform: none; }
+
+#bp-curtain-art {
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 22.5);
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--bp-radius);
+  box-shadow: 0 calc(var(--u) * 1.4) calc(var(--u) * 4) rgba(0, 0, 0, 0.7), 0 0 calc(var(--u) * 3) var(--bp-accent-soft);
+}
+
+#bp-curtain-text { font-size: calc(var(--u) * 1.25); color: #fff; }
+
+#bp-curtain-bar {
+  width: calc(var(--u) * 16);
+  height: calc(var(--u) * 0.2);
+  border-radius: calc(var(--u) * 0.1);
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+#bp-curtain-bar i {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bp-accent);
+  animation: bpSlide 1.15s ease-in-out infinite;
+}
+
+@keyframes bpSlide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(260%); }
+}
+
+/* ─── Entrance choreography ────────────────────────────────────── */
+/* Transform-only, so a stalled renderer shows an unanimated but complete UI. */
+#bp-root.is-open #bp-top { animation: bpDropIn 0.5s var(--bp-spring) both; }
+#bp-root.is-open #bp-rail { animation: bpSlideIn 0.52s var(--bp-spring) 0.04s both; }
+#bp-root.is-open #bp-hints { animation: bpRiseIn 0.5s var(--bp-spring) 0.1s both; }
+#bp-root.is-open #bp-detail { animation: bpRiseIn 0.55s var(--bp-spring) 0.08s both; }
+
+@keyframes bpDropIn { from { transform: translateY(calc(var(--u) * -1.6)); } }
+@keyframes bpRiseIn { from { transform: translateY(calc(var(--u) * 1.6)); } }
+@keyframes bpSlideIn { from { transform: translateX(calc(var(--u) * -2.4)); } }
+
+/* ─── Reduced motion ───────────────────────────────────────────── */
+html.reduce-motion #bp-root,
+html.reduce-motion #bp-root *,
+#bp-root[data-motion="off"],
+#bp-root[data-motion="off"] * {
+  animation: none !important;
+  transition-duration: 0.001s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bp-root, #bp-root * {
+    animation: none !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
+/* ─── Search: library ⇄ store ──────────────────────────────────── */
+#bp-search-tabs {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  margin-bottom: calc(var(--u) * 1);
+}
+
+.bp-tab {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.5);
+  height: calc(var(--u) * 2.4);
+  padding: 0 calc(var(--u) * 1.1);
+  border: 1px solid transparent;
+  border-radius: calc(var(--u) * 1.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--bp-mute);
+  font: inherit;
+  font-size: calc(var(--u) * 0.94);
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.2s var(--bp-spring);
+}
+
+.bp-tab svg { width: calc(var(--u) * 1.05); height: calc(var(--u) * 1.05); fill: currentColor; }
+.bp-tab:hover { color: #fff; }
+
+.bp-tab.is-on {
+  color: var(--bp-accent);
+  border-color: var(--bp-accent);
+  background: rgba(23, 200, 182, 0.12);
+}
+
+#bp-tab-hint {
+  margin-left: auto;
+  font-size: calc(var(--u) * 0.68);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Search results carry their names — a store listing is unrecognisable art. */
+#bp-results .bp-card-plate { transform: none; opacity: 1; }
+#bp-results .bp-card-plate::before { display: none; }
+
+.bp-flag.is-owned { background: var(--bp-accent); color: #04201E; }
+
+/* ─── On-screen keyboard over a desktop dialog ─────────────────── */
+/* Only the keys are wanted there: the dialog is the thing being filled in. */
+#bp-root[data-osk="on"] #bp-search {
+  z-index: 1200;                       /* above the adopted #modal-overlay */
+  background: rgba(5, 6, 7, 0.35);
+  backdrop-filter: none;
+  place-items: end center;
+  padding-bottom: calc(var(--u) * 2.4);
+}
+
+#bp-root[data-osk="on"] #bp-search-box {
+  width: calc(var(--u) * 38);
+  height: auto;
+  grid-template-columns: 1fr;
+}
+
+#bp-root[data-osk="on"] .bp-key { height: calc(var(--u) * 2.4); font-size: calc(var(--u) * 0.86); }
+
+#bp-root[data-osk="on"] #bp-search-tabs,
+#bp-root[data-osk="on"] #bp-query-wrap,
+#bp-root[data-osk="on"] #bp-results-wrap { display: none; }
+
+#bp-root[data-osk="on"] #bp-keys {
+  padding: calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 0.7);
+  background: var(--bp-sheet);
+  border: 1px solid var(--bp-line);
+  box-shadow: 0 calc(var(--u) * 1.2) calc(var(--u) * 3.4) rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Downloads ────────────────────────────────────────────────── */
+#bp-downloads { place-items: stretch end; }
+
+#bp-downloads .bp-panel {
+  width: calc(var(--u) * 30);
+  height: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  transform: translateX(100%);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#bp-downloads .bp-panel::-webkit-scrollbar { width: 0; }
+#bp-downloads.is-on .bp-panel { transform: none; }
+
+#bp-dl-live {
+  padding: 0 calc(var(--u) * 1.6) calc(var(--u) * 1.4);
+  margin-bottom: calc(var(--u) * 0.4);
+  border-bottom: 1px solid var(--bp-line);
+}
+
+#bp-dl-name {
+  font-size: calc(var(--u) * 1.02);
+  color: #fff;
+  margin-bottom: calc(var(--u) * 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#bp-dl-bar {
+  height: calc(var(--u) * 0.34);
+  border-radius: calc(var(--u) * 0.17);
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+#bp-dl-bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bp-accent), color-mix(in srgb, var(--bp-accent) 55%, #fff));
+  transition: width 0.4s var(--bp-ease);
+}
+
+#bp-dl-stats {
+  margin-top: calc(var(--u) * 0.6);
+  font-size: calc(var(--u) * 0.88);
+  color: var(--bp-tan);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The top-bar progress ring. */
+#bp-btn-dl { position: relative; }
+
+#bp-btn-dl .bp-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke-width: 3;
+}
+
+.bp-ring-track { stroke: rgba(255, 255, 255, 0.18); }
+
+.bp-ring-fill {
+  stroke: var(--bp-accent);
+  stroke-linecap: round;
+  stroke-dasharray: 94.25;             /* 2πr, r = 15 */
+  stroke-dashoffset: 94.25;
+  transition: stroke-dashoffset 0.5s var(--bp-ease);
+}
+
+#bp-btn-dl.is-paused .bp-ring-fill { stroke: var(--bp-mute); }
+
+#bp-dl-pct {
+  font-size: calc(var(--u) * 0.66);
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+/* ─── Empty shelf ──────────────────────────────────────────────── */
+#bp-empty-actions {
+  display: flex;
+  gap: calc(var(--u) * 0.8);
+  margin-top: calc(var(--u) * 0.6);
+}
+
+/* ─── Adopted desktop dialogs ──────────────────────────────────── */
+/* The depot picker, the destination sheet and the executable chooser are the
+   app's own modals, moved inside #bp-root while Big Picture is up. They keep
+   their own layout; all that is added is scale, a visible pad cursor, and a
+   backdrop dark enough to read against. */
+/* Adopted dialogs. Both are re-parented into #bp-root when Big Picture opens,
+   so they need a stacking position here rather than the one they have on the
+   desktop — #plan sits at 1750, which is under this whole overlay. */
+#bp-root > #modal-overlay,
+#bp-root > #plan { z-index: 60; }
+
+#bp-root > #modal-overlay { backdrop-filter: blur(calc(var(--u) * 0.7)); }
+
+/* The planner is driven with a stick here, so the focus ring has to be as loud
+   as Big Picture's own cursor — the desktop's subtle outline disappears at
+   couch distance. */
+#bp-root > #plan .plan-card:focus,
+#bp-root > #plan .plan-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 calc(var(--u) * 0.16) var(--bp-accent), 0 calc(var(--u) * 0.4) calc(var(--u) * 1.2) rgba(0, 0, 0, 0.5);
+  transform: scale(1.03);
+}
+
+#bp-root > #modal-overlay #modal-container {
+  border-color: var(--bp-line);
+  box-shadow: 0 calc(var(--u) * 1.6) calc(var(--u) * 4.5) rgba(0, 0, 0, 0.7);
+}
+
+/* Focus is moved programmatically, so :focus-visible never fires — the cursor
+   has to be drawn off plain :focus or it would be invisible on a pad. */
+#bp-root > #modal-overlay :focus {
+  outline: calc(var(--u) * 0.15) solid var(--bp-accent);
+  outline-offset: calc(var(--u) * 0.12);
+  border-radius: calc(var(--u) * 0.2);
+}
+
+#bp-root > #modal-overlay .library-item:focus,
+#bp-root > #modal-overlay .loc-row:focus,
+#bp-root > #modal-overlay .plan-card:focus {
+  background: rgba(23, 200, 182, 0.1);
+}
+
+/* ─── Desktop entry point ──────────────────────────────────────── */
+/* The controller button that opens Big Picture, in the desktop top bar. */
+/* The Big Picture button lives in the sidebar now and is styled with the
+   rest of the navigation (main.css). */
+
+/* ═══ The current system ═════════════════════════════════════════════
+   Big Picture speaks the same language as the desktop: its two typefaces,
+   its night-blue ground, its panel colour, its amber for "update".
+
+   Only type and colour are set here. Every size, transform and the card
+   geometry above is measurement-backed and stays exactly as it was. The
+   accent is not touched either: it is the user's own Big Picture setting,
+   written inline by bigpicture.js.
+   ═══════════════════════════════════════════════════════════════════ */
+#bp-root {
+  --bp-void: color-mix(in srgb, var(--bg-deep, #10131f) 46%, #000);
+  --bp-sheet: color-mix(in srgb, color-mix(in srgb, var(--bg-deep, #10131f) 86%, #8f9cff) 95%, transparent);
+  --bp-line: rgba(190, 200, 255, 0.15);
+  --bp-tan: #ffb85c;
+  font-family: 'Instrument Sans', 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  font-weight: 400;
+}
+#bp-root :is(#bp-title, #bp-name, h1, h2, h3) {
+  font-family: 'Bricolage Grotesque', 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}

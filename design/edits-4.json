@@ -1,0 +1,17 @@
+[
+  { "file": "src/js/app.js", "from": "        toggle.textContent = '🔇';\n", "to": "        toggle.textContent = 'Sound off';\n" },
+  { "file": "src/js/app.js", "from": "          toggle.textContent = video.muted ? '🔇' : '🔊';", "to": "          toggle.textContent = video.muted ? 'Sound off' : 'Sound on';" },
+  { "file": "src/js/app.js", "from": "    if (toggle) { toggle.classList.add('hidden'); toggle.textContent = '🔊'; }", "to": "    if (toggle) { toggle.classList.add('hidden'); toggle.textContent = 'Sound on'; }" },
+  { "file": "src/js/store.js", "from": "sound.textContent = '🔇'; }", "to": "sound.textContent = 'Sound off'; }" },
+  { "file": "src/js/store.js", "from": "      sound.textContent = v.muted ? '🔇' : '🔊';", "to": "      sound.textContent = v.muted ? 'Sound off' : 'Sound on';" },
+  { "file": "src/index.html", "from": "title=\"Sound\">🔇</button>", "to": "title=\"Sound\">Sound off</button>" },
+  { "file": "src/index.html", "from": "title=\"Toggle trailer sound\">🔊</button>", "to": "title=\"Toggle trailer sound\">Sound on</button>" },
+  { "file": "src/js/app.js", "from": "{ label: 'Open install folder', icon: '📂',", "to": "{ label: 'Open install folder', icon: '❐'," },
+  { "file": "src/js/app.js", "from": "items.push({ label: 'View details', icon: '❐', key: 'Enter',", "to": "items.push({ label: 'Game page', icon: '☰', key: 'Enter'," },
+  { "file": "src/js/enhance.js", "from": "          icon: '🎮',\n          title: 'Open Big Picture',", "to": "          icon: '▣',\n          title: 'Open Big Picture'," },
+  { "file": "src/index.html", "from": "<h2 id=\"store-title\">Find a game</h2>", "to": "<h2 id=\"store-title\">Store</h2>" },
+  { "file": "src/styles/enhance.css", "from": "#flyout-trailer-toggle { position: absolute; z-index: 3; right: var(--gutter); top: calc(var(--top-h) + 8px); width: 40px; height: 40px; border-radius: 12px;", "to": "#flyout-trailer-toggle { position: absolute; z-index: 3; right: var(--gutter); top: calc(var(--top-h) + 8px); height: 36px; padding: 0 13px; border-radius: 11px; font-size: 13px; font-weight: 500; color: var(--soft);" },
+  { "file": "src/styles/store.css", "from": "#sd-sound { position: absolute; right: 18px; top: 18px; width: 40px; height: 40px; border-radius: 12px;", "to": "#sd-sound { position: absolute; right: 18px; top: 18px; height: 36px; padding: 0 13px; border-radius: 11px; font-size: 13px; font-weight: 500; color: var(--soft);" },
+  { "file": "src/styles/enhance.css", "from": "#queue-area, #log-area { display: flex; flex-direction: column; gap: 10px; flex: none; }", "to": "#queue-area, #log-area { display: flex; flex-direction: column; gap: 10px; flex: none; }\n#queue-area:has(#queue-cards:empty) { display: none; }" },
+  { "file": "dev/ui-shots.cjs", "from": "window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));`, after: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));`", "to": "document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));`, after: `document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));`" }
+]

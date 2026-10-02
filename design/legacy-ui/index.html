@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: file: https:; media-src 'self' blob: https:; connect-src 'self' https:; worker-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Librarian</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/enhance.css">
+  <link rel="stylesheet" href="styles/library.css">
+  <link rel="stylesheet" href="styles/store.css">
+  <link rel="stylesheet" href="styles/bigpicture.css">
+  <link rel="stylesheet" href="styles/tuning.css">
+  <!-- Motion only, and deliberately last: it layers over everything above. -->
+  <link rel="stylesheet" href="styles/kinetic.css">
+  <link rel="stylesheet" href="styles/stability.css">
+  <link rel="stylesheet" href="styles/dlssg.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Archivo is requested with its width axis so --font-wide resolves to a real
+       expanded cut ("Archivo Expanded" is not a family; it is a wdth value). -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Archivo:wdth,wght@62..125,400..900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <!-- ─── Top Navigation Bar ──────────────────────── -->
+    <header id="topbar">
+      <div id="topbar-drag">
+        <div id="topbar-brand">
+          <img class="topbar-logo" src="../res/logo/librarian-icon.png" alt="Librarian">
+          <span class="topbar-name">Librarian</span>
+        </div>
+        <nav id="topbar-nav">
+          <button class="nav-tab active" data-page="home" id="nav-home">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-tab" data-page="library" id="nav-library">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V14a1 1 0 11-2 0V4.804z"/></svg>
+            <span>Library</span>
+          </button>
+          <button class="nav-tab" data-page="store" id="nav-store">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+            <span>Store</span>
+          </button>
+          <button class="nav-tab" data-page="downloads" id="nav-downloads">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg>
+            <span>Downloads</span>
+            <span class="nav-badge hidden" id="badge-downloads">0</span>
+          </button>
+          <button class="nav-tab" data-page="crack" id="nav-crack">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/></svg>
+            <span>Crack</span>
+          </button>
+          <button class="nav-tab" data-page="tuning" id="nav-tuning">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
+            <span>Tuning</span>
+          </button>
+          <button class="nav-tab" data-page="settings" id="nav-settings">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+        <div id="topbar-search">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8.5 3a5.5 5.5 0 014.383 8.823l3.147 3.147a.75.75 0 11-1.06 1.06l-3.147-3.147A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z"/></svg>
+          <input id="global-search-input" type="text" aria-label="Search library and commands" placeholder="Games and commands…">
+          <kbd>Ctrl K</kbd>
+        </div>
+      </div>
+      <!-- Active-download progress, visible from every page -->
+      <div id="topbar-progress" aria-hidden="true"><i></i></div>
+      <button id="btn-bigpicture" title="Big Picture (Ctrl+Shift+B)" aria-label="Big Picture">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6.5 6h7A4.5 4.5 0 0118 10.5v1A3.5 3.5 0 0111.6 13l-.6-1H9l-.6 1A3.5 3.5 0 012 11.5v-1A4.5 4.5 0 016.5 6zm-.5 2.6v1.1H4.9v1.1H6v1.1h1.1v-1.1h1.1V9.7H7.1V8.6H6zm7.4.2a.85.85 0 100 1.7.85.85 0 000-1.7zm-1.7 1.7a.85.85 0 100 1.7.85.85 0 000-1.7z"/></svg>
+      </button>
+      <div id="window-controls">
+        <button class="win-btn" id="btn-minimize" title="Minimize">
+          <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="win-btn" id="btn-maximize" title="Maximize">
+          <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+        </button>
+        <button class="win-btn close-btn" id="btn-close" title="Close">
+          <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside id="magic-sidebar">
+      <div class="sidebar-section-label">Catalog</div>
+      <button class="sidebar-link active" data-page="library" id="sidebar-all-games">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 012-2h3v6H4V4zm7-2h3a2 2 0 012 2v4h-5V2zM4 10h5v8H6a2 2 0 01-2-2v-6zm7 0h5v6a2 2 0 01-2 2h-3v-8z"/></svg>
+        All Games
+      </button>
+      <button class="sidebar-link" id="sidebar-favorites">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>
+        Favorites
+      </button>
+      <button class="sidebar-link" id="sidebar-recent">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+        Recently Played
+      </button>
+      <button class="sidebar-link" data-page="downloads">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V9h-4a2 2 0 01-2-2V3H5zm8 .5V7h3.5L13 3.5zM10 9a1 1 0 011 1v1.586l.293-.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414l.293.293V10a1 1 0 011-1z"/></svg>
+        Queue
+      </button>
+
+      <div class="sidebar-section-label" style="margin-top:20px">Collections</div>
+      <div id="sidebar-collections"></div>
+      <button id="sidebar-new-collection">＋ New collection</button>
+
+      <div class="sidebar-section-label" style="margin-top:20px">The Ledger</div>
+      <div id="sidebar-ledger">
+        <div class="ledger-row"><span class="ledger-num" id="ledger-games">0</span><span class="ledger-label">Games shelved</span></div>
+        <div class="ledger-row"><span class="ledger-num" id="ledger-hours">0h</span><span class="ledger-label">Hours played</span></div>
+        <div class="ledger-row"><span class="ledger-num" id="ledger-size">0 GB</span><span class="ledger-label">On disk</span></div>
+      </div>
+
+      <!-- Live download summary; clicking it jumps to the Downloads page -->
+      <div id="dl-hud" class="hidden" role="button" tabindex="0" title="Go to downloads">
+        <div id="dl-hud-top">
+          <div id="dl-hud-spin"></div>
+          <span id="dl-hud-label">Downloading</span>
+          <span id="dl-hud-pct">0%</span>
+        </div>
+        <div id="dl-hud-name">—</div>
+        <div id="dl-hud-bar"><div id="dl-hud-fill"></div></div>
+        <div id="dl-hud-sub">
+          <span id="dl-hud-speed">—</span>
+          <span class="sep">·</span>
+          <span id="dl-hud-eta">—</span>
+        </div>
+      </div>
+
+      <!-- Live "Now Playing" reading lamp; shown while a game runs -->
+      <div id="now-playing" class="hidden">
+        <div class="np-lamp"></div>
+        <div class="np-info">
+          <div class="np-label">Now Playing</div>
+          <div class="np-name" id="np-name">—</div>
+          <div class="np-timer" id="np-timer">0:00</div>
+        </div>
+        <button class="np-stop" id="np-stop" title="Stop game">Stop</button>
+      </div>
+    </aside>
+
+    <!-- ─── Page Container ──────────────────────────── -->
+    <div id="page-container">
+
+      <!-- ═══ PAGE: Home ═══ -->
+      <div class="page active" id="page-home">
+        <div id="home-scroll">
+          <!-- First-run setup progress (Goldberg emulator download) -->
+          <div id="home-setup" class="hidden" role="status" aria-live="polite">
+            <div id="home-setup-row">
+              <div id="home-setup-spin"></div>
+              <div id="home-setup-body">
+                <div id="home-setup-title">Setting up the Goldberg emulator</div>
+                <div id="home-setup-sub">Starting…</div>
+              </div>
+              <button class="xbox-btn xbox-btn-secondary btn-sm hidden" id="home-setup-action">Retry</button>
+            </div>
+            <div id="home-setup-bar"><i></i></div>
+          </div>
+
+          <!-- Hero Spotlight -->
+          <section id="hero-section">
+            <div id="hero-bg"></div>
+            <div id="hero-content">
+              <div id="hero-badge">Featured</div>
+              <!-- The publisher's own wordmark when Steam has one; app.js
+                   falls back to the serif title below when it does not. -->
+              <img id="hero-logo" class="hidden" alt="" src="">
+              <h1 id="hero-title">Welcome to Librarian</h1>
+              <p id="hero-subtitle">Scan your library to line the shelves.</p>
+              <div id="hero-actions">
+                <button class="xbox-btn xbox-btn-primary" id="hero-play-btn">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                  Play
+                </button>
+                <button class="xbox-btn xbox-btn-secondary" id="hero-details-btn">Details</button>
+              </div>
+              <div id="hero-hint"><kbd>Ctrl</kbd><kbd>K</kbd> for anything · <kbd>?</kbd> for shortcuts</div>
+            </div>
+            <div id="hero-dots"></div>
+          </section>
+
+          <!-- Game Rows / Shelves -->
+          <section class="game-row" id="row-continue">
+            <div class="row-header">
+              <h2 class="row-title">Continue Reading</h2>
+              <button class="row-see-all" data-target="library">See all</button>
+            </div>
+            <div class="row-scroll" id="row-continue-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-recent">
+            <div class="row-header">
+              <h2 class="row-title">New Acquisitions</h2>
+              <button class="row-see-all" data-target="library">See all</button>
+            </div>
+            <div class="row-scroll" id="row-recent-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-updates">
+            <div class="row-header">
+              <h2 class="row-title">Updates Available</h2>
+            </div>
+            <div class="row-scroll" id="row-updates-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-mostplayed">
+            <div class="row-header">
+              <h2 class="row-title">Most Played</h2>
+            </div>
+            <div class="row-scroll" id="row-mostplayed-scroll"></div>
+          </section>
+
+          <section class="game-row" id="row-all">
+            <div class="row-header">
+              <h2 class="row-title">The Stacks</h2>
+              <button class="row-see-all" data-target="library">See all</button>
+            </div>
+            <div class="row-scroll" id="row-all-scroll"></div>
+          </section>
+
+          <!-- Empty state -->
+          <div id="home-empty" class="empty-hero">
+            <svg viewBox="0 0 48 48" fill="none" style="width:64px;height:64px;margin-bottom:16px;opacity:0.3"><path d="M24 4L24 32M24 32L16 24M24 32L32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 36V40C8 41.1 8.9 42 10 42H38C39.1 42 40 41.1 40 40V36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h2>The shelves are empty</h2>
+            <p>Scan your Steam libraries or acquire something new from the Store.</p>
+            <div class="flex gap-8">
+              <button class="xbox-btn xbox-btn-primary" id="home-scan-btn">Scan Libraries</button>
+              <button class="xbox-btn xbox-btn-secondary" id="home-store-btn">Go to Store</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Library ═══ -->
+      <div class="page" id="page-library">
+        <div class="page-bar">
+          <div class="page-bar-left">
+            <h2 class="page-heading">Library</h2>
+            <span class="page-count" id="lib-count" role="status" aria-live="polite" aria-atomic="true">0 games</span>
+          </div>
+          <div class="page-bar-right">
+            <button class="xbox-btn xbox-btn-primary" id="lib-add-game-btn">Add Game</button>
+            <button class="xbox-btn xbox-btn-secondary" id="lib-scan-btn" title="Rescan libraries (F5)">Scan</button>
+            <button class="xbox-btn xbox-btn-secondary" id="lib-check-updates-btn">Check Updates</button>
+            <button class="xbox-btn xbox-btn-primary" id="lib-update-all-btn" style="display:none">⬆ Update All</button>
+          </div>
+        </div>
+        <div id="lib-controls" role="group" aria-label="Library filters and display">
+            <div id="lib-filter-wrap">
+              <input type="text" class="filter-input" id="lib-filter" aria-label="Filter your library" aria-controls="lib-grid" aria-keyshortcuts="Control+f Meta+f" autocomplete="off" spellcheck="false" placeholder="Find in your library…" title="Filter your library (Ctrl+F)">
+              <button type="button" id="lib-clear-filter" aria-label="Clear library filter" title="Clear filter (Esc)" hidden>×</button>
+            </div>
+            <select class="filter-input" id="lib-sort" aria-label="Sort games" title="Sort by">
+              <option value="name">A → Z</option>
+              <option value="recent">Recently played</option>
+              <option value="playtime">Most played</option>
+              <option value="size">Largest</option>
+              <option value="added">Recently added</option>
+            </select>
+            <div id="lib-toolbar-extra">
+              <div class="seg" id="lib-view-seg" role="group" aria-label="Layout">
+                <button data-view="grid" class="active" aria-label="Grid view" aria-pressed="true" title="Grid view">▦</button>
+                <button data-view="list" aria-label="List view" aria-pressed="false" title="List view">☰</button>
+              </div>
+              <div class="seg" id="lib-density-seg" role="group" aria-label="Tile size">
+                <button data-density="compact" aria-label="Small tiles" aria-pressed="false" title="Small tiles">S</button>
+                <button data-density="cozy" class="active" aria-label="Medium tiles" aria-pressed="true" title="Medium tiles">M</button>
+                <button data-density="large" aria-label="Large tiles" aria-pressed="false" title="Large tiles">L</button>
+              </div>
+            </div>
+            <button class="xbox-btn xbox-btn-secondary" id="lib-fav-toggle" aria-pressed="false" title="Show favorites only">★ Favorites</button>
+        </div>
+        <div id="lib-grid" class="game-grid"></div>
+        <nav id="lib-pagination" class="library-pagination" aria-label="Library pages" hidden>
+          <span id="lib-page-range"></span>
+          <div class="library-page-actions">
+            <button class="xbox-btn xbox-btn-secondary" id="lib-page-prev" aria-label="Previous library page">Previous</button>
+            <span id="lib-page-label" role="status" aria-live="polite" aria-atomic="true"></span>
+            <button class="xbox-btn xbox-btn-secondary" id="lib-page-next" aria-label="Next library page">Next</button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- ═══ PAGE: Store (Search) ═══ -->
+      <div class="page" id="page-store" data-mode="hero">
+        <section id="store-hero">
+          <div id="store-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+          <h2 id="store-title">Find a game</h2>
+          <p id="store-sub">Search by name or AppID.</p>
+          <div id="store-search-box">
+            <span id="store-search-ico" aria-hidden="true">
+              <svg class="ico-glass" viewBox="0 0 20 20" fill="currentColor"><path d="M8.5 3a5.5 5.5 0 014.383 8.823l3.147 3.147a.75.75 0 11-1.06 1.06l-3.147-3.147A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z"/></svg>
+              <span class="ico-ring"></span>
+            </span>
+            <input type="text" class="search-input" id="search-input" placeholder="Search for a game…"
+                   autocomplete="off" spellcheck="false" aria-label="Search the store">
+            <button id="store-search-clear" type="button" title="Clear" aria-label="Clear search">✕</button>
+            <kbd id="store-search-kbd">Enter</kbd>
+          </div>
+          <div class="store-chips" id="search-recent"></div>
+          <!-- What's new: Denuvo titles arriving on Steam, and the followed
+               member's posts on CS.RIN.RU. Shows on its own at launch when
+               there is something unseen; this reopens it any time. -->
+          <button id="store-news-btn" type="button" title="Denuvo releases on Steam and new posts on CS.RIN.RU">
+            <span class="sn-dot" aria-hidden="true"></span>
+            <span>What's new</span>
+            <span id="store-news-count" class="hidden">0</span>
+          </button>
+        </section>
+        <div id="search-status"></div>
+        <div id="search-results" class="store-results"></div>
+
+        <!-- ═══ The front page ═══
+             Shown whenever you are not looking at search results or a store
+             page. Live data: what is being played right now, what is rated
+             best, what is selling. See src/core/storeFront.js. -->
+        <section id="store-front" class="hidden" aria-label="Store front page">
+          <div id="sf-spotlight" class="hidden">
+            <img id="sf-spot-art" alt="" src="">
+            <div id="sf-spot-scrim" aria-hidden="true"></div>
+            <div id="sf-spot-body">
+              <div id="sf-spot-kicker">Featured today</div>
+              <h2 id="sf-spot-name"></h2>
+              <p id="sf-spot-sub"></p>
+              <div id="sf-spot-actions">
+                <button id="sf-spot-open" class="xbox-btn xbox-btn-primary" type="button">View in store</button>
+                <button id="sf-spot-get" class="xbox-btn xbox-btn-secondary" type="button">Install</button>
+              </div>
+            </div>
+            <div id="sf-spot-dots" aria-hidden="true"></div>
+          </div>
+          <div id="sf-rails"></div>
+          <div id="sf-status"></div>
+        </section>
+
+        <!-- ═══ Store page: one game, in full ═══
+             Driven by js/store.js. Takes the whole Store page over while it
+             is up (#page-store[data-mode="detail"]) and hands it back on Back
+             or Escape, so the results behind it are never re-fetched. -->
+        <section id="store-detail" class="hidden" aria-label="Store page">
+          <div id="sd-bg" aria-hidden="true"></div>
+          <div id="sd-scrim" aria-hidden="true"></div>
+
+          <div id="sd-scroll">
+            <button id="sd-back" type="button">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M12.7 4.3a1 1 0 010 1.4L8.4 10l4.3 4.3a1 1 0 01-1.4 1.4l-5-5a1 1 0 010-1.4l5-5a1 1 0 011.4 0z"/></svg>
+              <span>Back to results</span>
+            </button>
+
+            <!-- The cinema. Media first and full-bleed: a shopfront leads with
+                 the thing playing in the window, where the catalogue record in
+                 the library leads with the spine. -->
+            <section id="sd-cinema">
+              <video id="sd-trailer" muted loop playsinline preload="none"></video>
+              <img id="sd-still" alt="" src="">
+              <div id="sd-cinema-scrim" aria-hidden="true"></div>
+              <div id="sd-cinema-head">
+                <div id="sd-kicker"></div>
+                <img id="sd-logo" class="hidden" alt="" src="">
+                <h1 id="sd-title">—</h1>
+                <p id="sd-tagline"></p>
+              </div>
+              <button id="sd-sound" class="sd-stage-btn hidden" type="button" title="Sound">🔇</button>
+              <div id="sd-strip"></div>
+            </section>
+
+            <!-- Sticky. The commit stays within a glance for the whole page. -->
+            <div id="sd-bar">
+              <div id="sd-bar-left">
+                <div id="sd-bar-name"></div>
+                <div id="sd-size"></div>
+                <!-- Denuvo titles only: what CS.RIN.RU has, before Install is pressed. -->
+                <div id="sd-csrin-line" class="hidden"></div>
+              </div>
+              <div id="sd-bar-right">
+                <button id="sd-steam" class="xbox-btn xbox-btn-secondary" type="button">Steam page</button>
+                <!-- The second source. Hidden until the CS.RIN.RU tools are found in deps/csrin. -->
+                <button id="sd-csrin" class="xbox-btn xbox-btn-secondary" type="button" title="Look this game up on CS.RIN.RU">CS.RIN.RU</button>
+                <button id="sd-install" class="xbox-btn xbox-btn-primary" type="button">Install</button>
+              </div>
+            </div>
+
+            <div id="sd-body">
+              <div id="sd-facts"></div>
+
+              <section id="sd-about" class="sd-block hidden">
+                <h2 class="sd-block-title">About this game</h2>
+                <div id="sd-about-text"></div>
+              </section>
+
+              <section id="sd-tags" class="sd-block hidden">
+                <h2 class="sd-block-title">Tags</h2>
+                <div id="sd-tag-list"></div>
+              </section>
+
+              <section id="sd-depots" class="sd-block hidden">
+                <h2 class="sd-block-title">What gets installed</h2>
+                <div id="sd-depot-list"></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ PAGE: Downloads ═══ -->
+      <div class="page" id="page-downloads">
+        <!-- ═══ Focus view: takes over the page while a job is running ═══ -->
+        <section id="dl-focus" class="hidden">
+          <div id="dl-focus-bg"></div>
+          <div id="dl-focus-scrim"></div>
+          <div id="dl-focus-inner">
+            <div id="dl-focus-poster">
+              <div class="poster-frame">
+                <div id="dl-poster-art"></div>
+                <div class="poster-sheen"></div>
+                <div class="poster-fill" id="dl-poster-fill"></div>
+              </div>
+              <div class="poster-plinth"></div>
+            </div>
+
+            <div id="dl-focus-main">
+              <div id="dl-focus-kicker"><span class="kicker-dot"></span><span id="dl-focus-kicker-text">Downloading</span></div>
+              <h1 id="dl-focus-title">—</h1>
+              <div id="dl-focus-dest"></div>
+
+              <div id="dl-focus-readout">
+                <div id="dl-focus-pct"><span id="dl-focus-pct-num">0</span><span class="unit">%</span></div>
+                <canvas id="dl-focus-chart" width="300" height="64"></canvas>
+              </div>
+
+              <div id="dl-focus-track"><div id="dl-focus-fill"></div></div>
+
+              <div id="dl-focus-stats">
+                <div class="fstat"><span class="fstat-num" id="fstat-size">—</span><span class="fstat-label">Downloaded</span></div>
+                <div class="fstat"><span class="fstat-num" id="fstat-speed">—</span><span class="fstat-label">Download</span></div>
+                <div class="fstat hidden" id="fstat-disk-wrap" title="Data being written, including chunks reused from the previous build — during an update this runs well above your line speed"><span class="fstat-num" id="fstat-disk">—</span><span class="fstat-label">To disk</span></div>
+                <div class="fstat"><span class="fstat-num" id="fstat-eta">—</span><span class="fstat-label">Remaining</span></div>
+                <div class="fstat"><span class="fstat-num" id="fstat-elapsed">0:00</span><span class="fstat-label">Elapsed</span></div>
+              </div>
+
+              <div id="dl-focus-actions">
+                <button class="xbox-btn xbox-btn-secondary" id="dl-focus-pause">⏸ Pause</button>
+                <button class="xbox-btn xbox-btn-secondary" id="dl-focus-cancel">⏹ Cancel</button>
+                <button class="xbox-btn xbox-btn-secondary" id="dl-focus-logbtn">Show log</button>
+              </div>
+
+              <div id="dl-focus-queue" class="hidden">
+                <div class="fq-label">Up next</div>
+                <div id="dl-focus-queue-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Drop Zone -->
+        <div id="drop-zone">
+          <div id="drop-zone-inner">
+            <div id="grid-bg"></div>
+            <svg id="drop-icon" viewBox="0 0 48 48" fill="none">
+              <path d="M24 4L24 32M24 32L16 24M24 32L32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 36V40C8 41.1 8.9 42 10 42H38C39.1 42 40 41.1 40 40V36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="drop-text">Drop a game ZIP or click to browse</span>
+            <span id="drop-subtext">Librarian handles the rest — queue, download, crack.</span>
+          </div>
+        </div>
+
+        <!-- Download Stats Bar -->
+        <div id="dl-stats" class="hidden">
+          <div id="dl-stats-left">
+            <div id="dl-game-name">—</div>
+            <div id="dl-status-line">
+              <span id="dl-pct-text">0%</span>
+              <span class="dl-dot">·</span>
+              <span id="dl-size-progress">—</span>
+              <span class="dl-dot">·</span>
+              <span id="dl-speed" title="Downloading from the CDN">—</span>
+              <span class="dl-dot dl-disk-sep hidden">·</span>
+              <span id="dl-disk-speed" class="hidden" title="Writing to disk — includes data reused from the previous build, so it can run well above your line speed">—</span>
+              <span class="dl-dot">·</span>
+              <span id="dl-eta">—</span>
+            </div>
+          </div>
+          <div id="dl-stats-right">
+            <canvas id="speed-chart" width="120" height="36"></canvas>
+          </div>
+        </div>
+        <div id="dl-progress-track" class="hidden">
+          <div id="dl-progress-fill"></div>
+        </div>
+        <div id="dl-extra" class="hidden">
+          <span class="chip" id="dl-dest" title="Install location">📁 —</span>
+          <span class="chip" id="dl-disk" title="Free space on the destination drive">💽 —</span>
+          <span class="chip" id="dl-elapsed" title="Elapsed time">⏱ 0:00</span>
+        </div>
+
+        <!-- Queue Cards -->
+        <div id="queue-area" class="hidden">
+          <div id="queue-header-row">
+            <span class="section-label">Queue</span>
+            <div id="queue-actions">
+              <button class="icon-btn" id="btn-pause" title="Pause">⏸</button>
+              <button class="icon-btn" id="btn-cancel" title="Cancel">⏹</button>
+            </div>
+          </div>
+          <div id="queue-cards"></div>
+        </div>
+
+        <!-- Log -->
+        <div id="log-area" class="hidden">
+          <div id="log-header-row">
+            <span class="section-label">Log</span>
+            <button class="icon-btn" id="btn-clear-log" title="Clear">⌫</button>
+          </div>
+          <div id="log-output"></div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Auto Crack ═══ -->
+      <div class="page" id="page-crack">
+        <div class="settings-panel">
+          <div class="settings-section">
+            <h3 class="settings-title">Steam Auto Crack</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:14px">
+              Apply Goldberg Steam Emulator to a downloaded game. Automatically generates configs, DLC unlocks, and achievements.
+            </p>
+            <div id="crack-goldberg-status" class="mb-12"></div>
+            <!-- Which emulator build is installed, the newest release known,
+                 and the way to fetch it. Filled by the Crack page code in
+                 app.js from emu:status; the update is forced, so it also
+                 replaces a build that is present but too old. -->
+            <div id="crack-emu-build" class="mb-12">
+              <span class="text-dim" style="font-size:12.5px" id="crack-emu-build-text">Reading the emulator build…</span>
+              <button type="button" class="xbox-btn xbox-btn-secondary btn-sm" id="crack-emu-update" style="margin-left:10px">⬆ Update emulator</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Select Game Folder</h3>
+            <div class="form-group">
+              <div class="color-pick-row">
+                <button class="xbox-btn xbox-btn-primary" id="crack-browse">📂 Browse</button>
+                <span class="font-mono text-dim" style="font-size:12px" id="crack-path">No folder selected</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>App ID</label>
+              <input type="text" class="form-input" id="crack-appid" placeholder="e.g. 570">
+            </div>
+            <div class="form-group">
+              <label>Game Name</label>
+              <input type="text" class="form-input" id="crack-name" placeholder="e.g. Dota 2">
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Scan Results</h3>
+            <div id="crack-scan-results" class="empty-state-small">Select a game folder to scan.</div>
+          </div>
+
+          <div class="settings-section">
+            <div class="flex gap-8">
+              <button class="xbox-btn xbox-btn-primary" id="crack-apply" disabled>🔧 Apply Crack</button>
+              <button class="xbox-btn xbox-btn-secondary" id="crack-restore" disabled>↩ Restore Originals</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="settings-title">Log</h3>
+            <div id="crack-log" class="crack-log-box"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Tuning ═══
+           The performance mode: what runs inside the game (src/core/tuning.js
+           drives native/achoverlay/tuning.c) and what the launcher does at
+           start. Static markup here, behaviour in js/tuning.js, look in
+           styles/tuning.css. Every id below is addressed from js/tuning.js and
+           checked by dev/verify-tuning.mjs. -->
+      <div class="page" id="page-tuning">
+        <div class="settings-panel tn-panel">
+          <div class="tn-head">
+            <div class="tn-head-text">
+              <h2 class="page-heading">Tuning</h2>
+              <p class="tn-lead">Less input lag and steadier frames, done from inside the game and at launch. Measured, not promised: every switch shows its effect below, and the before/after test runs both on the same game.</p>
+            </div>
+            <label class="toggle-row tn-master"><input type="checkbox" id="tn-enabled"><span class="toggle-slider"></span><span>Tuning mode</span></label>
+          </div>
+          <div class="tn-status" id="tn-status" aria-live="polite">Reading the machine…</div>
+
+          <div class="tn-grid">
+            <section class="settings-section tn-card" id="tn-ingame">
+              <h3 class="settings-title">Inside the game</h3>
+              <div class="tn-field">
+                <div class="tn-field-head"><span>Render queue</span><span class="tn-hint" id="tn-queue-hint"></span></div>
+                <div class="tn-seg" id="tn-queue" role="radiogroup" aria-label="Render queue">
+                  <button type="button" role="radio" data-value="auto" aria-checked="false">Just in time</button>
+                  <button type="button" role="radio" data-value="off" aria-checked="false">Driver default</button>
+                  <button type="button" role="radio" data-value="ultra" aria-checked="false">Ultra</button>
+                </div>
+                <p class="setting-hint">Just in time holds the game after each frame so its next one is built as late as possible and never waits in Present: the input is that much fresher and the GPU never idles. Measured on a GPU-bound control: up to a frame less latency at the same frame rate, and nothing at all when the CPU is the bottleneck. Ultra goes further — no frame in flight — but costs frame rate whenever the CPU has work of its own.</p>
+              </div>
+              <label class="toggle-row"><input type="checkbox" id="tn-limiter"><span class="toggle-slider"></span><span>Frame limiter</span></label>
+              <div class="tn-field tn-inline">
+                <label for="tn-fps" class="tn-inline-label">Target</label>
+                <input type="number" class="form-input tn-num" id="tn-fps" min="0" max="1000" step="1" placeholder="auto">
+                <span class="tn-hint" id="tn-fps-hint">auto follows the display</span>
+              </div>
+              <p class="setting-hint">Held a few frames under the refresh rate, a variable-refresh display stays in range and the V-Sync queue never fills. The wait happens just before the frame goes out, so it is the newest one possible.</p>
+            </section>
+
+            <section class="settings-section tn-card" id="tn-launch">
+              <h3 class="settings-title">At launch</h3>
+              <label class="toggle-row"><input type="checkbox" id="tn-affinity"><span class="toggle-slider"></span><span>Pin to the right cores</span></label>
+              <div class="setting-hint" id="tn-topology">Reading the processor…</div>
+              <label class="toggle-row"><input type="checkbox" id="tn-priority"><span class="toggle-slider"></span><span>High process priority</span></label>
+              <label class="toggle-row"><input type="checkbox" id="tn-refresh"><span class="toggle-slider"></span><span>Display at its highest refresh rate</span></label>
+              <div class="setting-hint" id="tn-display">Reading the display…</div>
+              <label class="toggle-row"><input type="checkbox" id="tn-power"><span class="toggle-slider"></span><span>High performance power plan while playing</span></label>
+              <div class="setting-hint" id="tn-power-hint"></div>
+            </section>
+          </div>
+
+          <section class="settings-section tn-card" id="tn-game">
+            <h3 class="settings-title">Per game</h3>
+            <div class="tn-inline tn-wrap">
+              <select class="form-input tn-select" id="tn-game-select" aria-label="Game"></select>
+              <div class="tn-seg" id="tn-override" role="radiogroup" aria-label="Per-game override">
+                <button type="button" role="radio" data-value="inherit" aria-checked="false">Follow the profile</button>
+                <button type="button" role="radio" data-value="on" aria-checked="false">Always on</button>
+                <button type="button" role="radio" data-value="off" aria-checked="false">Never</button>
+              </div>
+            </div>
+            <p class="setting-hint">A game that misbehaves with the DLL inside it can be excluded here; one you always want tuned can be forced on even with the mode off.</p>
+          </section>
+
+          <section class="settings-section tn-card" id="tn-live">
+            <div class="tn-card-head">
+              <h3 class="settings-title">Live measurements</h3>
+              <span class="tn-api" id="tn-live-api"></span>
+            </div>
+            <div class="tn-tiles" id="tn-tiles">
+              <div class="tn-tile"><span class="tn-tile-label">Measured FPS</span><span class="tn-tile-value" id="tn-m-fps">—</span><span class="tn-tile-sub" id="tn-m-fps-sub">waiting for measurements</span></div>
+              <div class="tn-tile"><span class="tn-tile-label">1% low</span><span class="tn-tile-value" id="tn-m-low1">—</span><span class="tn-tile-sub" id="tn-m-low1-sub">the slow frames</span></div>
+              <div class="tn-tile"><span class="tn-tile-label">Frame time</span><span class="tn-tile-value" id="tn-m-frame">—</span><span class="tn-tile-sub" id="tn-m-frame-sub">p99 —</span></div>
+              <div class="tn-tile tn-tile-key"><span class="tn-tile-label">GPU latency</span><span class="tn-tile-value" id="tn-m-lat">—</span><span class="tn-tile-sub" id="tn-m-lat-sub">Present → frame rendered</span></div>
+              <div class="tn-tile"><span class="tn-tile-label">Blocked in Present</span><span class="tn-tile-value" id="tn-m-present">—</span><span class="tn-tile-sub" id="tn-m-present-sub">CPU waiting on the queue</span></div>
+              <div class="tn-tile"><span class="tn-tile-label">Our waits</span><span class="tn-tile-value" id="tn-m-waits">—</span><span class="tn-tile-sub" id="tn-m-waits-sub">limiter · queue</span></div>
+            </div>
+            <p class="setting-hint" id="tn-measurement-note">Measured at Present. With DLSS Frame Generation, this may differ from the total FPS displayed. Use NVIDIA FrameView to check generated-frame output; Librarian does not measure that total.</p>
+            <canvas class="tn-spark" id="tn-spark" height="72" aria-label="Measured frame rate history"></canvas>
+            <div class="tn-applied" id="tn-applied"></div>
+          </section>
+
+          <section class="settings-section tn-card" id="tn-ab">
+            <div class="tn-card-head">
+              <h3 class="settings-title">Before / after</h3>
+              <div class="tn-inline">
+                <select class="form-input tn-select-sm" id="tn-ab-seconds" aria-label="Seconds per phase">
+                  <option value="10">10 s each</option>
+                  <option value="15" selected>15 s each</option>
+                  <option value="30">30 s each</option>
+                </select>
+                <button type="button" class="xbox-btn xbox-btn-primary btn-sm" id="tn-ab-run">Run the test</button>
+                <button type="button" class="xbox-btn xbox-btn-secondary btn-sm hidden" id="tn-ab-cancel">Cancel</button>
+              </div>
+            </div>
+            <div class="tn-ab-progress hidden" id="tn-ab-progress">
+              <div class="tn-ab-bar"><span id="tn-ab-bar-fill"></span></div>
+              <span class="tn-ab-phase" id="tn-ab-phase"></span>
+            </div>
+            <div class="tn-table-wrap">
+              <table class="tn-table" id="tn-ab-table">
+                <thead><tr><th>Measure</th><th>Before<small>everything off</small></th><th>After<small>your profile</small></th><th>Change</th></tr></thead>
+                <tbody id="tn-ab-body"></tbody>
+              </table>
+            </div>
+            <p class="setting-hint" id="tn-ab-note">Start a game with Tuning mode on, then run the test: one phase with everything inside the game switched off, one with your profile, back to back on the same scene. Keep playing, or stand still — both phases see the same thing.</p>
+          </section>
+
+          <section class="settings-section tn-card tn-notes" id="tn-notes">
+            <h3 class="settings-title">What this can and cannot do</h3>
+            <ul>
+              <li>Direct3D 11 and 12 games, through Present and Present1. Vulkan and OpenGL games are not seen: nothing here changes them and nothing is measured.</li>
+              <li>Games Librarian leaves alone for the achievement overlay (hypervisor releases) are left alone here too.</li>
+              <li>If the DLL hits a fault it switches itself off for that session; the game keeps running. The status line above says so.</li>
+              <li>Changes to the display rate and power plan are undone when the last tuned game exits.</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: Settings ═══ -->
+      <div class="page" id="page-settings">
+        <div id="settings-topbar">
+          <nav id="settings-nav"></nav>
+          <div id="settings-save-wrap">
+            <span id="settings-saved-hint"></span>
+            <button class="xbox-btn xbox-btn-primary" id="btn-save-settings">Save Settings</button>
+          </div>
+        </div>
+        <div class="settings-panel">
+          <div class="settings-section" data-sec="Interface">
+            <h3 class="settings-title">Interface</h3>
+            <div class="form-group">
+              <label>Accent Color</label>
+              <div class="color-pick-row">
+                <input type="color" class="color-pick" id="inp-accent" aria-label="Accent color" value="#D2A65C">
+                <span class="color-hex font-mono" id="accent-hex">#D2A65C</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-reset-accent">Reset</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Background Color</label>
+              <div class="color-pick-row">
+                <input type="color" class="color-pick" id="inp-bg" aria-label="Background color" value="#0C0D10">
+                <span class="color-hex font-mono" id="bg-hex">#0C0D10</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-reset-bg">Reset</button>
+              </div>
+            </div>
+            <button class="xbox-btn xbox-btn-primary btn-sm" id="btn-apply-style" style="margin-bottom:12px">Apply Theme</button>
+
+            <label class="toggle-row"><input type="checkbox" id="chk-dynamic-accent"><span class="toggle-slider"></span><span>Tint the interface from cover art</span></label>
+            <div class="setting-hint">The accent colour follows whichever game is featured on Home.</div>
+            <label class="toggle-row"><input type="checkbox" id="chk-tilt"><span class="toggle-slider"></span><span>Tilt game tiles toward the cursor</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-hero-rotate"><span class="toggle-slider"></span><span>Rotate the featured game on Home</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-gamepad"><span class="toggle-slider"></span><span>Navigate with a gamepad</span></label>
+            <div class="setting-hint">D-pad or left stick to move, A to open, B to go back, X to play, Y for search.</div>
+            <label class="toggle-row"><input type="checkbox" id="chk-ui-sounds"><span class="toggle-slider"></span><span>Interface sounds</span></label>
+            <div class="form-group range-row" id="row-sound-volume">
+              <label style="margin:0;flex-shrink:0">Volume</label>
+              <input type="range" id="inp-sound-volume" min="0" max="1" step="0.05" value="0.35">
+              <output id="out-sound-volume">35%</output>
+            </div>
+            <label class="toggle-row"><input type="checkbox" id="chk-kinetic"><span class="toggle-slider"></span><span>Kinetic interface</span></label>
+            <div class="setting-hint">Menus arrive off-axis, selections overshoot, and live numbers react when they change. Turn it off for a still interface with plain fades.</div>
+            <label class="toggle-row"><input type="checkbox" id="chk-reduce-motion"><span class="toggle-slider"></span><span>Reduce motion &amp; animations</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-notify-complete"><span class="toggle-slider"></span><span>Notify me when a download finishes</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-news"><span class="toggle-slider"></span><span>Show what's new at launch</span></label>
+            <div class="setting-hint">Denuvo titles arriving on Steam, and new posts by the member you follow on CS.RIN.RU. Only when there is something you have not seen; the Store keeps a button to reopen it.</div>
+          </div>
+
+          <div class="settings-section" data-sec="Big Picture">
+            <h3 class="settings-title">Big Picture</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:12px">
+              A full-screen, controller-driven front-end for the couch. Open it with the
+              gamepad button in the title bar or <b>Ctrl&nbsp;+&nbsp;Shift&nbsp;+&nbsp;B</b>;
+              press <b>B</b> or <b>Esc</b> to come back.
+            </p>
+            <button class="xbox-btn xbox-btn-primary btn-sm" id="btn-open-bigpicture" style="margin-bottom:14px">Open Big Picture</button>
+
+            <div class="form-group">
+              <label>Layout</label>
+              <div class="seg" id="seg-bp-layout">
+                <button data-bp-layout="horizontal" class="active">Horizontal shelf</button>
+                <button data-bp-layout="grid">Grid</button>
+              </div>
+              <div class="setting-hint">Switchable at any time from inside Big Picture — grid button, <b>LT</b>, or <b>G</b>.</div>
+            </div>
+
+            <div class="form-group">
+              <label>Accent Colour</label>
+              <div class="color-pick-row">
+                <input type="color" class="color-pick" id="inp-bp-accent" aria-label="Big Picture accent color" value="#17C8B6">
+                <span class="color-hex font-mono" id="bp-accent-hex">#17C8B6</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-reset-bp-accent">Reset</button>
+              </div>
+            </div>
+
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-fullscreen"><span class="toggle-slider"></span><span>Take over the whole screen</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-logos"><span class="toggle-slider"></span><span>Show game wordmarks instead of titles</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-rounded"><span class="toggle-slider"></span><span>Rounded cover corners</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-trailer-bg"><span class="toggle-slider"></span><span>Play the trailer behind the shelf</span></label>
+            <div class="setting-hint">Starts after the highlighted game has sat still for a moment, and stops as soon as you move.</div>
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-trailers"><span class="toggle-slider"></span><span>Play trailers in the details view</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-bp-sounds"><span class="toggle-slider"></span><span>Navigation sounds</span></label>
+          </div>
+
+          <div class="settings-section" data-sec="Install">
+            <h3 class="settings-title">Install Locations</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:12px">
+              Where Librarian puts the games it downloads. Steam libraries are detected automatically;
+              add any other folder you want to install into.
+            </p>
+            <div id="install-locations"></div>
+            <div class="flex gap-8" style="margin-top:12px">
+              <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-add-location">＋ Add folder</button>
+              <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-refresh-locations">↻ Rescan drives</button>
+            </div>
+            <label class="toggle-row" style="margin-top:8px"><input type="checkbox" id="chk-ask-destination"><span class="toggle-slider"></span><span>Ask me where to install every download</span></label>
+            <div class="setting-hint">Off means new downloads go straight to the default folder above.</div>
+          </div>
+
+          <div class="settings-section" data-sec="Graphics" id="settings-graphics">
+            <h3 class="settings-title">DLSS Frame Generation updates</h3>
+            <div class="fg-card" id="fg-updates" aria-labelledby="fg-updates-title">
+              <span class="fg-eyebrow">GRAPHICS · ALL LIBRARY GAMES</span>
+              <h3 id="fg-updates-title">Keep your DLSS FG installations up to date</h3>
+              <p class="fg-message fg-updates-intro">Update the DLSS FG mod installed through Librarian across your library, including manually added games. Close affected games before updating. Checking for updates does not change game files.</p>
+              <div class="fg-update-actions">
+                <button type="button" class="xbox-btn xbox-btn-secondary btn-sm" id="fg-updates-check">Check for updates</button>
+                <button type="button" class="xbox-btn xbox-btn-primary btn-sm" id="fg-updates-apply" disabled>Update all DLSS FG</button>
+              </div>
+              <p class="fg-message" id="fg-updates-message" role="status" aria-live="polite">Check GitHub to see which managed games have an update available.</p>
+              <p class="fg-path hidden" id="fg-updates-release"></p>
+              <progress id="fg-updates-progress" class="hidden" aria-label="DLSS FG update progress" max="1" value="0"></progress>
+              <div id="fg-updates-list" aria-label="DLSS FG results by game"></div>
+              <p class="fg-updates-note">Each update verifies the package and backs up the previous DLL and configuration. Games with modified files are skipped. Native NVIDIA DLSS files and other mods are preserved.</p>
+            </div>
+          </div>
+
+          <div class="settings-section" data-sec="API">
+            <h3 class="settings-title">API Configuration</h3>
+            <div class="form-group">
+              <label>Manifest source</label>
+              <select class="form-input" id="sel-manifest-source">
+                <option value="auto">Auto — Hubcap, checked against public metadata</option>
+                <option value="hubcap">Hubcap only</option>
+                <option value="steammanifest">steammanifest endpoints — no Hubcap key needed</option>
+              </select>
+              <div class="setting-hint" style="margin-left:0">Auto checks Hubcap packages against public metadata from steamcmd.net. Outdated or unavailable packages are assembled using the configured manifest endpoints and XYZ or saved depot keys. No direct Steam session, key lookup or request-code attempt is made. Files are delivered by Steam's CDN using endpoint-issued codes.</div>
+            </div>
+            <div class="form-group">
+              <label>Hubcap API Key</label>
+              <input type="text" class="form-input" id="inp-api-key" placeholder="Paste your API key">
+              <div class="text-dim" style="font-size:12px;margin-top:6px">
+                Needed when Hubcap is a source; Store search and downloads work without one through steammanifest.
+                <a href="#" id="link-get-api-key" class="settings-link">Where do I get a key?</a>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>steammanifest folder</label>
+              <div class="csrin-dir-row">
+                <span class="font-mono text-dim" id="steammanifest-dir-label" title="">—</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-steammanifest-browse">📂 Choose</button>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-steammanifest-dir-reset">Reset</button>
+              </div>
+              <div class="setting-hint" style="margin-left:0">A checkout of the steammanifest project to use instead of the copy Librarian ships with. Leave it at the bundled copy unless you are working on the project.</div>
+            </div>
+            <div class="form-group">
+              <label>Manifest request-code mirror</label>
+              <input type="text" class="form-input" id="inp-steammanifest-mirror" placeholder="https://20770407.xyz/enone" maxlength="200">
+              <div class="setting-hint" style="margin-left:0">Default: 20770407.xyz/enone first, then 20770407.xyz as backup. You can paste a relay base or its /manifest/x/x template. The relay supplies a request code; manifest files still come from Steam's CDN.</div>
+            </div>
+            <div class="form-group">
+              <label>Manifest mirror proxies</label>
+              <input type="text" class="form-input" id="inp-manifest-proxies" placeholder="Off — direct connection only" maxlength="2000">
+              <div class="setting-hint" style="margin-left:0">The mirror rate-limits per IP (a 401 once it has seen enough from one address). Give a pool of http(s) proxies, comma-separated (http://user:pass@host:port), and Librarian rotates through them so a refusal on one address retries from another. SOCKS is not supported.</div>
+            </div>
+            <div class="form-group">
+              <label>Auto proxy list</label>
+              <input type="text" class="form-input" id="inp-manifest-proxy-source" placeholder="Off — clear to disable" maxlength="500">
+              <div class="setting-hint" style="margin-left:0">When no proxy is pinned above, Librarian draws a live pool from this public, GitHub-published proxy list, ranks it, probes a handful and keeps the few that respond — refreshed each session, since free proxies die fast. The default is proxifly's list over the jsDelivr CDN. Clear the field to switch auto-sourcing off.</div>
+            </div>
+            <div class="form-group">
+              <label>Depot-key catalog</label>
+              <input type="text" class="form-input" id="inp-depot-key-catalog" placeholder="Off — clear to disable" maxlength="300">
+              <div class="setting-hint" style="margin-left:0">First choice for depot keys in generated and imported Lua packages. Saved and package keys fill missing entries or take over if the catalog is unavailable. Downloaded once and cached. Clear the field to switch it off.</div>
+            </div>
+            <div class="form-group">
+              <label>App-token catalog</label>
+              <input type="text" class="form-input" id="inp-app-token-catalog" placeholder="Off — clear to disable" maxlength="300">
+              <div class="setting-hint" style="margin-left:0">Retained for compatibility. Manifest downloads now use the public metadata endpoint and do not request Steam session access tokens.</div>
+            </div>
+            <div class="text-dim font-mono" style="font-size:11px;margin:8px 0 18px" id="steammanifest-tools-line"></div>
+
+            <div class="form-group">
+              <label>Steam Web API Key</label>
+              <input type="text" class="form-input" id="inp-steam-web-key" placeholder="Optional — needed to look up achievements">
+              <div class="text-dim" style="font-size:12px;margin-top:6px">
+                Only used to fetch achievement names, descriptions and icons for your games.
+                <a href="#" id="link-get-steam-key" class="settings-link">Get one free from Steam</a>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section" data-sec="Achievements">
+            <h3 class="settings-title">Achievement Overlay</h3>
+            <label class="toggle-row"><input type="checkbox" id="chk-achievement-popups"><span class="toggle-slider"></span><span>Show achievement overlay</span></label>
+            <div class="setting-hint">Show a popup when you unlock an achievement. Turning this off hides current popups immediately; achievements are still tracked. Restart a running game after enabling this to activate the in-game overlay.</div>
+          </div>
+          <div class="settings-section" data-sec="Launcher">
+            <h3 class="settings-title">Launcher</h3>
+            <div class="form-group">
+              <label>When you press Play</label>
+              <select class="form-input" id="sel-launch-mode">
+                <option value="exe">Run the game's executable directly</option>
+                <option value="steam">Open through the Steam client</option>
+                <option value="greenluma">Launch with GreenLuma (play as owned)</option>
+              </select>
+              <div class="text-dim" style="font-size:11px;margin-top:6px">Direct launch records playtime and never opens Steam. If no executable is found, Librarian falls back to Steam. GreenLuma mode makes the Steam client report the game as owned and launches it under its real App ID — the only way to join a friend who owns it. Needs GreenLuma installed in your Steam folder; Librarian restarts Steam through its injector when it isn't already active.</div>
+            </div>
+          </div>
+          <div class="settings-section" data-sec="Downloads">
+            <h3 class="settings-title">Download Options</h3>
+            <label class="toggle-row"><input type="checkbox" id="chk-sls"><span class="toggle-slider"></span><span>SLSsteam / GreenLuma Wrapper Mode</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-library"><span class="toggle-slider"></span><span>Limit Downloads to Steam Libraries</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-achievements"><span class="toggle-slider"></span><span>Generate Steam Achievements</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-steamless"><span class="toggle-slider"></span><span>Remove Steam DRM with Steamless</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-auto-crack"><span class="toggle-slider"></span><span>Auto-Crack after Download (Goldberg)</span></label>
+            <div class="setting-hint">For a Denuvo title the emulator is not enough: the release for its exact build is fetched from CS.RIN.RU and placed over the install as well. See the CS.RIN.RU section for the account it needs.</div>
+            <div class="form-group">
+              <label>Download Connections</label>
+              <select class="form-input" id="sel-max-downloads">
+                <option value="4">Safe - 4 chunks</option>
+                <option value="8">Balanced - 8 chunks</option>
+                <option value="12">Fast - 12 chunks</option>
+                <option value="16">Turbo - 16 chunks</option>
+                <option value="24">Aggressive - 24 chunks</option>
+                <option value="32">Maximum - 32 chunks</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="chk-adaptive">Adaptive speed</label>
+              <input type="checkbox" id="chk-adaptive" checked>
+              <div class="setting-hint">Treats the value above as a starting point and opens more connections while that keeps making the download faster. If adding them makes it slower it hands them back, then keeps watching in case the line frees up later. Never goes below your setting.</div>
+            </div>
+            <div class="form-group">
+              <label>Bandwidth limit (MB/s)</label>
+              <input type="number" class="form-input" id="inp-speed-limit" min="0" step="0.5" placeholder="0">
+              <div class="setting-hint">Leave at 0 for no limit. Useful when a download at full speed makes everything else on the connection unusable.</div>
+            </div>
+            <label class="toggle-row"><input type="checkbox" id="chk-validate-fresh"><span class="toggle-slider"></span><span>Validate new downloads (slower, safer)</span></label>
+            <label class="toggle-row"><input type="checkbox" id="chk-lancache" checked><span class="toggle-slider"></span><span>Use Lancache</span></label>
+            <div class="setting-hint">Looks for a content cache on your network and downloads from it instead of Steam's servers when one answers. Costs one DNS lookup if there isn't one.</div>
+            <label class="toggle-row"><input type="checkbox" id="chk-steam-overlay" checked><span class="toggle-slider"></span><span>Steam overlay in Online mode</span></label>
+            <div class="setting-hint">Shift+Tab, screenshots and Steam invites — but only in games where the overlay attaches at all, which Steam decides when the game starts. Your friends list shows you as playing "Spacewar" either way: that comes from the session, not the overlay.</div>
+            <div class="form-group">
+              <label>Online player name</label>
+              <input type="text" class="form-input" id="inp-player-name" placeholder="Player" maxlength="48">
+              <div class="setting-hint">Shown to friends in Online mode. Sessions are anonymous, so without this everyone appears as "Player".</div>
+            </div>
+            <div class="form-group">
+              <label>Steam Content Server Cell ID</label>
+              <input type="text" class="form-input" id="inp-steam-cell-id" placeholder="Optional">
+            </div>
+          </div>
+          <div class="settings-section" data-sec="Steam login">
+            <h3 class="settings-title">Steam Login</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:12px">
+              Used only by the download engine, for depots that anonymous access cannot reach.
+            </p>
+            <div class="form-group">
+              <label>Steam Username</label>
+              <input type="text" class="form-input" id="inp-steam-username" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label>Steam Password</label>
+              <input type="password" class="form-input" id="inp-steam-password" placeholder="Optional">
+            </div>
+            <div class="text-dim" style="font-size:12px">
+              Leave both blank to keep using anonymous downloads.
+            </div>
+          </div>
+
+          <div class="settings-section" data-sec="CS.RIN.RU">
+            <h3 class="settings-title">CS.RIN.RU</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:12px">
+              A second source beside Hubcap. A store page can look up the game's thread on cs.rin.ru
+              and fetch what a trusted member attached. The forum hides download links from guests,
+              so without an account a search finds the post but not the file.
+            </p>
+            <div class="form-group">
+              <label>Forum username</label>
+              <input type="text" class="form-input" id="inp-csrin-username" placeholder="Optional — needed to see links" maxlength="64">
+            </div>
+            <div class="form-group">
+              <label>Forum password</label>
+              <input type="password" class="form-input" id="inp-csrin-password" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label>Member to look for</label>
+              <input type="text" class="form-input" id="inp-csrin-author" placeholder="ARTIFACT" maxlength="64">
+              <div class="setting-hint" style="margin-left:0">Whose posts hold the release in a thread. ARTIFACT posts the Denuvo titles, each named for the patch it fits; the picker lets you change it per search.</div>
+            </div>
+            <div class="form-group">
+              <label>Download folder</label>
+              <div class="csrin-dir-row">
+                <span class="font-mono text-dim" id="csrin-dir-label" title="">—</span>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-csrin-browse">📂 Choose</button>
+                <button class="xbox-btn xbox-btn-secondary btn-sm" id="btn-csrin-dir-reset">Reset</button>
+              </div>
+              <div class="setting-hint" style="margin-left:0">Releases arrive as archives to unpack, not as installs, so they stay out of your Steam libraries.</div>
+            </div>
+            <div class="text-dim" style="font-size:12px;margin-top:4px">
+              Part of Auto-Crack: with <b>Auto-Crack after Download</b> on, a Denuvo title gets the member's
+              release for its exact build placed over the install after it downloads, updates or is repaired,
+              and an update is held back when no release exists for the new build yet. Games without Denuvo
+              are never touched.
+            </div>
+            <div class="text-dim font-mono" style="font-size:11px;margin-top:8px" id="csrin-tools-line"></div>
+          </div>
+
+          <div class="settings-section" data-sec="Data">
+            <h3 class="settings-title">Data &amp; Storage</h3>
+            <p class="text-dim" style="font-size:13px;margin-bottom:10px">
+              Settings, custom games, and fetched manifests are stored in Librarian's data folder.
+            </p>
+            <div class="flex gap-8" style="flex-wrap:wrap">
+              <button class="xbox-btn xbox-btn-primary" id="btn-replay-tour">🎓 Replay the tutorial</button>
+              <button class="xbox-btn xbox-btn-secondary" id="btn-show-shortcuts">⌨ Keyboard Shortcuts</button>
+              <button class="xbox-btn xbox-btn-secondary" id="btn-open-config">📂 Open Settings Folder</button>
+            </div>
+            <div class="text-dim font-mono" style="font-size:11px;margin-top:12px" id="about-line">Librarian</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Game Detail (immersive catalog entry) ───────────── -->
+    <div id="game-flyout" class="flyout-closed">
+      <div id="flyout-backdrop"></div>
+      <div id="flyout-panel">
+        <!-- Ambient backdrop: the game's key art, blurred, with its trailer over it -->
+        <div id="flyout-hero">
+          <div id="flyout-hero-media">
+            <img id="flyout-hero-img" src="" alt="">
+            <video id="flyout-trailer" muted loop playsinline preload="none"></video>
+          </div>
+          <div id="flyout-hero-scrim"></div>
+        </div>
+
+        <div id="flyout-nav">
+          <button id="flyout-prev" title="Previous game (←)">‹</button>
+          <button id="flyout-next" title="Next game (→)">›</button>
+        </div>
+        <button id="flyout-close" class="icon-btn" title="Close (Esc)">✕</button>
+        <button id="flyout-trailer-toggle" class="hidden" title="Toggle trailer sound">🔊</button>
+
+        <div id="flyout-layout">
+          <aside id="flyout-aside">
+            <div class="poster-frame" id="flyout-poster">
+              <div id="flyout-poster-art"></div>
+              <div class="poster-sheen"></div>
+            </div>
+            <div class="poster-plinth"></div>
+            <div id="flyout-primary"></div>
+            <!-- The rail: every switch this game happens to offer. It is the one
+                 part of the column whose height is unknown — nought to four
+                 panels — so it is the one part that scrolls. -->
+            <div id="flyout-rail">
+            <!-- Online mode: only rendered for games it can actually help -->
+            <div id="flyout-online" class="hidden">
+              <div id="flyout-online-row">
+                <div id="flyout-online-text">
+                  <span id="flyout-online-title">Online mode</span>
+                  <span id="flyout-online-sub"></span>
+                </div>
+                <button id="flyout-online-toggle" role="switch" aria-checked="false" aria-labelledby="flyout-online-title">
+                  <i></i>
+                </button>
+              </div>
+              <div id="flyout-online-note"></div>
+            </div>
+            <!-- Emulator compatibility: shown only when the installed emulator
+                 lacks an interface this game's build asks for, or when a
+                 launch wrote a missing-interface report (src/core/emuCompat.js). -->
+            <div id="flyout-emu" class="hidden">
+              <div id="flyout-emu-row">
+                <div id="flyout-emu-text">
+                  <span id="flyout-emu-title">Emulator too old for this build</span>
+                  <span id="flyout-emu-sub"></span>
+                </div>
+                <button type="button" class="xbox-btn xbox-btn-primary btn-sm" id="flyout-emu-update">Update &amp; apply</button>
+              </div>
+              <div id="flyout-emu-note"></div>
+            </div>
+            <!-- Greffon PEAK : n'apparaît que pour ce jeu, seul concerné -->
+            <div id="flyout-peakmod" class="hidden">
+              <div id="flyout-peakmod-row">
+                <div id="flyout-peakmod-text">
+                  <span id="flyout-peakmod-title">Rejoindre un ami</span>
+                  <span id="flyout-peakmod-sub"></span>
+                </div>
+                <button id="flyout-peakmod-toggle" role="switch" aria-checked="false" aria-labelledby="flyout-peakmod-title">
+                  <i></i>
+                </button>
+              </div>
+              <div id="flyout-peakmod-note"></div>
+            </div>
+            <!-- Moteur generique : apparait sur tout jeu Unity/Photon reconnu -->
+            <div id="flyout-photonmod" class="hidden">
+              <div id="flyout-photonmod-row">
+                <div id="flyout-photonmod-text">
+                  <span id="flyout-photonmod-title">Rejoindre un ami</span>
+                  <span id="flyout-photonmod-sub"></span>
+                </div>
+                <button id="flyout-photonmod-toggle" role="switch" aria-checked="false" aria-labelledby="flyout-photonmod-title">
+                  <i></i>
+                </button>
+              </div>
+              <div id="flyout-photonmod-note"></div>
+            </div>
+            <div id="flyout-dlc" class="hidden">
+              <div id="flyout-dlc-row">
+                <div id="flyout-dlc-text">
+                  <span id="flyout-dlc-title">DLC</span>
+                  <span id="flyout-dlc-sub"></span>
+                </div>
+                <button id="flyout-dlc-toggle" role="switch" aria-checked="false" aria-labelledby="flyout-dlc-title">
+                  <i></i>
+                </button>
+              </div>
+              <div id="flyout-dlc-note"></div>
+            </div>
+            </div>
+          </aside>
+
+          <!-- The identity block sits on the key art, next to the poster, the
+               way a title sits on a jacket. Everything below the rule is what
+               you can do about it; everything below the tabs is reading. -->
+          <header id="flyout-head">
+            <div id="flyout-ident">
+              <img id="flyout-logo" alt="" class="hidden">
+              <h2 id="flyout-title"></h2>
+              <div id="flyout-meta"></div>
+            </div>
+            <div id="flyout-playtime"></div>
+            <div id="flyout-update-status"></div>
+            <div id="flyout-actions"></div>
+          </header>
+
+          <main id="flyout-body">
+            <nav id="flyout-tabs">
+              <button class="dtab active" data-tab="overview">Overview</button>
+              <button class="dtab hidden" data-tab="graphics" id="flyout-graphics-tab">Graphics</button>
+              <button class="dtab" data-tab="patch">Patch notes<span class="dtab-count hidden" id="dtab-count-patch"></span></button>
+              <button class="dtab" data-tab="achievements">Achievements<span class="dtab-count hidden" id="dtab-count-ach"></span></button>
+              <button class="dtab" data-tab="media">Media<span class="dtab-count hidden" id="dtab-count-media"></span></button>
+              <button class="dtab" data-tab="files">Catalog Record</button>
+            </nav>
+            <div class="dtab-panel active" id="flyout-tab-overview">
+              <div id="flyout-desc"></div>
+              <div id="flyout-tags"></div>
+              <div id="flyout-shots"></div>
+            </div>
+            <div class="dtab-panel" id="flyout-tab-graphics">
+              <!-- Per-game graphics has its own section, separate from Overview and the switch rail. -->
+              <section id="flyout-dlssg" class="fg-card hidden" aria-labelledby="fg-title"></section>
+            </div>
+            <div class="dtab-panel" id="flyout-tab-patch">
+              <div id="flyout-patch"></div>
+            </div>
+            <div class="dtab-panel" id="flyout-tab-achievements">
+              <div id="flyout-ach"></div>
+            </div>
+            <div class="dtab-panel" id="flyout-tab-media">
+              <div id="flyout-media"></div>
+            </div>
+            <div class="dtab-panel" id="flyout-tab-files">
+              <div id="flyout-details"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Right-click context menu ───────────────── -->
+    <div id="context-menu" class="hidden"></div>
+
+    <!-- ─── Lightbox for screenshots ───────────────── -->
+    <div id="lightbox" class="hidden">
+      <img id="lightbox-img" src="" alt="">
+    </div>
+  </div>
+
+  <!-- ─── Modal Overlay (for depot selection etc.) ───── -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-container">
+      <div id="modal-header">
+        <span id="modal-title"></span>
+        <button id="modal-close" class="icon-btn">✕</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ─── Command palette (Ctrl/⌘ K) ─────────────────── -->
+  <div id="palette" class="hidden" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div id="palette-box">
+      <div id="palette-head">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8.5 3a5.5 5.5 0 014.383 8.823l3.147 3.147a.75.75 0 11-1.06 1.06l-3.147-3.147A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        <input id="palette-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Search games, run a command…" aria-controls="palette-list" role="combobox" aria-expanded="true">
+        <span id="palette-mode">All</span>
+      </div>
+      <div id="palette-list" role="listbox"></div>
+      <div id="palette-foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> open</span>
+        <span><kbd>⇧</kbd><kbd>↵</kbd> play</span>
+        <span><kbd>&gt;</kbd> commands</span>
+        <span><kbd>esc</kbd> close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Keyboard shortcut sheet (?) ─────────────────── -->
+  <div id="shortcut-sheet" class="hidden" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div id="shortcut-card">
+      <div class="shortcut-heading">
+        <h2 id="shortcut-title">Keyboard &amp; gamepad</h2>
+        <button class="icon-btn" id="shortcut-close" aria-label="Close keyboard shortcuts" title="Close (Esc)">×</button>
+      </div>
+      <div class="sc-lead">Everything in Librarian is reachable without the mouse.</div>
+      <div class="sc-grid" id="shortcut-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── First-run onboarding ────────────────────────── -->
+  <div id="onboard" class="hidden" role="dialog" aria-modal="true" aria-label="Welcome">
+    <div id="onboard-card">
+      <img src="../res/logo/librarian-icon.png" alt="">
+      <h2>Welcome to Librarian</h2>
+      <p>A quiet, fast shelf for your PC games. Three things and you're set.</p>
+      <div id="onboard-steps">
+        <div class="ob-step"><span class="ob-num">1</span><span class="ob-text"><b>Scan your drives</b>Find everything already installed.</span></div>
+        <div class="ob-step"><span class="ob-num">2</span><span class="ob-text"><b>Pick an install folder</b>Where new downloads land.</span></div>
+        <div class="ob-step"><span class="ob-num">3</span><span class="ob-text"><b>Press Ctrl + K</b>Search and launch anything, instantly.</span></div>
+      </div>
+      <div id="onboard-actions">
+        <button class="xbox-btn xbox-btn-secondary" id="onboard-skip">Skip for now</button>
+        <button class="xbox-btn xbox-btn-primary" id="onboard-go">Show me around</button>
+      </div>
+      <div id="onboard-note">Takes about two minutes. You can replay it any time from Settings.</div>
+    </div>
+  </div>
+
+  <!-- ─── Install plan: choose what to install ────────── -->
+  <div id="plan" class="hidden" role="dialog" aria-modal="true" aria-label="Choose what to install">
+    <div id="plan-bg"></div>
+    <div id="plan-scrim"></div>
+    <div id="plan-sheet">
+      <header id="plan-head">
+        <div id="plan-poster"></div>
+        <div id="plan-heading">
+          <div id="plan-kicker">Install plan</div>
+          <h2 id="plan-title">—</h2>
+          <p id="plan-lead">Leave out what you'll never use. You can reinstall any of it later.</p>
+        </div>
+        <button id="plan-close" title="Cancel (Esc)">✕</button>
+      </header>
+
+      <section id="plan-meter">
+        <div id="plan-figures">
+          <div id="plan-size">
+            <span id="plan-size-num">0</span><span id="plan-size-unit">GB</span>
+          </div>
+          <div id="plan-size-label">to install</div>
+        </div>
+        <div id="plan-savings" class="hidden">
+          <span id="plan-full-size"></span>
+          <span id="plan-saved"></span>
+        </div>
+      </section>
+
+      <div id="plan-bar" aria-hidden="true"></div>
+      <div id="plan-legend"></div>
+
+      <div id="plan-groups"></div>
+
+      <footer id="plan-foot">
+        <div id="plan-foot-left">
+          <button class="plan-btn ghost" id="plan-all">Install everything</button>
+          <button class="plan-btn ghost" id="plan-lean">Just the essentials</button>
+        </div>
+        <div id="plan-foot-right">
+          <span id="plan-warn" class="hidden"></span>
+          <button class="plan-btn ghost" id="plan-cancel">Cancel</button>
+          <button class="plan-btn primary" id="plan-go">Install</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ─── Guided tour ─────────────────────────────────── -->
+  <div id="tour" class="hidden" role="dialog" aria-modal="true" aria-label="Librarian tutorial">
+    <div id="tour-mask"></div>
+    <div id="tour-card" role="document">
+      <div id="tour-head">
+        <span id="tour-chapter">Getting around</span>
+        <span id="tour-count">1 / 1</span>
+      </div>
+      <h3 id="tour-title">—</h3>
+      <div id="tour-body"></div>
+      <div id="tour-foot">
+        <div id="tour-dots" aria-hidden="true"></div>
+        <div id="tour-nav">
+          <button class="tour-btn ghost" id="tour-skip">Skip</button>
+          <button class="tour-btn ghost" id="tour-back">Back</button>
+          <button class="tour-btn primary" id="tour-next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Toast stack + celebration canvas ────────────── -->
+  <div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  <canvas id="confetti" class="hidden" aria-hidden="true"></canvas>
+
+  <!-- Steam serves trailers as HLS now; see src/js/trailer.js. -->
+  <script src="vendor/hls.light.min.js"></script>
+  <script src="js/trailer.js"></script>
+  <script src="js/dialogs.js"></script>
+  <script src="js/dlssg.js"></script>
+  <script src="js/dlssgUpdates.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/enhance.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/tuning.js"></script>
+  <script src="js/bigpicture.js"></script>
+  <script src="js/kinetic.js"></script>
+</body>
+
+</html>

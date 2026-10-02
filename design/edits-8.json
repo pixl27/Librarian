@@ -1,0 +1,5 @@
+[
+  { "file": "src/styles/store.css", "from": "#sd-cinema-head { position: absolute; left: 30px; bottom: 26px; right: 34%;", "to": "#sd-cinema-head { position: absolute; left: 30px; bottom: 26px; right: 46%;" },
+  { "file": "src/styles/store.css", "from": "#sd-strip { position: absolute; right: 22px; bottom: 22px; max-width: 60%;", "to": "#sd-strip { position: absolute; right: 22px; bottom: 22px; max-width: calc(46% - 44px);" },
+  { "file": "src/styles/store.css", "from": "#sd-body { display: flex; flex-direction: column; gap: 14px; max-width: 980px; }", "to": "#sd-body { display: flex; flex-direction: column; gap: 14px; }" }
+]

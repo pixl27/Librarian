@@ -1,0 +1,580 @@
+/* ═══════════════════════════════════════════════════════════════
+   Librarian — Reading Room, second pass: the shelf and the desk
+   ═══════════════════════════════════════════════════════════════
+   Loaded last, on purpose. main.css sets the identity and enhance.css
+   the motion system; this sheet only reshapes the two surfaces the art
+   actually lives on — the library grid and the game detail — and it is
+   deliberately small enough to read in one sitting.
+
+   The brief, from the identity comment in main.css: "game art as the
+   colour". Everything here follows from taking that literally.
+
+     · No strokes. Separation is done with fill and shadow, never a
+       1px line. A border around a poster is a frame around a frame.
+     · No chrome colour. Brass is light, not decoration: it appears
+       where something is live or actionable, nowhere else.
+     · The colour on screen comes from the game you are looking at.
+
+   The one thing this fixes above all: the detail view had the game's
+   own key art behind it at blur(44px) and 42% opacity, under a scrim
+   at 93–97% — present in the DOM, invisible on screen. It is the most
+   characteristic image the game has. Now it is the room.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── The desk: game detail ─────────────────────────────────────
+   Key art anchored to the top and read at full strength, dissolving
+   downward into ink so text below never fights it. Two masks rather
+   than one flat scrim: a vertical fade that ends the image, and a
+   left-weighted wash that buys legibility for the title block without
+   dimming the whole frame. */
+#flyout-hero { height: clamp(268px, 42vh, 460px); inset: 0 0 auto 0; }
+#flyout-hero-media { inset: 0; overflow: hidden; }
+
+#flyout-hero-img,
+#flyout-trailer {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 26%;
+  /* Sharp. The blur was hiding the one asset the publisher art-directed. */
+  filter: none;
+  transform: none;
+  opacity: 1;
+  -webkit-mask-image: linear-gradient(180deg,
+      #000 0%, #000 46%, rgba(0,0,0,.5) 78%, transparent 100%);
+          mask-image: linear-gradient(180deg,
+      #000 0%, #000 46%, rgba(0,0,0,.5) 78%, transparent 100%);
+}
+
+#flyout-hero-scrim {
+  background:
+    /* the reading lamp: one warm source, upper left, the identity's signature */
+    radial-gradient(120% 90% at 12% 0%, var(--lamp, rgba(210,166,92,.16)), transparent 58%),
+    /* legibility under the title block, weighted left so the art keeps its right side */
+    linear-gradient(100deg, rgba(12,13,16,.82) 0%, rgba(12,13,16,.46) 42%, transparent 74%),
+    /* the image has to end somewhere */
+    linear-gradient(180deg, rgba(12,13,16,.34) 0%, transparent 26%, rgba(12,13,16,.78) 84%, var(--ink) 100%);
+}
+
+/* The poster sits on the art, lifted, with the game's own colour pooled
+   underneath — the same borrowed-light idea as the grid below. */
+#flyout-poster {
+  border: 0;
+  border-radius: 16px;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.5),
+    0 26px 60px rgba(0,0,0,.62),
+    0 0 90px -20px var(--game-tint, var(--brass));
+}
+
+/* ─── The shelf: library grid ───────────────────────────────────
+   A poster is already a finished piece of design. The tile's whole job
+   is to hold it and get out of the way. */
+.game-tile-img-wrap {
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 20px -10px rgba(0,0,0,.7);
+  transition: box-shadow var(--dur-3) var(--ease-standard);
+}
+
+/* Decoration that competed with the art. A sweep of white across a
+   cover is a shine on glass the cover never asked for. */
+.game-tile-sheen { display: none; }
+.game-tile-img-wrap::before { display: none; }
+
+/* Lift on hover, and let the tile's own colour pool beneath it.
+   --tile-tint is sampled from the cover on first hover; until then it
+   falls back to brass, so the effect degrades to lamplight, never to
+   nothing. */
+.game-tile {
+  transition: transform var(--dur-2) var(--ease-standard);
+}
+.game-tile:hover .game-tile-img-wrap,
+.game-tile:focus-visible .game-tile-img-wrap {
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.5),
+    0 18px 34px -14px rgba(0,0,0,.8),
+    0 0 46px -8px var(--tile-tint, var(--brass));
+}
+.game-tile:hover .game-tile-img { transform: scale(1.045); }
+
+/* The name is the thing you scan by, so it brightens; brass is reserved
+   for what you can act on. */
+.game-tile:hover .game-tile-name { color: var(--paper); }
+
+/* Half the grid's visual noise was a size and an hour count under every
+   single tile, permanently. It is reference, not identity — so it waits
+   until the tile is the one you are looking at. */
+.game-tile-meta {
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity var(--dur-2) var(--ease-standard),
+              transform var(--dur-2) var(--ease-standard);
+}
+.game-tile:hover .game-tile-meta,
+.game-tile:focus-visible .game-tile-meta { opacity: .72; transform: none; }
+/* A list row is a table: the numbers are the point, so they stay. */
+html[data-libview="list"] .game-tile-meta { opacity: .72; transform: none; }
+
+/* Running is the one state that must read across the room without
+   hovering — the only ring in the whole sheet, and it earns it. */
+.game-tile.is-running .game-tile-img-wrap {
+  box-shadow:
+    inset 0 0 0 2px var(--patina),
+    0 2px 6px rgba(0,0,0,.5),
+    0 0 40px -10px var(--patina);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-tile,
+  .game-tile-img,
+  .game-tile-meta { transition: none; }
+  .game-tile:hover .game-tile-img { transform: none; }
+}
+
+/* ─── The poster wall ───────────────────────────────────────────
+   Grid view only. A list row is a row; it keeps the wide banner
+   proportions that make a scannable line. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap { aspect-ratio: 2 / 3; }
+
+/* Portraits are narrower than banners, so the same pixel width would
+   make each one tower. Retuned per density so a shelf still reads as a
+   shelf: three sizes of poster, not three sizes of poster-shaped hole. */
+html[data-libview="grid"][data-density="compact"] { --tile-min: 148px; --gutter: 12px; }
+html[data-libview="grid"][data-density="cozy"]    { --tile-min: 186px; --gutter: 16px; }
+html[data-libview="grid"][data-density="large"]   { --tile-min: 248px; --gutter: 20px; }
+
+/* The name sits under its poster and has to survive two lines without
+   pushing the row apart. */
+html[data-libview="grid"] #lib-grid .game-tile-name {
+  font-size: 12.5px;
+  line-height: 1.3;
+  margin-top: 9px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* A banner standing in for a missing poster: shown whole, floating on a
+   blurred, dimmed copy of itself so the frame is filled without the
+   title being cropped away. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide::before {
+  display: block;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--art-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(24px) saturate(150%) brightness(.5);
+  transform: scale(1.3);
+}
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .game-tile-img {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+}
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide:hover .game-tile-img,
+html[data-libview="grid"] #lib-grid .game-tile:hover .game-tile-img-wrap.is-wide .game-tile-img {
+  transform: scale(1.02);
+}
+
+/* ─── The tile stops being a card ───────────────────────────────
+   A poster is a finished object. Wrapping it in a surface with a
+   border, a shadow and a name-plate makes it look like a database row
+   with a picture in it. Grid view drops the card entirely: the poster
+   floats on the page, and the name is just text beneath it.
+
+   overflow:hidden had to go with it — it was clipping the very glow
+   the poster casts on hover. */
+html[data-libview="grid"] #lib-grid .game-tile {
+  width: 100%;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+html[data-libview="grid"] #lib-grid .game-tile:hover {
+  transform: translateY(-6px);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* The mud. A gradient over the bottom 60% of the artwork, inherited from
+   when tiles were 460x215 banners with the title sitting on them. On a
+   portrait poster it dims the illustration for no one's benefit. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap::after { display: none; }
+
+/* Text on the page, not in a plate. */
+html[data-libview="grid"] #lib-grid .game-tile-name { margin-left: 2px; margin-right: 2px; }
+html[data-libview="grid"] #lib-grid .game-tile-meta { margin: 2px 2px 0; }
+
+/* ─── When there is no dust jacket, bind the book ───────────────
+   Roughly a third of any library has no 600x900 poster — Valve never
+   generated one. The honest options were a cropped banner (the title
+   sliced off) or a small banner floating in blur (most of the frame
+   wasted on nothing). Neither is a design; both are an apology.
+
+   So: the banner becomes the cover plate at the top of the frame, and
+   the rest of the poster is *bound* — the title struck in the display
+   face on a ground derived from the game's own name hash, above a brass
+   rule. A shelf of these next to real posters reads as a library where
+   some volumes are jacketed and some are cloth-bound, which is what a
+   real one looks like.
+
+   Nothing here is sampled or fetched: --art-a/--art-b/--art-c come from
+   artStyleFor(), so the plate is instant, deterministic, and identical
+   every session — the same game is always the same colour. */
+.tile-plate { display: none; }
+
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide {
+  background:
+    linear-gradient(168deg, var(--art-a) 0%, var(--art-b) 92%);
+}
+/* The banner keeps its own proportions, seated at the top of the frame. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .game-tile-img {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 1;
+}
+/* The blurred fill is no longer needed — there is a designed ground now. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide::before { display: none; }
+
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .tile-plate {
+  display: flex;
+  position: absolute;
+  inset: 40% 0 0 0;
+  z-index: 2;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 15px 14px 16px;
+}
+/* The rule sits on the join, the way a band sits on a spine. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .tile-plate::before {
+  content: '';
+  height: 2px;
+  width: 34px;
+  margin-bottom: 12px;
+  border-radius: 2px;
+  background: var(--art-c);
+  opacity: .9;
+}
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .tile-plate-title {
+  font-family: var(--font-display, 'Fraunces', Georgia, serif);
+  font-weight: 600;
+  font-size: clamp(15px, 1.35vw, 21px);
+  line-height: 1.12;
+  letter-spacing: -.01em;
+  color: var(--paper);
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* The generated initials block was the old answer to this problem and
+   would now sit underneath the plate, showing through nothing. */
+html[data-libview="grid"] #lib-grid .game-tile-img-wrap.is-wide .art-fallback { display: none; }
+
+/* ═══ The detail view holds still ═══════════════════════════════
+   One screen, no page scroll. Everything that identifies the game —
+   art, poster, title, actions — stays put, and only the long text
+   moves, inside its own panel. A description that runs to forty lines
+   should not be able to push the Play button off the bottom of the
+   window.
+
+   The whole panel was the scroller before, which also meant the key art
+   scrolled away the instant you read anything, and the poster had to be
+   position:sticky to survive it. Neither is needed now.
+
+   Short windows opt out at the bottom of this block: below ~620px there
+   is genuinely not enough height, and a cramped fixed layout is worse
+   than a scrolling one.
+
+   ── The second pass, and what it was fixing ────────────────────
+   Holding still is only half a layout; the other half is deciding what
+   gets the room. Measured at 1280×800, the first version spent 344 of
+   608 available pixels on the header — title, chips, update badge and
+   eight action pills, stacked — and left 220 for the thing you opened
+   the panel to read. The header was bigger than the page.
+
+   Worse, the column on the left was 730px of content in a 608px box
+   with overflow:hidden on it: the DLC switch and the whole playtime
+   ledger were painted below the fold of a panel that does not scroll,
+   which is to say they were not painted at all.
+
+   So: two rows instead of one. The identity block moves up onto the key
+   art — where the left-weighted wash a hundred lines above this was
+   drawn to make it legible, and had until now been washing nothing —
+   and the reading panel gets the entire lower half. Nothing in the left
+   column is a fixed-height guess any more: the poster and the Play
+   control take what they need, and the rail underneath them, whose
+   height is genuinely unknowable (nought to four switches, depending on
+   the game), is the one part allowed to scroll. */
+#game-flyout #flyout-panel { overflow: hidden; }
+
+/* The rail width is one number, and everything in the left column is
+   exactly it. Three widths stacked — a 227px poster over a 300px Play
+   button over a 285px plinth — was the ragged edge that read as broken
+   before anything else did. */
+#game-flyout {
+  --rail: clamp(184px, 18vw, 236px);
+  --head-drop: clamp(146px, 22vh, 252px);
+}
+
+#game-flyout #flyout-layout {
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: clamp(22px, 2.6vw, 42px);
+  row-gap: 0;
+  padding-top: var(--head-drop);
+  padding-bottom: clamp(18px, 3vh, 34px);
+}
+
+/* Art sized to the band it occupies rather than to a scroll that no
+   longer happens. The poster still overlaps its lower edge. */
+#game-flyout #flyout-hero { height: clamp(238px, 38vh, 420px); }
+
+/* ── Left column ─────────────────────────────────────────────── */
+/* The poster rides higher than the title it belongs to, deep into the key
+   art — a jacket laid on the plate, not a thumbnail beside a heading. The
+   height it borrows is height the rail below it gets to keep. */
+#game-flyout #flyout-aside {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  margin-top: calc(var(--head-drop) * -0.4);
+  position: static;      /* sticky was a workaround for the scroll */
+  align-items: stretch;  /* not centre: the column has one width now */
+  gap: 12px;
+  min-height: 0;
+  overflow: visible;     /* the halo below deliberately leaves the box */
+}
+/* The halo followed the aside's height, so a tall column blew it up into
+   a screen-wide smear. It belongs to the poster; size it from the rail. */
+#game-flyout #flyout-aside::before {
+  top: -6%;
+  width: 168%;
+  height: calc(var(--rail) * 2.1);
+  aspect-ratio: auto;
+  opacity: .5;
+}
+#game-flyout #flyout-poster {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  flex: 0 0 auto;
+}
+#game-flyout #flyout-aside .poster-plinth { width: 82%; margin: -4px auto 0; }
+#game-flyout #flyout-primary { width: 100%; max-width: none; flex: 0 0 auto; }
+
+/* The one part of the column whose height nobody can predict. */
+#game-flyout #flyout-rail {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  /* A rail that continues past its edge should say so rather than look
+     like it stopped. */
+  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+}
+#game-flyout #flyout-rail::-webkit-scrollbar { width: 0; }
+#game-flyout #flyout-rail:empty { display: none; }
+#game-flyout #flyout-rail > * { flex: 0 0 auto; }
+
+/* ── The identity block, on the art ──────────────────────────── */
+#game-flyout #flyout-head {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: clamp(18px, 2.4vw, 38px);
+  min-width: 0;
+}
+#flyout-ident { grid-column: 1; grid-row: 1; min-width: 0; }
+#flyout-head #flyout-playtime { grid-column: 2; grid-row: 1; }
+#flyout-head #flyout-update-status,
+#flyout-head #flyout-actions { grid-column: 1 / -1; }
+
+#flyout-ident #flyout-logo { max-width: min(360px, 100%); max-height: 92px; margin-bottom: 10px; }
+#flyout-ident #flyout-title {
+  margin: 0 0 8px;
+  font-size: clamp(30px, 3.5vw, 50px);
+  line-height: 1.0;
+  text-wrap: balance;
+  text-shadow: 0 4px 30px rgba(0,0,0,.7);
+}
+
+/* Five outlined mono pills for five facts nobody came here to read. They
+   are reference, so they get the weight of reference: one quiet line. */
+#flyout-head #flyout-meta {
+  display: block;
+  margin: 0 0 4px;
+  color: var(--paper-3);
+  font: 400 12px/1.6 var(--font-mono);
+  letter-spacing: .02em;
+}
+#flyout-head #flyout-meta .meta-chip {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  text-shadow: 0 1px 8px rgba(0,0,0,.9);
+}
+#flyout-head #flyout-meta .meta-chip + .meta-chip::before {
+  content: '·';
+  margin: 0 9px;
+  opacity: .55;
+}
+
+/* The ledger reads better beside the title than under the poster: it is
+   the answer to "have I played this", which is a question about the game,
+   not about the shelf. On art it needs its own ground. */
+#flyout-head #flyout-playtime {
+  display: grid;
+  grid-auto-flow: column;
+  gap: clamp(14px, 1.6vw, 26px);
+  align-items: end;
+  padding: 11px 18px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: rgba(12, 13, 16, .46);
+  backdrop-filter: blur(14px) saturate(140%);
+  text-align: right;
+}
+#flyout-head #flyout-playtime:empty { display: none; }
+#flyout-head .pt-cell { align-items: flex-end; min-width: 0; }
+#flyout-head .pt-num { font-size: 16px; white-space: nowrap; }
+#flyout-head .pt-label { font-size: 8.5px; letter-spacing: 1.1px; white-space: nowrap; }
+
+#flyout-head #flyout-update-status { margin: 14px 0 0; }
+#flyout-head #flyout-update-status:empty { margin: 0; }
+
+/* The action bar wrapped its own destructive button onto a second line,
+   alone and hard right, which is the shape of a mistake rather than a
+   decision. The quiet group wraps inside itself now; Uninstall stays
+   pinned to the top-right corner of the block whatever happens. */
+#flyout-head #flyout-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0 0 clamp(14px, 2vh, 22px);
+  border-bottom: 1px solid var(--line);
+}
+#flyout-head .fa-group { flex-wrap: wrap; min-width: 0; }
+#flyout-head .fa-group.fa-danger { flex: 0 0 auto; margin-left: auto; }
+
+/* ── The reading panel ───────────────────────────────────────── */
+#game-flyout #flyout-body {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;         /* without this a flex child refuses to shrink */
+  height: 100%;
+  padding: 0;            /* the layout already sets the margin */
+}
+/* Header block: everything down to the tab strip stays where it is. */
+#game-flyout #flyout-body > :not(.dtab-panel) { flex: 0 0 auto; }
+#game-flyout #flyout-tabs { margin: 0 0 18px; }
+
+/* The one thing that scrolls. */
+#game-flyout .dtab-panel.active {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 10px;   /* room for the scrollbar, so text is not clipped */
+}
+#game-flyout .dtab-panel:not(.active) { display: none; }
+
+/* The panel is the page now, so the entrance belongs to the two blocks
+   that make it, not to five siblings arriving one at a time. */
+#flyout-body > * { animation: none; }
+#flyout-head { animation: fadeUp var(--dur-3) var(--ease-entrance) both; animation-delay: 40ms; }
+#game-flyout #flyout-body { animation: fadeUp var(--dur-3) var(--ease-entrance) both; animation-delay: 120ms; }
+html.reduce-motion :is(#flyout-head, #game-flyout #flyout-body) { animation: none !important; }
+
+/* The quick-step buttons were pinned at top:18px, which is inside the top
+   bar — and the top bar floats above this panel, so they were painted
+   under the wordmark and could not be clicked. Below it they landed on the
+   poster instead. They are not a header control at all: they step through
+   the shelf, so they belong on the edges you would swipe, out of the way
+   of everything the panel is actually saying. */
+#game-flyout #flyout-nav {
+  position: absolute;
+  inset: 60px 0 0;
+  top: 60px; left: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  pointer-events: none;
+}
+#game-flyout #flyout-nav button {
+  pointer-events: auto;
+  opacity: .38;
+  transition: opacity var(--dur-2), background var(--dur-1), transform var(--dur-1) var(--ease-spring);
+}
+#game-flyout #flyout-panel:hover #flyout-nav button { opacity: .82; }
+#game-flyout #flyout-nav button:hover { opacity: 1; }
+#game-flyout #flyout-nav button:disabled,
+#game-flyout #flyout-panel:hover #flyout-nav button:disabled { opacity: .12; }
+
+/* Not enough height to hold everything: give the scroll back rather than
+   crush the layout. */
+@media (max-height: 620px) {
+  #game-flyout #flyout-panel { overflow-y: auto; }
+  #game-flyout #flyout-layout { height: auto; grid-template-rows: auto auto; }
+  #game-flyout #flyout-aside { margin-top: 0; }
+  #game-flyout #flyout-body { height: auto; }
+  #game-flyout .dtab-panel.active { overflow: visible; flex: 0 0 auto; }
+  #game-flyout #flyout-rail { overflow: visible; mask-image: none; }
+}
+
+/* One column. The head keeps its own two, until they stop fitting. */
+@media (max-width: 1080px) {
+  #game-flyout #flyout-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    justify-items: stretch;
+  }
+  #game-flyout #flyout-aside {
+    grid-column: 1; grid-row: 1;
+    margin-top: 0;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  #game-flyout #flyout-poster { width: var(--rail); flex: 0 0 auto; }
+  #game-flyout #flyout-aside .poster-plinth { display: none; }
+  #game-flyout #flyout-primary { max-width: 260px; }
+  #game-flyout #flyout-rail { max-width: 320px; overflow: visible; mask-image: none; }
+  #game-flyout #flyout-head { grid-column: 1; grid-row: 2; margin-top: 22px; }
+  #game-flyout #flyout-body { grid-column: 1; grid-row: 3; }
+}
+@media (max-width: 820px) {
+  #game-flyout #flyout-head { grid-template-columns: minmax(0, 1fr); }
+  #flyout-head #flyout-playtime { grid-column: 1; grid-row: 2; margin-top: 14px; justify-content: start; text-align: left; }
+  #flyout-head .pt-cell { align-items: flex-start; }
+}

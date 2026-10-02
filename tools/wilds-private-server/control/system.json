@@ -1,0 +1,15 @@
+{
+    "json_ver": "1.0.2",
+    "title": "EAR-P-WW",
+    "revision": "10420000",
+    "api_timeout": 30000,
+    "mtm": "https://mtm.rebe.capcom.com",
+    "mtms": "https://mtms.rebe.capcom.com",
+    "mmr": "https://mmr.rebe.capcom.com",
+    "tmr": "https://pubsub.googleapis.com/v1/projects/ddmoon-analysis/topics/analysis-client-log:publish",
+    "nkm": "https://nkm.rebe.capcom.com",
+    "wlt": "https://wlt.rebe.capcom.com",
+    "selector": "https://selector.gs.capcom.com",
+    "working_state": "alive",
+    "custom_property": "eyJvYnRfaW5mbyI6bnVsbCwidXJsIjp7ImFwaSI6Imh0dHBzOi8vYXBpLndpbGRzLm1vbnN0ZXJodW50ZXIuY29tIiwibm90aWZ5Ijoid3NzOi8vbm90aWZ5LndpbGRzLm1vbnN0ZXJodW50ZXIuY29tIiwiY2RuIjoiaHR0cHM6Ly9jZG4ud2lsZHMubW9uc3Rlcmh1bnRlci5jb20ifSwidmVyc2lvbiI6eyJ4YnMiOjEwNDIwMDAwLCJwczUiOjEwNDIwMDAwLCJzdGVhbSI6MTA0MjAwMDB9LCJ3ZWIiOjZ9"
+}

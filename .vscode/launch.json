@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Librarian",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/Librarian",
+      "runtimeExecutable": "${workspaceFolder}/Librarian/node_modules/.bin/electron.cmd",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/Librarian/node_modules/.bin/electron.cmd"
+      },
+      "args": [
+        "."
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}

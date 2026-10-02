@@ -1,0 +1,1427 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Librarian — Kinetic layer
+   ═══════════════════════════════════════════════════════════════════
+   Loaded last. Everything here is motion: no new colours, no new layout,
+   no new components. It takes the interface that already exists and gives
+   it a temperament — the Persona-5 school of menu design, where nothing
+   simply appears, nothing sits perfectly still, and every input is
+   answered with an overshoot you can feel.
+
+   Three rules keep it from becoming noise:
+
+     1. Entrances travel off-axis. A panel does not fade — it arrives from
+        a direction, skewed, and snaps square. Direction carries meaning:
+        forward pages come from the right, back pages from the left.
+     2. Selection is loud, idle is quiet. The focused thing overshoots,
+        throws a hard shadow and takes a light swipe; everything else
+        breathes on 4–8 second cycles you only notice peripherally.
+     3. Nothing here may hide content. Every entrance animates from an
+        invisible keyframe to the element resting state, so removing the
+        animation — reduce-motion, a stalled renderer, a thrown error —
+        leaves the interface fully visible rather than blank.
+
+   Scoped under html[data-kinetic="on"], which js/kinetic.js sets only when
+   the preference is on and reduce-motion is off. One attribute turns the
+   whole personality off.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Timing ────────────────────────────────────────────────────
+     Faster than the base motion system on purpose: this language is
+     about impact, and impact is short. --k-4 is the longest thing a
+     user waits on before content is readable.                      */
+  --k-1: 90ms;    /* press / release */
+  --k-2: 170ms;   /* hover states, small swaps */
+  --k-3: 280ms;   /* rows, chips, list items */
+  --k-4: 440ms;   /* panels, cards, page bodies */
+  --k-5: 720ms;   /* hero-scale reveals, wipes */
+
+  /* ── Curves ────────────────────────────────────────────────────
+     --k-slam is the house curve: most of the distance in the first
+     third, then a visible overshoot that settles. --k-elastic is the
+     same idea pushed to where it reads as a bounce, reserved for
+     things the user just asked for.                                */
+  --k-slam:    cubic-bezier(.16, 1.26, .30, 1);
+  --k-snap:    cubic-bezier(.20, .90, .16, 1);
+  --k-elastic: cubic-bezier(.18, 1.72, .40, 1);
+  --k-exit:    cubic-bezier(.55, 0, .85, .20);
+  --k-swipe:   cubic-bezier(.62, .02, .24, 1);
+
+  /* ── Geometry ──────────────────────────────────────────────────
+     The skew is what makes motion read as "kinetic" rather than
+     "sliding". Kept under 2deg on text so nothing looks broken at the
+     moment it lands.                                               */
+  --k-skew: 1.7deg;
+  --k-skew-hard: 7deg;
+  --k-travel: 34px;
+
+  /* Distance between successive items in a cascade, and the ceiling on
+     the whole cascade — a 200-tile grid must not take six seconds. */
+  --k-step: 32ms;
+  --k-cap: 420ms;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Keyframe library
+
+   Every entrance ends on `transform: none; opacity: 1` — which is the
+   resting state the stylesheet would have given the element anyway. That
+   is what lets all of them fill `backwards` rather than `both`.
+
+   The distinction matters more than it looks. A `both` fill keeps its last
+   keyframe applied for the life of the element, and an animation beats any
+   declaration — so an entrance that ended on `transform: none` would go on
+   winning against every hover, cursor and selection transform underneath it
+   for as long as the element existed. Selected rows would stop leaning,
+   focused Big Picture cards would stop lifting, and nothing about it would
+   look like a fill-mode bug. `backwards` covers the delay, gets out of the
+   way at the end, and leaves the element on the identical pixels.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@keyframes kRise {
+  from { opacity: 0; transform: translate3d(0, var(--k-travel), 0) skewY(var(--k-skew)) scale(.965); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kDrop {
+  from { opacity: 0; transform: translate3d(0, calc(var(--k-travel) * -.7), 0) skewY(calc(var(--k-skew) * -1)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSlideL {
+  from { opacity: 0; transform: translate3d(calc(var(--k-travel) * -1.6), 0, 0) skewX(calc(var(--k-skew-hard) * -1)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kSlideR {
+  from { opacity: 0; transform: translate3d(calc(var(--k-travel) * 1.6), 0, 0) skewX(var(--k-skew-hard)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPop {
+  from { opacity: 0; transform: scale(.68) rotate(-3.5deg); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kFlip {
+  from { opacity: 0; transform: perspective(900px) rotateX(-62deg) translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+/* The plain one. For scrims and anything sitting over live media, where the
+   only safe entrance is one that moves nothing. */
+@keyframes kFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* A hard diagonal reveal: the element is wiped on rather than faded on.
+   clip-path is composited, so this costs about what an opacity change does. */
+@keyframes kCut {
+  from { opacity: 0; clip-path: polygon(0 0, 0 0, -18% 100%, 0 100%); }
+  20%  { opacity: 1; }
+  to   { opacity: 1; clip-path: polygon(0 0, 130% 0, 112% 100%, 0 100%); }
+}
+
+/* ── Reactions ─────────────────────────────────────────────────── */
+@keyframes kBump {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(1.22) rotate(-2deg); }
+  100% { transform: scale(1); }
+}
+@keyframes kNudge {
+  0%   { transform: none; }
+  40%  { transform: translateY(-3px) skewX(calc(var(--k-skew-hard) * -.35)); }
+  100% { transform: none; }
+}
+@keyframes kShake {
+  0%, 100% { transform: none; }
+  16% { transform: translate3d(-5px, 1px, 0) rotate(-.4deg); }
+  34% { transform: translate3d(4px, -2px, 0) rotate(.35deg); }
+  54% { transform: translate3d(-3px, 1px, 0); }
+  76% { transform: translate3d(2px, 0, 0); }
+}
+@keyframes kBurst {
+  from { opacity: .55; transform: translate(-50%, -50%) scale(0); }
+  to   { opacity: 0;   transform: translate(-50%, -50%) scale(1); }
+}
+/* The light swipe that crosses whatever is currently selected. */
+@keyframes kSwipe {
+  0%   { opacity: 0; transform: translateX(-120%) skewX(calc(var(--k-skew-hard) * -1.6)); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(220%) skewX(calc(var(--k-skew-hard) * -1.6)); }
+}
+
+/* ── Idle ──────────────────────────────────────────────────────────
+   Long cycles at tiny amplitudes. Individually invisible; together they
+   are the difference between a screenshot and a running application. */
+@keyframes kBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+@keyframes kFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes kTick {
+  0%, 88%, 100% { transform: none; }
+  92%           { transform: translateY(-2px) skewX(-3deg); }
+}
+@keyframes kGlowPulse {
+  0%, 100% { opacity: .35; }
+  50%      { opacity: .85; }
+}
+@keyframes kScan {
+  from { transform: translateY(-120%); }
+  to   { transform: translateY(320%); }
+}
+@keyframes kMarch { to { background-position: 28px 0; } }
+@keyframes kSpin  { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Cascade engine
+   js/kinetic.js stamps --k-i on each child; the delay is derived here.
+   min() is the ceiling: past item ~13 everything lands together instead
+   of trickling in for a second and a half.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] [data-k-cascade] > * {
+  animation: kRise var(--k-4) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * var(--k-step)), var(--k-cap));
+}
+html[data-kinetic="on"] [data-k-cascade="slide"] > *   { animation-name: kSlideL; }
+html[data-kinetic="on"] [data-k-cascade="slide-r"] > * { animation-name: kSlideR; }
+html[data-kinetic="on"] [data-k-cascade="pop"] > *     { animation-name: kPop; animation-duration: var(--k-3); animation-timing-function: var(--k-elastic); }
+html[data-kinetic="on"] [data-k-cascade="drop"] > *    { animation-name: kDrop; }
+html[data-kinetic="on"] [data-k-cascade="flip"] > *    { animation-name: kFlip; }
+html[data-kinetic="on"] [data-k-cascade="cut"] > *     { animation-name: kCut; animation-duration: var(--k-3); animation-timing-function: var(--k-swipe); }
+
+/* Tighter cadence for long lists so the tail is never left waiting. */
+html[data-kinetic="on"] [data-k-cascade][data-k-dense] > * { --k-step: 18ms; }
+
+/* One-shot helpers the JS applies directly. */
+html[data-kinetic="on"] .k-bump  { animation: kBump  var(--k-3) var(--k-elastic); }
+html[data-kinetic="on"] .k-nudge { animation: kNudge var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] .k-shake { animation: kShake 420ms var(--k-snap); }
+html[data-kinetic="on"] .k-enter { animation: kRise var(--k-4) var(--k-slam) backwards; }
+
+/* The value readout that just changed. Scoped tight: it lands on numbers,
+   which are tabular here, so a 1.22x scale never reflows its neighbours. */
+html[data-kinetic="on"] .k-roll {
+  display: inline-block;
+  animation: kBump var(--k-3) var(--k-elastic);
+  transform-origin: 50% 60%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Impact — the ring a click leaves behind
+   Planted by js/kinetic.js at the pointer, removed on animationend.
+   ═══════════════════════════════════════════════════════════════════ */
+.k-burst {
+  position: fixed;
+  z-index: 9500;
+  width: var(--k-burst-size, 120px);
+  height: var(--k-burst-size, 120px);
+  border: 2px solid var(--k-burst-ink, #EBCB86);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: kBurst 460ms var(--k-snap) forwards;
+}
+.k-burst.is-square { border-radius: 3px; animation-duration: 380ms; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Reduce motion — one switch, and it has to reach everything above
+   ═══════════════════════════════════════════════════════════════════ */
+html.reduce-motion .k-burst { display: none; }
+html.reduce-motion [data-k-cascade] > *,
+html.reduce-motion .k-bump,
+html.reduce-motion .k-nudge,
+html.reduce-motion .k-shake,
+html.reduce-motion .k-roll,
+html.reduce-motion .k-enter {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ▓▓ DESKTOP MODE ▓▓
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ Pages ═════════════════════════════════════════════════════════
+   navigateTo() in app.js sets data-dir before it adds .active, so the
+   direction is known at the moment the animation starts. The page body
+   arrives skewed from the side it travelled from, behind the wipe.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] .page.active { animation: kPageIn var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] .page.active[data-dir="back"] { animation-name: kPageInBack; }
+
+/* Translate only — no scale, no skew.
+   A page is full-bleed and at least two of them hold a heavily filtered
+   backdrop: #dl-focus-bg is a 46px blur on a permanent Ken Burns loop, and
+   #hero-bg is its equivalent on Home. Translation is a compositor move and
+   costs nothing; scaling or shearing forces those blurs to be re-rasterised
+   on every frame of the transition. */
+@keyframes kPageIn {
+  from { opacity: 0; transform: translate3d(46px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kPageInBack {
+  from { opacity: 0; transform: translate3d(-46px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══ Top bar ═══════════════════════════════════════════════════════ */
+
+/* The mark has a heartbeat: one slow scale cycle you register only in
+   peripheral vision, and a lean toward the pointer on hover. */
+html[data-kinetic="on"] .topbar-logo {
+  animation: kBreathe 7s ease-in-out infinite;
+  transition: transform var(--k-2) var(--k-elastic);
+}
+html[data-kinetic="on"] .topbar-name { display: inline-block; transition: transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] #topbar-brand:hover .topbar-logo { transform: rotate(-6deg) scale(1.12); }
+html[data-kinetic="on"] #topbar-brand:hover .topbar-name { transform: skewX(-6deg) translateX(2px); }
+
+/* Tabs lean into the pointer and snap back. */
+html[data-kinetic="on"] .nav-tab {
+  transition: color var(--k-1), background var(--k-1), transform var(--k-2) var(--k-elastic);
+}
+html[data-kinetic="on"] .nav-tab:hover  { transform: translateY(-2px) skewX(-3deg); }
+html[data-kinetic="on"] .nav-tab:active { transform: translateY(0) scale(.94); transition-duration: var(--k-1); }
+html[data-kinetic="on"] .nav-tab svg { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] .nav-tab:hover svg { transform: scale(1.18) rotate(-8deg); }
+html[data-kinetic="on"] .nav-tab.active svg { animation: kTick 6s ease-in-out infinite; }
+
+/* The sliding pill overshoots into place instead of gliding. */
+html[data-kinetic="on"] #nav-ind {
+  transition:
+    transform var(--k-4) var(--k-elastic),
+    width var(--k-4) var(--k-elastic),
+    opacity var(--k-2);
+}
+
+/* The search pill flares open on focus and runs a scan line down itself
+   while it holds focus, so the caret is never the only sign of where the
+   keyboard is pointed. */
+html[data-kinetic="on"] #topbar-search {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--k-3) var(--k-slam), box-shadow var(--k-3), background var(--k-2);
+}
+html[data-kinetic="on"] #topbar-search:focus-within { transform: scaleX(1.035) skewX(-1.5deg); }
+html[data-kinetic="on"] #topbar-search::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, var(--primary-glow, rgba(210,166,92,.22)), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-kinetic="on"] #topbar-search:focus-within::after { opacity: 1; animation: kScan 2.6s linear infinite; }
+html[data-kinetic="on"] #topbar-search svg { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] #topbar-search:focus-within svg { transform: scale(1.2) rotate(-12deg); }
+
+/* Window controls answer the pointer hard, because that is the one place
+   where a mis-click costs the whole session. */
+html[data-kinetic="on"] #window-controls button {
+  transition: background var(--k-1), color var(--k-1), transform var(--k-2) var(--k-elastic);
+}
+html[data-kinetic="on"] #window-controls button:hover  { transform: scale(1.16); }
+html[data-kinetic="on"] #window-controls button:active { transform: scale(.86); transition-duration: 60ms; }
+
+html[data-kinetic="on"] #topbar-progress > i { transition: width var(--k-4) var(--k-slam); }
+
+/* ═══ Sidebar ═══════════════════════════════════════════════════════ */
+
+html[data-kinetic="on"] .sidebar-section-label { transition: transform var(--k-3) var(--k-slam), color var(--k-2); }
+html[data-kinetic="on"] #magic-sidebar:hover .sidebar-section-label { transform: translateX(3px) skewX(-4deg); }
+
+html[data-kinetic="on"] .sidebar-link {
+  position: relative;
+  transition: background var(--k-1), color var(--k-1), transform var(--k-2) var(--k-slam);
+}
+html[data-kinetic="on"] .sidebar-link:hover  { transform: translateX(5px) skewX(-3deg); }
+html[data-kinetic="on"] .sidebar-link:active { transform: translateX(2px) scale(.98); }
+html[data-kinetic="on"] .sidebar-link svg { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] .sidebar-link:hover svg { transform: scale(1.16) rotate(-7deg); }
+
+/* The active marker grows out of the top edge rather than appearing. */
+html[data-kinetic="on"] .sidebar-link.active::before {
+  animation: kBarGrow var(--k-4) var(--k-slam) backwards;
+  transform-origin: 50% 0;
+}
+@keyframes kBarGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* Ledger numbers get a tabular slot so the count-up cannot shove the
+   labels around while it runs. */
+html[data-kinetic="on"] .ledger-num { display: inline-block; font-variant-numeric: tabular-nums; }
+html[data-kinetic="on"] .ledger-row { transition: transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] .ledger-row:hover { transform: translateX(4px) skewX(-3deg); }
+
+/* ═══ Download HUD (sidebar) ════════════════════════════════════════ */
+html[data-kinetic="on"] #dl-hud {
+  transition: transform var(--k-3) var(--k-slam), border-color var(--k-2), box-shadow var(--k-3);
+}
+html[data-kinetic="on"] #dl-hud:hover  { transform: translateY(-3px) skewX(-1.4deg) scale(1.015); }
+html[data-kinetic="on"] #dl-hud:active { transform: translateY(-1px) scale(.985); }
+html[data-kinetic="on"] #dl-hud:not(.hidden) { animation: kRise var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] #dl-hud-spin { animation: kSpin 1.05s linear infinite; }
+html[data-kinetic="on"] #dl-hud-fill { transition: width var(--k-4) var(--k-slam); }
+
+/* Live progress bars march: a repeating diagonal that scrolls along the
+   filled part, so even a slow download visibly moves. */
+html[data-kinetic="on"] #dl-hud-fill,
+html[data-kinetic="on"] #dl-progress-fill,
+html[data-kinetic="on"] #dl-focus-fill,
+html[data-kinetic="on"] .queue-card-fill,
+html[data-kinetic="on"] #home-setup-bar > i {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, .16) 0 8px,
+    transparent 8px 18px
+  );
+  background-size: 28px 100%;
+  animation: kMarch 620ms linear infinite;
+}
+
+/* ═══ Now playing ═══════════════════════════════════════════════════ */
+html[data-kinetic="on"] #now-playing:not(.hidden) { animation: kSlideL var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] .np-lamp { animation: kBreathe 2.4s ease-in-out infinite; }
+html[data-kinetic="on"] .np-timer { font-variant-numeric: tabular-nums; }
+
+/* ═══ Buttons ═══════════════════════════════════════════════════════
+   Two rules cover every button in the app: lean toward the pointer,
+   collapse under the press. The collapse is shorter than the lean, so a
+   click feels like it lands on something solid.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] .xbox-btn,
+html[data-kinetic="on"] .tour-btn,
+html[data-kinetic="on"] .seg button,
+html[data-kinetic="on"] .store-chip {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--k-2) var(--k-elastic),
+    background var(--k-1),
+    border-color var(--k-1),
+    color var(--k-1),
+    box-shadow var(--k-2);
+}
+html[data-kinetic="on"] .xbox-btn:hover,
+html[data-kinetic="on"] .tour-btn:hover,
+html[data-kinetic="on"] .store-chip:hover { transform: translateY(-2px) skewX(-3deg); }
+html[data-kinetic="on"] .xbox-btn:active,
+html[data-kinetic="on"] .tour-btn:active,
+html[data-kinetic="on"] .seg button:active,
+html[data-kinetic="on"] .store-chip:active { transform: translateY(0) scale(.94); transition-duration: 70ms; }
+
+/* Primary actions throw a hard offset shadow as they lean — the sticker
+   look, and the loudest thing a button does short of being pressed.
+
+   Deliberately not a ::after sweep: enhance.css already owns .xbox-btn::after
+   for its click ripple and .xbox-btn.busy::before for the busy spinner, so
+   both pseudo-elements on every button in the app are spoken for. box-shadow
+   composites just as cheaply and collides with nothing. */
+html[data-kinetic="on"] .xbox-btn-primary:hover {
+  box-shadow: 4px 5px 0 -1px var(--primary-dark, #A67C3C), 0 12px 30px rgba(0, 0, 0, .45);
+}
+html[data-kinetic="on"] .xbox-btn-primary:active {
+  box-shadow: 1px 2px 0 -1px var(--primary-dark, #A67C3C), 0 5px 14px rgba(0, 0, 0, .4);
+}
+
+/* The tour is the one place with a free pseudo-element, so it gets the
+   light swipe the buttons cannot have. */
+html[data-kinetic="on"] .tour-btn.primary::after {
+  content: "";
+  position: absolute;
+  top: -60%; bottom: -60%;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .42), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-kinetic="on"] .tour-btn.primary:hover::after { animation: kSwipe 720ms var(--k-swipe); }
+
+html[data-kinetic="on"] .seg button.active { animation: kPop var(--k-3) var(--k-elastic); }
+
+/* ═══ Form controls ═════════════════════════════════════════════════ */
+html[data-kinetic="on"] input[type="text"],
+html[data-kinetic="on"] input[type="password"],
+html[data-kinetic="on"] input[type="number"],
+html[data-kinetic="on"] input[type="search"],
+html[data-kinetic="on"] select,
+html[data-kinetic="on"] textarea {
+  transition: border-color var(--k-2), box-shadow var(--k-2), transform var(--k-3) var(--k-slam), background var(--k-2);
+}
+html[data-kinetic="on"] input:focus,
+html[data-kinetic="on"] select:focus,
+html[data-kinetic="on"] textarea:focus { transform: translateY(-1px) skewX(-.6deg); }
+
+html[data-kinetic="on"] .toggle-slider { transition: background var(--k-2), box-shadow var(--k-2); }
+html[data-kinetic="on"] .toggle-slider::after { transition: transform var(--k-3) var(--k-elastic), background var(--k-2); }
+html[data-kinetic="on"] .toggle-row { transition: transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] .toggle-row:hover { transform: translateX(3px); }
+html[data-kinetic="on"] .toggle-row:active .toggle-slider::after { transform: scale(.86); }
+
+html[data-kinetic="on"] input[type="range"]::-webkit-slider-thumb { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.3); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   HOME
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The hero assembles in four beats: badge, title, subtitle, actions. Each
+   one arrives from a slightly different direction, which is what stops it
+   reading as a single block sliding up. */
+html[data-kinetic="on"] #hero-badge    { animation: kSlideL var(--k-4) var(--k-slam) backwards; }
+/* The wordmark takes the entrance the title would have had, and the title
+   gives its up when one loaded — otherwise kCut keeps a clip-path applied to
+   an element the stylesheet is trying to hide, which is harmless but reads as
+   a bug the first time anyone inspects it. */
+html[data-kinetic="on"] #hero-logo     { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 70ms; }
+html[data-kinetic="on"] #hero-content.has-logo #hero-title { animation: none; }
+html[data-kinetic="on"] #hero-title    { animation: kCut  var(--k-5) var(--k-swipe) backwards; animation-delay: 70ms; }
+html[data-kinetic="on"] #hero-subtitle { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 150ms; }
+html[data-kinetic="on"] #hero-actions  { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 210ms; }
+html[data-kinetic="on"] #hero-hint     { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 280ms; }
+
+/* Re-run the whole sequence when the rotation swaps games. js/kinetic.js
+   flips this attribute; the animations restart because the name changes. */
+html[data-kinetic="on"] #hero-content[data-k-swap] #hero-badge,
+html[data-kinetic="on"] #hero-content[data-k-swap] #hero-title,
+html[data-kinetic="on"] #hero-content[data-k-swap] #hero-subtitle { animation-name: kSlideR; }
+
+html[data-kinetic="on"] #hero-badge {
+  display: inline-block;
+  transform-origin: left center;
+}
+/* The featured badge is the one element allowed to keep drawing attention:
+   it is the only thing on Home that changes without being asked. */
+html[data-kinetic="on"] #hero-section:hover #hero-badge { animation: kNudge var(--k-3) var(--k-elastic); }
+
+html[data-kinetic="on"] #hero-dots > * { transition: transform var(--k-2) var(--k-elastic), background var(--k-2), width var(--k-3) var(--k-slam); }
+html[data-kinetic="on"] #hero-dots > *:hover { transform: scale(1.5); }
+
+/* Row headings slide in from the left margin, and the See-all button
+   answers the heading rather than the pointer. */
+html[data-kinetic="on"] .row-title {
+  display: inline-block;
+  transition: transform var(--k-3) var(--k-slam), color var(--k-2);
+}
+html[data-kinetic="on"] .game-row:hover .row-title { transform: translateX(5px) skewX(-4deg); }
+html[data-kinetic="on"] .row-see-all {
+  transition: transform var(--k-2) var(--k-elastic), color var(--k-1), opacity var(--k-2);
+}
+html[data-kinetic="on"] .game-row:hover .row-see-all { transform: translateX(-4px); }
+html[data-kinetic="on"] .row-see-all:hover  { transform: translateX(-4px) skewX(-5deg) scale(1.06); }
+html[data-kinetic="on"] .row-see-all:active { transform: scale(.92); }
+
+/* Empty states drift, so an empty library still looks switched on. */
+html[data-kinetic="on"] .empty-hero > svg,
+html[data-kinetic="on"] .empty-state-small > svg { animation: kFloat 5.5s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   GAME TILES
+   The 3-D tilt in enhance.js owns `transform` on hover, so nothing here
+   competes for it. The kinetic pass goes into the parts the tilt does not
+   touch: the art, the title, the badges, and a hard drop shadow that snaps
+   out from under the tile as it lifts.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Entrances. The reveal observer still decides *when* a tile appears; this
+   only changes *how* — the parked state travels further and arrives skewed.
+
+   The `transform: none` on the released state is load-bearing, not tidiness.
+   enhance.css parks the tile in `.reveal` and releases it in `.reveal.shown`,
+   but a kinetic `.reveal` rule outranks a bare `.reveal.shown` — so without a
+   kinetic rule for the released state too, the parked transform would never
+   be given back. Every tile in the library sat permanently 26px low and
+   skewed 1.4deg, and since a fractional scale on a composited layer is
+   resampled rather than redrawn, every cover was permanently soft as well.
+   The two states have to be stated at the same specificity, as a pair. */
+html[data-kinetic="on"] .reveal { transform: translateY(26px) skewY(1.4deg) scale(.955); }
+html[data-kinetic="on"] .reveal.shown {
+  transform: none;
+  transition:
+    opacity var(--k-4) var(--k-slam),
+    transform var(--k-5) var(--k-slam);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Cover art is deliberately left alone. enhance.css already zooms it to
+   1.04 on hover, and anything past that crops the capsule enough to lose
+   the logo — the art is composed to its own edges, so there is no slack to
+   zoom into. The tile lifts; the artwork inside it stays framed. */
+html[data-kinetic="on"] .game-tile-name {
+  display: block;
+  transition: transform var(--k-2) var(--k-slam), color var(--k-2);
+}
+html[data-kinetic="on"] .game-tile:hover .game-tile-name { transform: translateX(3px) skewX(-4deg); }
+html[data-kinetic="on"] .game-tile-meta { transition: opacity var(--k-2), transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] .game-tile:hover .game-tile-meta { transform: translateX(3px); }
+
+/* No offset accent block behind the cover. It read as a coloured highlight
+   stuck to the poster rather than as depth, and on a wall of artwork that
+   is one border too many. The lift and the lean carry the hover on their
+   own; the depth stays a plain shadow. */
+/* The hover shadow belongs to library.css and stays there. It pools the
+   cover own dominant colour under the tile — enhance.js samples it into
+   --tile-tint on first hover — and a plain black shadow declared here
+   outranked it, which quietly switched that off everywhere. All this layer
+   contributes is the curve it arrives on. */
+html[data-kinetic="on"] .game-tile-img-wrap { transition: box-shadow var(--k-2) var(--k-slam); }
+
+/* Tiles without the tilt still need somewhere to put the lean. */
+html[data-kinetic="on"][data-tilt="off"] .game-tile:hover { transform: translateY(-6px) skewX(-2deg) scale(1.03); }
+
+html[data-kinetic="on"] .tile-fav-btn,
+html[data-kinetic="on"] .tile-play-btn { transition: opacity var(--k-2), transform var(--k-3) var(--k-elastic), background var(--k-1); }
+html[data-kinetic="on"] .game-tile:hover .tile-play-btn { transform: translate(-50%, -50%) scale(1); }
+html[data-kinetic="on"] .tile-play-btn:hover  { transform: translate(-50%, -50%) scale(1.14) !important; }
+html[data-kinetic="on"] .tile-play-btn:active { transform: translate(-50%, -50%) scale(.88) !important; }
+html[data-kinetic="on"] .tile-fav-btn:hover   { transform: scale(1.22) rotate(-10deg); }
+html[data-kinetic="on"] .tile-fav-btn:active  { animation: kBump var(--k-3) var(--k-elastic); }
+
+/* A tile that is running keeps a pulse, so a glance at the shelf tells you
+   the session is live without reading anything. */
+html[data-kinetic="on"] .game-tile.is-running .game-tile-img-wrap { animation: kLive 2.6s ease-in-out infinite; }
+@keyframes kLive {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(116, 187, 171, .30), 0 14px 34px rgba(0, 0, 0, .45); }
+  50%      { box-shadow: 0 0 0 2px rgba(116, 187, 171, .58), 0 14px 40px rgba(0, 0, 0, .5); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIBRARY
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] .page-bar { animation: kDrop var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] .page-bar-right > * { animation: kSlideR var(--k-3) var(--k-slam) backwards; }
+html[data-kinetic="on"] .page-bar-right > *:nth-child(2) { animation-delay: 45ms; }
+html[data-kinetic="on"] .page-bar-right > *:nth-child(3) { animation-delay: 90ms; }
+html[data-kinetic="on"] .page-bar-right > *:nth-child(4) { animation-delay: 135ms; }
+
+/* List view rows lean as a set: the hovered row steps out of the column. */
+html[data-kinetic="on"][data-libview="list"] #lib-grid .game-tile:hover  { transform: translateX(7px) skewX(-1.8deg); }
+html[data-kinetic="on"][data-libview="list"] #lib-grid .game-tile:active { transform: translateX(3px) scale(.995); }
+
+/* Collections behave like chips, not links. */
+html[data-kinetic="on"] .collection-link { transition: transform var(--k-2) var(--k-slam), background var(--k-1), color var(--k-1); }
+html[data-kinetic="on"] .collection-link:hover  { transform: translateX(5px) skewX(-3deg); }
+html[data-kinetic="on"] .collection-link:active { transform: translateX(2px) scale(.97); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   STORE / SEARCH
+   The search field is the loudest control in the app, because it is the
+   one people come back to. It flares, it scans, and the results land in a
+   staggered cascade with the odd rows skewed the other way.
+   ═══════════════════════════════════════════════════════════════════ */
+
+html[data-kinetic="on"] #store-title { animation: kCut var(--k-5) var(--k-swipe) backwards; }
+html[data-kinetic="on"] #store-sub   { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 90ms; }
+html[data-kinetic="on"] #store-search-box {
+  animation: kRise var(--k-4) var(--k-elastic) backwards;
+  animation-delay: 150ms;
+  transition: transform var(--k-3) var(--k-elastic), box-shadow var(--k-3), border-color var(--k-2);
+}
+html[data-kinetic="on"] #store-search-box:focus-within { transform: translateY(-3px) scale(1.012); }
+html[data-kinetic="on"] #store-search-box:focus-within .ico-ring { animation: kBreathe 1.8s ease-in-out infinite; }
+html[data-kinetic="on"] #store-search-ico svg { transition: transform var(--k-3) var(--k-elastic); }
+html[data-kinetic="on"] #store-search-box:focus-within #store-search-ico svg { transform: rotate(-14deg) scale(1.14); }
+html[data-kinetic="on"] #store-search-kbd { transition: transform var(--k-2) var(--k-elastic), opacity var(--k-2); }
+html[data-kinetic="on"] #store-search-box:focus-within #store-search-kbd { animation: kTick 3.2s ease-in-out infinite; }
+html[data-kinetic="on"] #store-search-clear:hover  { transform: rotate(90deg) scale(1.15); }
+html[data-kinetic="on"] #store-search-clear { transition: transform var(--k-3) var(--k-elastic), opacity var(--k-2); }
+
+/* The aurora behind the hero drifts four times faster while a search is in
+   flight, so the wait itself is animated rather than merely spinner-shaped.
+   js/kinetic.js sets data-busy off the presence of the skeletons. */
+html[data-kinetic="on"] #page-store[data-busy="1"] #store-aurora {
+  opacity: .42;
+  transition: opacity var(--k-3) var(--k-snap);
+}
+html[data-kinetic="on"] #page-store[data-busy="1"] #store-aurora i { animation-duration: 4.6s; }
+html[data-kinetic="on"] #search-status { animation: kRise var(--k-3) var(--k-slam); }
+
+/* Recent-search chips pop in one after another. */
+html[data-kinetic="on"] .store-chip { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 26ms), 300ms); }
+
+/* Results: alternate the incoming skew so the grid assembles as a weave
+   instead of a single sheet. */
+html[data-kinetic="on"] .result-card {
+  animation: kResultIn var(--k-5) var(--k-slam) backwards;
+  animation-delay: calc(min(var(--i, 0), 17) * 30ms);
+}
+html[data-kinetic="on"] .result-card:nth-child(even) { animation-name: kResultInAlt; }
+@keyframes kResultIn {
+  from { opacity: 0; transform: translate3d(-26px, 30px, 0) skewX(-6deg) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kResultInAlt {
+  from { opacity: 0; transform: translate3d(26px, 30px, 0) skewX(6deg) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+/* app.js adds .settled once the batch is done, which freezes the entrance
+   so a later re-render does not replay it. Keep that contract. */
+html[data-kinetic="on"] .store-results.settled .result-card { animation: none; opacity: 1; transform: none; }
+
+html[data-kinetic="on"] .result-art { transition: transform var(--k-3) var(--k-slam), box-shadow var(--k-3) var(--k-slam); }
+/* Left to enhance.css for the same reason as the tiles: its hover shadow
+   carries a brass hairline around the cover, and a plain shadow declared
+   here outranked it and took the hairline off. */
+html[data-kinetic="on"] .result-card:active .result-art { transform: scale(.965); transition-duration: 80ms; }
+html[data-kinetic="on"] .result-card-add { transition: opacity var(--k-2), transform var(--k-3) var(--k-elastic), filter var(--k-1); }
+html[data-kinetic="on"] .result-card:hover .result-card-add { transform: translateY(0) scale(1); }
+html[data-kinetic="on"] .result-card-add:active { transform: scale(.9); }
+html[data-kinetic="on"] .result-badge { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: 180ms; }
+
+/* Skeletons breathe rather than shimmer flatly, so a slow search still
+   reads as work in progress. */
+html[data-kinetic="on"] .result-skeleton {
+  animation: kSkelBreathe 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes kSkelBreathe {
+  0%, 100% { opacity: .45; transform: none; }
+  50%      { opacity: .85; transform: translateY(-2px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DOWNLOADS
+   The one screen people leave open and watch. Everything on it either
+   moves with the transfer or has a reason not to.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The focus view takes the page over, so it gets the biggest entrance in
+   the app: the poster drops in from the left, the readout from the right. */
+html[data-kinetic="on"] #dl-focus:not(.hidden)  { animation: kRise var(--k-5) var(--k-slam) backwards; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-poster { animation: kSlideL var(--k-5) var(--k-slam) backwards; animation-delay: 60ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-kicker  { animation: kSlideR var(--k-4) var(--k-slam) backwards; animation-delay: 120ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-title   { animation: kCut var(--k-5) var(--k-swipe) backwards; animation-delay: 160ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-readout { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 210ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-track   { animation: kBarWide var(--k-5) var(--k-slam) backwards; animation-delay: 250ms; }
+html[data-kinetic="on"] #dl-focus:not(.hidden) #dl-focus-actions { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: 340ms; }
+@keyframes kBarWide {
+  from { opacity: 0; transform: scaleX(.2); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #dl-focus-track { transform-origin: left center; }
+
+/* The poster is the anchor: it leans very slightly, forever, so the frame
+   never looks like a screenshot of itself. */
+html[data-kinetic="on"] #dl-focus-poster .poster-frame { animation: kPosterSway 9s ease-in-out infinite; }
+@keyframes kPosterSway {
+  0%, 100% { transform: rotate(-.5deg) translateY(0); }
+  50%      { transform: rotate(.5deg)  translateY(-5px); }
+}
+html[data-kinetic="on"] .poster-fill { transition: height var(--k-5) var(--k-slam), background var(--k-3); }
+
+/* The kicker dot is the pulse of the whole page. */
+html[data-kinetic="on"] .kicker-dot { animation: kGlowPulse 1.4s ease-in-out infinite; }
+
+/* The percentage is set once a second; the digits are given a slot so the
+   readout cannot jitter, and js/kinetic.js bumps them on every change. */
+html[data-kinetic="on"] #dl-focus-pct-num,
+html[data-kinetic="on"] .fstat-num,
+html[data-kinetic="on"] #dl-hud-pct,
+html[data-kinetic="on"] #dl-percent { font-variant-numeric: tabular-nums; }
+
+html[data-kinetic="on"] #dl-focus-fill { transition: width var(--k-4) var(--k-slam); }
+
+/* Stat cells lift as a group when the pointer is anywhere in the readout,
+   and individually when it is on one of them. */
+html[data-kinetic="on"] .fstat { transition: transform var(--k-2) var(--k-slam), opacity var(--k-2); }
+html[data-kinetic="on"] .fstat:hover { transform: translateY(-3px) skewX(-3deg); }
+html[data-kinetic="on"] #dl-focus-stats .fstat { animation: kRise var(--k-3) var(--k-slam) backwards; }
+html[data-kinetic="on"] #dl-focus-stats .fstat:nth-child(1) { animation-delay: 280ms; }
+html[data-kinetic="on"] #dl-focus-stats .fstat:nth-child(2) { animation-delay: 315ms; }
+html[data-kinetic="on"] #dl-focus-stats .fstat:nth-child(3) { animation-delay: 350ms; }
+html[data-kinetic="on"] #dl-focus-stats .fstat:nth-child(4) { animation-delay: 385ms; }
+html[data-kinetic="on"] #dl-focus-stats .fstat:nth-child(5) { animation-delay: 420ms; }
+
+/* Up-next rows slide in from the right, in order. */
+/* No entrance on the up-next list. renderUpNext() assigns innerHTML on every
+   librarian:download tick — roughly once a second for the whole length of a
+   download — so an entrance here is not an entrance at all: it restarts on
+   fresh nodes each time and the queue text slides in over and over. The rule
+   for this whole file is that an entrance may only go on a list that is
+   rebuilt when something the user did changed it. */
+
+/* ═══ Drop zone ═════════════════════════════════════════════════════
+   Idle it breathes; on drag-over it snaps up and the grid behind it
+   speeds up, so the drop target is unmistakable while a file is in the
+   air and quiet when it is not.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #drop-zone {
+  transition: transform var(--k-3) var(--k-elastic), border-color var(--k-2), background var(--k-2);
+}
+html[data-kinetic="on"] #drop-zone:hover { transform: translateY(-2px); }
+html[data-kinetic="on"] #drop-zone.dragover { transform: scale(1.02) skewX(-1deg); }
+html[data-kinetic="on"] #drop-zone.dragover #grid-bg { animation-duration: .55s; }
+html[data-kinetic="on"] #drop-zone-inner > svg { animation: kFloat 4.2s ease-in-out infinite; }
+
+/* ═══ Queue ═════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] .queue-card {
+  transition:
+    transform var(--k-3) var(--k-slam),
+    border-color var(--k-2),
+    box-shadow var(--k-3);
+}
+html[data-kinetic="on"] .queue-card:hover  { transform: translateY(-4px) skewX(-1.6deg); }
+html[data-kinetic="on"] .queue-card:active { transform: translateY(-1px) scale(.985); }
+/* The job actually downloading keeps a heartbeat the queued ones do not. */
+html[data-kinetic="on"] .queue-card.active { animation: kQueueLive 2.8s ease-in-out infinite; }
+@keyframes kQueueLive {
+  0%, 100% { box-shadow: 0 0 0 1px var(--primary-glow, rgba(210,166,92,.22)); }
+  50%      { box-shadow: 0 0 0 3px var(--primary-glow, rgba(210,166,92,.22)), 0 10px 30px rgba(0,0,0,.4); }
+}
+html[data-kinetic="on"] .queue-card-remove { transition: opacity var(--k-2), transform var(--k-2) var(--k-elastic), background var(--k-1); }
+html[data-kinetic="on"] .queue-card-remove:hover  { transform: rotate(90deg) scale(1.15); }
+html[data-kinetic="on"] .queue-card-remove:active { transform: rotate(90deg) scale(.85); }
+html[data-kinetic="on"] .queue-card.flip-move { transition: transform var(--k-4) var(--k-slam); }
+
+/* ═══ Log ═══════════════════════════════════════════════════════════
+   Lines cut in from the left margin. No delay: they arrive as the work
+   happens, and a stagger here would misreport the timing.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #log-output > * { animation: kLogLine var(--k-3) var(--k-slam) backwards; }
+@keyframes kLogLine {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0) skewX(-5deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GAME DETAIL FLYOUT
+   ═══════════════════════════════════════════════════════════════════
+   No entrances here. Not a taste call — enhance.css states the constraint
+   twice, with measurements, and this layer walked straight into both:
+
+     · #flyout-panel is pinned at `transform: none` in three places, because
+       it is full-bleed and #flyout-hero-img inside it carries a 44px blur.
+       Scaling the panel re-rasterises a full-screen blur every frame, which
+       is what put the key art and the trailer out of register.
+     · The panel is also a scroll container, and a transform on a scroll
+       container child counts toward its scrollable overflow. A staggered
+       translate on the contents changed the panel scroll height and flipped
+       the scrollbar on and off — a reflow, not a repaint.
+
+   Fading the panel is the whole transition. What is left below is hover and
+   press feedback, which enhance.css already grants this family in its own
+   "long tail" block, and which never runs while the panel is opening. */
+
+html[data-kinetic="on"] .dtab { transition: color var(--k-1), transform var(--k-2) var(--k-elastic), background var(--k-1); }
+html[data-kinetic="on"] .dtab:hover  { transform: translateY(-2px) skewX(-4deg); }
+html[data-kinetic="on"] .dtab:active { transform: scale(.94); }
+html[data-kinetic="on"] .dtab-count { animation: kPop var(--k-3) var(--k-elastic); }
+
+/* Screenshots behave like a contact sheet: they lift out of the strip. */
+html[data-kinetic="on"] #flyout-shots img,
+html[data-kinetic="on"] #flyout-media img { transition: box-shadow var(--k-3), filter var(--k-2); }
+html[data-kinetic="on"] #flyout-shots img:hover,
+html[data-kinetic="on"] #flyout-media img:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, .5);
+}
+
+/* Achievement rows land in sequence and their bars fill from empty. */
+/* Colour only. These rows are flyout contents, so the no-movement rule above
+   covers them; the bars underneath carry the motion. */
+html[data-kinetic="on"] .ach-row { transition: background var(--k-1), color var(--k-1); }
+html[data-kinetic="on"] .ach-bar > i,
+html[data-kinetic="on"] .ach-fill { transition: width var(--k-5) var(--k-slam); }
+
+html[data-kinetic="on"] .tag { transition: background var(--k-1), color var(--k-1), border-color var(--k-1); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   OVERLAYS — modal, palette, plan, shortcuts, onboarding, tour
+   All of them enter with the same grammar: scrim fades, sheet slams,
+   contents cascade. Exits accelerate away rather than easing out.
+   ═══════════════════════════════════════════════════════════════════ */
+
+html[data-kinetic="on"] #modal-overlay:not(.hidden) { animation: kFade var(--k-2) var(--k-snap) backwards; }
+html[data-kinetic="on"] #modal-overlay:not(.hidden) #modal-container { animation: kSheetIn var(--k-4) var(--k-elastic) backwards; }
+@keyframes kSheetIn {
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.94) skewY(1.2deg); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #modal-header { animation: kSlideL var(--k-3) var(--k-slam) backwards; animation-delay: 80ms; }
+html[data-kinetic="on"] #modal-body   { animation: kRise var(--k-4) var(--k-slam) backwards;   animation-delay: 120ms; }
+
+html[data-kinetic="on"] #palette:not(.hidden) #palette-box { animation: kPaletteIn var(--k-4) var(--k-elastic) backwards; }
+@keyframes kPaletteIn {
+  from { opacity: 0; transform: translate3d(0, -22px, 0) scale(.96) skewY(-1deg); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] .cmd-group { animation: kSlideL var(--k-2) var(--k-slam) backwards; }
+html[data-kinetic="on"] .cmd-item {
+  animation: kSlideL var(--k-3) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 20ms), 240ms);
+  transition: background var(--k-1), transform var(--k-2) var(--k-slam), color var(--k-1);
+}
+html[data-kinetic="on"] .cmd-item[aria-selected="true"] { transform: translateX(6px) skewX(-2.5deg); }
+html[data-kinetic="on"] .cmd-item:active { transform: translateX(3px) scale(.985); }
+html[data-kinetic="on"] .cmd-icon { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] .cmd-item[aria-selected="true"] .cmd-icon { transform: scale(1.12) rotate(-6deg); }
+
+html[data-kinetic="on"] #plan:not(.hidden) #plan-sheet  { animation: kSheetIn var(--k-5) var(--k-elastic) backwards; }
+html[data-kinetic="on"] #plan:not(.hidden) #plan-head   { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 90ms; }
+html[data-kinetic="on"] #plan:not(.hidden) #plan-meter  { animation: kRise var(--k-4) var(--k-slam) backwards;   animation-delay: 140ms; }
+html[data-kinetic="on"] #plan:not(.hidden) #plan-bar    { animation: kBarWide var(--k-5) var(--k-slam) backwards; animation-delay: 190ms; transform-origin: left center; }
+html[data-kinetic="on"] #plan:not(.hidden) #plan-legend > * { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 30ms + 220ms), 460ms); }
+html[data-kinetic="on"] #plan-groups > * { animation: kRise var(--k-3) var(--k-slam) backwards; animation-delay: min(calc(var(--k-i, 0) * 34ms + 240ms), 520ms); }
+html[data-kinetic="on"] #plan-size { font-variant-numeric: tabular-nums; }
+html[data-kinetic="on"] #plan-bar > * { transition: width var(--k-5) var(--k-slam), flex-basis var(--k-5) var(--k-slam); }
+
+html[data-kinetic="on"] #shortcut-sheet:not(.hidden) #shortcut-card { animation: kSheetIn var(--k-4) var(--k-elastic) backwards; }
+html[data-kinetic="on"] .sc-grid > * { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 18ms), 300ms); }
+
+html[data-kinetic="on"] #onboard:not(.hidden) #onboard-card { animation: kSheetIn var(--k-5) var(--k-elastic) backwards; }
+html[data-kinetic="on"] .ob-step { animation: kSlideL var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] .ob-step:nth-child(1) { animation-delay: 140ms; }
+html[data-kinetic="on"] .ob-step:nth-child(2) { animation-delay: 210ms; }
+html[data-kinetic="on"] .ob-step:nth-child(3) { animation-delay: 280ms; }
+html[data-kinetic="on"] .ob-num { animation: kBreathe 3.2s ease-in-out infinite; }
+
+html[data-kinetic="on"] #tour:not(.hidden) #tour-card { animation: kSheetIn var(--k-4) var(--k-elastic) backwards; }
+html[data-kinetic="on"] #tour-dots > * { transition: transform var(--k-2) var(--k-elastic), background var(--k-2), width var(--k-3) var(--k-slam); }
+
+/* ═══ Context menu ══════════════════════════════════════════════════ */
+html[data-kinetic="on"] #context-menu:not(.hidden) { animation: kMenuIn var(--k-2) var(--k-elastic) backwards; transform-origin: top left; }
+@keyframes kMenuIn {
+  from { opacity: 0; transform: scale(.86) translate3d(-6px, -6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] .ctx-item {
+  animation: kSlideL var(--k-2) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 16ms), 180ms);
+  transition: background var(--k-1), color var(--k-1), transform var(--k-1) var(--k-slam), padding-left var(--k-1);
+}
+html[data-kinetic="on"] .ctx-item:hover  { transform: translateX(4px); }
+html[data-kinetic="on"] .ctx-item:active { transform: translateX(2px) scale(.97); }
+
+/* ═══ Lightbox ══════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #lightbox:not(.hidden) { animation: kFade var(--k-2) var(--k-snap) backwards; }
+html[data-kinetic="on"] #lightbox:not(.hidden) img { animation: kPop var(--k-4) var(--k-elastic) backwards; }
+
+/* ═══ Toasts ════════════════════════════════════════════════════════
+   In from the side, skewed; out accelerating. The glyph gets its own beat
+   so the icon lands after the card, which is what makes it read as a stamp.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #toast-stack .toast { animation: kToastIn var(--k-4) var(--k-elastic) backwards; }
+@keyframes kToastIn {
+  from { opacity: 0; transform: translate3d(46px, 0, 0) skewX(8deg) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #toast-stack .toast .toast-glyph { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: 110ms; }
+html[data-kinetic="on"] #toast-stack .toast.leaving { animation: kToastOut var(--k-3) var(--k-exit) backwards; }
+@keyframes kToastOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translate3d(56px, 0, 0) skewX(10deg) scale(.92); }
+}
+html[data-kinetic="on"] #toast-stack .toast { transition: transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] #toast-stack .toast:hover { transform: translateX(-5px) skewX(-2deg); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SETTINGS
+   A long form is where a kinetic layer earns the most: without it, every
+   section looks identical and scrolling reads as standing still.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] .settings-section { animation: kRise var(--k-4) var(--k-slam) backwards; animation-delay: min(calc(var(--k-i, 0) * 45ms), 360ms); }
+html[data-kinetic="on"] .settings-title { display: inline-block; transition: transform var(--k-3) var(--k-slam); }
+html[data-kinetic="on"] .settings-section:hover .settings-title { transform: translateX(4px) skewX(-4deg); }
+html[data-kinetic="on"] #settings-nav button {
+  transition: color var(--k-1), background var(--k-1), transform var(--k-2) var(--k-elastic);
+}
+html[data-kinetic="on"] #settings-nav button:hover  { transform: translateY(-2px) skewX(-4deg); }
+html[data-kinetic="on"] #settings-nav button:active { transform: scale(.93); }
+html[data-kinetic="on"] #settings-nav button.active { animation: kPop var(--k-3) var(--k-elastic); }
+html[data-kinetic="on"] .settings-section.flash-target { animation: kFlash 1.2s var(--k-snap); }
+@keyframes kFlash {
+  0%   { box-shadow: 0 0 0 0 var(--primary-glow-strong, rgba(210,166,92,.42)); transform: translateX(0); }
+  12%  { box-shadow: 0 0 0 4px var(--primary-glow-strong, rgba(210,166,92,.42)); transform: translateX(6px) skewX(-2deg); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: none; }
+}
+html[data-kinetic="on"] #settings-save-wrap button { transition: transform var(--k-2) var(--k-elastic), background var(--k-1); }
+html[data-kinetic="on"] .setting-hint { transition: opacity var(--k-2), transform var(--k-2) var(--k-slam); }
+html[data-kinetic="on"] .form-group:focus-within .setting-hint { transform: translateX(3px); opacity: 1; }
+
+/* Install-location rows and any other repeated settings row. */
+html[data-kinetic="on"] .loc-row {
+  animation: kSlideL var(--k-3) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 34ms), 300ms);
+  transition: transform var(--k-2) var(--k-slam), border-color var(--k-2);
+}
+html[data-kinetic="on"] .loc-row:hover { transform: translateX(4px) skewX(-2deg); }
+
+/* ═══ First-run setup banner ════════════════════════════════════════ */
+html[data-kinetic="on"] #home-setup:not(.hidden) { animation: kDrop var(--k-4) var(--k-slam) backwards; }
+html[data-kinetic="on"] #home-setup-spin { animation: kSpin 1.05s linear infinite; }
+
+/* ═══ Crack page ════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #crack-log > *,
+html[data-kinetic="on"] .crack-log-box > * { animation: kLogLine var(--k-3) var(--k-slam) backwards; }
+html[data-kinetic="on"] #crack-scan-results > * {
+  animation: kRise var(--k-3) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 28ms), 300ms);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ▓▓ BIG PICTURE ▓▓
+   ═══════════════════════════════════════════════════════════════════
+   Everything here is scoped under #bp-root, which already carries its own
+   .no-anim guard for the case where frames stop arriving — that guard
+   zeroes animation-duration on every descendant, so it covers this file
+   too and no extra stalling logic is needed.
+
+   Couch distance changes the arithmetic. A 3px lean that reads as crisp on
+   a desk is invisible from a sofa, so every amplitude below is expressed in
+   --u (1% of the stage width) and runs roughly twice the size of its
+   desktop counterpart.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The whole front-end cuts in on a diagonal rather than fading up. */
+/* The root gets nothing at all. bigpicture.css already opens it with its own
+   opacity + scale transition, and #bp-root is full-bleed over #bp-bg, which
+   carries will-change: transform, a live <video>, and two Ken Burns layers.
+   A second transform animation on that container re-rasterises the whole
+   stack against a moving parent — which is where the stale, ghosted frame of
+   the previous screen in the background came from. One transform on this
+   element, owned by the module that also owns the layers underneath it. */
+
+/* ═══ Rail ══════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-rail-item {
+  transition:
+    color .16s ease,
+    background .16s ease,
+    transform .26s var(--k-elastic);
+}
+html[data-kinetic="on"] #bp-root .bp-rail-item svg { transition: transform .26s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor { transform: translateX(calc(var(--u) * .35)) skewX(-4deg); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor svg { transform: scale(1.22) rotate(-8deg); }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-active svg { animation: kTick 6s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-active::before { animation: kBarGrow .42s var(--k-slam) backwards; transform-origin: 50% 50%; }
+html[data-kinetic="on"] #bp-root .bp-rail-label { transition: transform .26s var(--k-slam), opacity .2s ease; }
+html[data-kinetic="on"] #bp-root .bp-rail-item.is-cursor .bp-rail-label { transform: translateX(calc(var(--u) * .2)); }
+
+/* Rail items deal themselves in when the front-end opens. */
+html[data-kinetic="on"] #bp-root.is-open .bp-rail-item {
+  animation: kSlideL .44s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms + 120ms), 560ms);
+}
+
+/* ═══ Shelf and cards ═══════════════════════════════════════════════
+   The selected cover overshoots, throws a hard accent shadow and takes a
+   light swipe; its name plate lands a beat later so the two do not read as
+   one movement. Unselected covers sit back and stay quiet.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-card {
+  transition:
+    transform .34s var(--k-elastic),
+    box-shadow .3s ease,
+    outline-color .18s ease;
+}
+/* The selection scale stays exactly where bigpicture.css set it. moveTrack()
+   reserves the overhang as `first.offsetWidth * 0.05` when it works out how
+   far the shelf may travel, so 1.075 is not a taste value — it is the number
+   the scroll arithmetic is built around. Scaling to 1.09 and lifting the card
+   pushed it past that reserve and the shelf clipped its own selection. */
+html[data-kinetic="on"] #bp-root[data-zone="shelf"] .bp-card.is-sel,
+html[data-kinetic="on"] #bp-root[data-zone="grid"] .bp-card.is-sel {
+  box-shadow:
+    0 calc(var(--u) * .9) calc(var(--u) * 2.6) rgba(0, 0, 0, .68),
+    0 0 calc(var(--u) * 2.6) var(--bp-accent-soft);
+}
+html[data-kinetic="on"] #bp-root .bp-card.is-press { transform: scale(.94) !important; transition-duration: .09s; }
+html[data-kinetic="on"] #bp-root .bp-card-plate { transition: transform .38s var(--k-elastic), opacity .22s ease; }
+html[data-kinetic="on"] #bp-root .bp-card-name { transition: transform .3s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-card.is-sel .bp-card-name { transform: translateX(calc(var(--u) * .18)) skewX(-3deg); }
+
+/* The shelf itself travels with an overshoot, which is what makes holding
+   a direction feel like flicking through a rack rather than scrolling. */
+html[data-kinetic="on"] #bp-root #bp-track { transition: transform .42s var(--k-slam); }
+
+/* Cards deal in when the shelf is rebuilt.
+   This rides the mechanism bigpicture.js already has rather than adding one:
+   .is-enter is the parked state, .is-entering is the transition that releases
+   it, --d is the per-card delay, and both classes come off on a timer so a
+   stalled renderer still ends with every card visible. All that changes here
+   is how far the card travels and on what curve. */
+html[data-kinetic="on"] #bp-root .bp-card.is-enter {
+  transform: translateY(calc(var(--u) * 2.2)) scale(.88) rotate(-2.6deg);
+}
+html[data-kinetic="on"] #bp-root .bp-card.is-entering {
+  transition:
+    opacity .34s ease var(--d, 0s),
+    transform .56s var(--k-slam) var(--d, 0s);
+}
+
+/* Search results are built with the enter classes already stripped, so they
+   need an animation of their own. */
+@keyframes kCardDeal {
+  from { opacity: 0; transform: translate3d(0, 6%, 0) scale(.86) rotate(-2.4deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Flags on a cover pop rather than appear, and a live one keeps beating. */
+html[data-kinetic="on"] #bp-root .bp-flag { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 60ms), 240ms); }
+html[data-kinetic="on"] #bp-root .bp-flag.is-live { animation: kPop .3s var(--k-elastic) backwards, kGlowPulse 1.6s ease-in-out infinite .3s; }
+
+/* ═══ Detail column ═════════════════════════════════════════════════
+   bigpicture.js flips .is-swap for ~95ms on every selection change. That
+   is the beat this hangs on: the column ducks out, and its contents deal
+   back in one after another rather than all together.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-detail { transition: opacity .2s ease, transform .3s var(--k-slam); }
+html[data-kinetic="on"] #bp-root #bp-detail.is-swap {
+  opacity: .001;
+  transform: translateY(calc(var(--u) * 1.1)) skewY(1.2deg);
+}
+/* kRise, not kCut: a clip-path wipe over a title that may already be
+   ellipsised is indistinguishable from the text being cut off, and this
+   column re-runs on every single shelf movement. */
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-logo,
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-title { animation: kRise .46s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-rule  { animation: kBarWide .46s var(--k-slam) backwards; animation-delay: 60ms; transform-origin: left center; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-meta  { animation: kSlideL .42s var(--k-slam) backwards; animation-delay: 90ms; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-desc  { animation: kRise .44s var(--k-slam) backwards; animation-delay: 130ms; }
+html[data-kinetic="on"] #bp-root #bp-detail:not(.is-swap) #bp-name  { animation: kRise .46s var(--k-slam) backwards; }
+
+/* Meta pills and stat cells arrive as a set. */
+html[data-kinetic="on"] #bp-root .bp-pill {
+  animation: kPop .3s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 34ms + 90ms), 340ms);
+}
+/* Scoped to the stats column on purpose. tabular-nums widens digit glyphs,
+   and #bp-det-tags is a fixed max-height box that clips: one extra wrapped
+   line there is one more value cut off. The stats are the only cells with
+   numbers in them anyway. */
+html[data-kinetic="on"] #bp-root #bp-det-stats .bp-stat-value { font-variant-numeric: tabular-nums; }
+
+/* ═══ Details view ══════════════════════════════════════════════════
+   Deliberately the quietest screen in this file.
+
+   It is the busiest one in the app: a trailer, two cross-fading background
+   layers, a screenshot slideshow, a tab strip whose panels swap, and an
+   achievement fetch that lands whenever the network says so — all of them
+   already animating, several of them mid-flight when the view opens. An
+   entrance choreography layered on top of that fought the transitions
+   bigpicture.css already runs, and read as glitching rather than motion.
+
+   So there are no entrances here. What is left is the part that answers
+   input directly: the cursor leans, the press collapses, the bars fill.
+   The screen still moves; it just no longer moves twice.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-act {
+  transition: background .16s ease, color .16s ease, transform .26s var(--k-elastic), box-shadow .22s ease;
+}
+html[data-kinetic="on"] #bp-root .bp-act.is-press { transform: scale(.96); transition-duration: .09s; }
+
+/* Screenshot strip: the focused shot steps forward out of the row. */
+html[data-kinetic="on"] #bp-root .bp-shot { transition: filter .22s ease, opacity .22s ease; }
+
+/* Achievements: rows deal in, bars fill from empty, pips pop. */
+html[data-kinetic="on"] #bp-root .bp-ach-strip > *,
+html[data-kinetic="on"] #bp-root #bp-ach-list > * {
+  animation: kSlideL .4s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 30ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root .bp-ach-bar > *,
+html[data-kinetic="on"] #bp-root #bp-ach-fill,
+html[data-kinetic="on"] #bp-root #bp-det-achbar > * { transition: width .62s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-achpip { animation: kPop .28s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 18ms), 300ms); }
+html[data-kinetic="on"] #bp-root .bp-ach-pct { font-variant-numeric: tabular-nums; }
+
+/* News items behave like the achievement list: a deck being dealt. The
+   whole post travels, not its body text — the body is nested two levels
+   down and animating it alone would slide the paragraph out from under
+   its own headline. */
+html[data-kinetic="on"] #bp-root .bp-news-item,
+html[data-kinetic="on"] #bp-root .bp-detnews-item {
+  animation: kSlideL .42s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms), 440ms);
+}
+html[data-kinetic="on"] #bp-root .bp-news-empty { animation: kRise .42s var(--k-slam) backwards; }
+
+/* ═══ Panels — menu, system, filter, update ═════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-panel { animation: kBpPanel .42s var(--k-elastic) backwards; }
+@keyframes kBpPanel {
+  from { opacity: 0; transform: translateY(2.4%) scale(.96) skewY(1deg); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #bp-root .bp-panel-head { animation: kSlideL .4s var(--k-slam) backwards; animation-delay: 60ms; }
+html[data-kinetic="on"] #bp-root .bp-panel-sub  { animation: kSlideL .4s var(--k-slam) backwards; animation-delay: 90ms; }
+/* Cursor feedback goes on every row, including the download sheet. */
+html[data-kinetic="on"] #bp-root .bp-row {
+  transition:
+    background .16s ease,
+    color .16s ease,
+    border-color .16s ease,
+    transform .24s var(--k-slam),
+    padding-left .2s var(--k-slam);
+}
+/* The deal-in does not: download rows are rebuilt on a progress tick rather
+   than on an interaction, so an entrance there restarts once a second. */
+html[data-kinetic="on"] #bp-root :not(#bp-dl-rows) > .bp-row {
+  animation: kSlideL .36s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 26ms + 110ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root .bp-row.is-cursor { transform: translateX(calc(var(--u) * .34)) skewX(-2.4deg); }
+html[data-kinetic="on"] #bp-root .bp-row.is-press  { transform: translateX(calc(var(--u) * .16)) scale(.985); transition-duration: .09s; }
+html[data-kinetic="on"] #bp-root .bp-row svg { transition: transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-row.is-cursor svg { transform: scale(1.18) rotate(-7deg); }
+
+/* ═══ Search ════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-search-box { transition: transform .3s var(--k-elastic), box-shadow .26s ease; }
+html[data-kinetic="on"] #bp-root #bp-search.is-on #bp-search-box { animation: kPop .42s var(--k-elastic) backwards; }
+html[data-kinetic="on"] #bp-root #bp-query-wrap { transition: transform .26s var(--k-slam); }
+html[data-kinetic="on"] #bp-root .bp-key {
+  transition: background .14s ease, color .14s ease, transform .22s var(--k-elastic), box-shadow .2s ease;
+  animation: kPop .3s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 8ms), 260ms);
+}
+html[data-kinetic="on"] #bp-root .bp-key.is-cursor { transform: scale(1.14) skewX(-3deg); z-index: 2; }
+html[data-kinetic="on"] #bp-root .bp-key.is-press { transform: scale(.88); transition-duration: .07s; }
+html[data-kinetic="on"] #bp-root #bp-results .bp-card {
+  animation: kCardDeal .46s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 30ms), 420ms);
+}
+html[data-kinetic="on"] #bp-root #bp-results-empty { animation: kRise .44s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root .bp-skel { animation: kSkelBreathe 1.6s ease-in-out infinite; animation-delay: calc(var(--k-i, 0) * 70ms); }
+
+/* ═══ Downloads view ════════════════════════════════════════════════
+   Same story as the up-next list: paintDownloads() calls paintRows(), which
+   assigns innerHTML, and the librarian:download handler calls it on every
+   tick while this sheet is open. The rows are excluded from the .bp-row
+   entrance below rather than given one of their own.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-dl-pct,
+html[data-kinetic="on"] #bp-root #bp-dl-stats,
+html[data-kinetic="on"] #bp-root #bp-upd-stats,
+html[data-kinetic="on"] #bp-root #bp-clock { font-variant-numeric: tabular-nums; }
+html[data-kinetic="on"] #bp-root #bp-dl-bar > *,
+html[data-kinetic="on"] #bp-root #bp-upd-fill,
+html[data-kinetic="on"] #bp-root #bp-curtain-bar > * { transition: width .5s var(--k-slam); }
+
+/* The filled part of every Big Picture bar marches, at couch scale. */
+html[data-kinetic="on"] #bp-root #bp-dl-bar > *,
+html[data-kinetic="on"] #bp-root #bp-upd-fill,
+html[data-kinetic="on"] #bp-root #bp-ach-fill {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, .18) 0 calc(var(--u) * .45),
+    transparent calc(var(--u) * .45) calc(var(--u) * 1)
+  );
+  background-size: calc(var(--u) * 1.55) 100%;
+  animation: kBpMarch .7s linear infinite;
+}
+@keyframes kBpMarch { to { background-position: calc(var(--u) * 1.55) 0; } }
+
+html[data-kinetic="on"] #bp-root #bp-upd-spin { animation: kSpin 1.05s linear infinite; }
+html[data-kinetic="on"] #bp-root .bp-ring-fill { transition: stroke-dashoffset .6s var(--k-slam); }
+html[data-kinetic="on"] #bp-root #bp-dl-live { animation: kGlowPulse 1.5s ease-in-out infinite; }
+
+/* ═══ Hint bar ══════════════════════════════════════════════════════
+   The glyphs tick on a long cycle. It is the only thing on screen while
+   you sit reading a description, and a dead hint bar makes the whole
+   front-end look frozen.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root .bp-hint { transition: color .16s ease, transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-hint:hover { transform: translateY(calc(var(--u) * -.2)) skewX(-4deg); }
+html[data-kinetic="on"] #bp-root .bp-hint.is-hit { animation: kBump .3s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-glyph { animation: kTick 7s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root .bp-hint:nth-child(2n) .bp-glyph { animation-delay: 1.4s; }
+html[data-kinetic="on"] #bp-root .bp-hint:nth-child(3n) .bp-glyph { animation-delay: 2.8s; }
+html[data-kinetic="on"] #bp-root #bp-hints { animation: kRise .5s var(--k-slam) backwards; animation-delay: .3s; }
+
+/* ═══ Top strip ═════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-top { animation: kDrop .5s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root .bp-top-btn { transition: color .16s ease, background .16s ease, transform .24s var(--k-elastic); }
+html[data-kinetic="on"] #bp-root .bp-top-btn:hover  { transform: scale(1.14) rotate(-6deg); }
+html[data-kinetic="on"] #bp-root .bp-top-btn:active { transform: scale(.88); }
+html[data-kinetic="on"] #bp-root .bp-playing-dot { animation: kGlowPulse 1.8s ease-in-out infinite; }
+html[data-kinetic="on"] #bp-root #bp-playing { animation: kSlideR .5s var(--k-slam) backwards; }
+
+/* ═══ Launch curtain ════════════════════════════════════════════════
+   The last thing seen before a game takes the screen, so it gets the one
+   genuinely large movement in the front-end: the art punches in.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-curtain.is-on #bp-curtain-art  { animation: kCurtainArt .8s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-curtain.is-on #bp-curtain-text { animation: kRise .5s var(--k-slam) backwards; animation-delay: .18s; }
+@keyframes kCurtainArt {
+  from { opacity: 0; transform: scale(1.22) rotate(-1.6deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══ Empty state ═══════════════════════════════════════════════════ */
+html[data-kinetic="on"] #bp-root #bp-empty { animation: kRise .5s var(--k-slam) backwards; }
+html[data-kinetic="on"] #bp-root #bp-empty-actions > * {
+  animation: kPop .38s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 60ms + 160ms), 400ms);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE BRAKE
+   ═══════════════════════════════════════════════════════════════════
+   Two independent ways to stop all of this, because they fail in
+   different circumstances:
+
+     · js/kinetic.js drops data-kinetic when the preference is off, which
+       makes every rule above inert. That is the normal path.
+     · The reset below catches the case the attribute cannot: the operating
+       system asks for reduced motion but the in-app setting was never
+       touched, so nothing ever removed the attribute.
+
+   Durations go to a hundredth of a millisecond rather than `none`, and
+   delays to zero, so every animation still runs to completion instantly
+   instead of being cancelled. It costs nothing and it keeps one class of
+   accident impossible: an entrance that is cancelled during its delay
+   never gets past its own first keyframe, and every one of those is
+   transparent.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-kinetic="on"] *,
+  html[data-kinetic="on"] *::before,
+  html[data-kinetic="on"] *::after {
+    animation-duration: .01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+html.reduce-motion[data-kinetic="on"] *,
+html.reduce-motion[data-kinetic="on"] *::before,
+html.reduce-motion[data-kinetic="on"] *::after {
+  animation-duration: .01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE STORE
+   ═══════════════════════════════════════════════════════════════════
+   Two constraints shape every rule here, both learned the hard way
+   elsewhere in this file.
+
+   The front page and the store page are scroll containers, and a transform
+   on a scroll container child counts toward its scrollable overflow — so
+   nothing below travels *down* or *right* into place. Entrances either
+   scale from their own centre, which never grows the box past its final
+   size, or come from the left, which is not scrollable in this direction.
+
+   And the shelves are rebuilt when the page loads, never on a timer, so an
+   entrance here plays once per visit rather than once a second.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Front page ─────────────────────────────────────────────────── */
+
+/* The spotlight is the first thing on the page and gets the only large
+   movement: it grows out of its own footprint while the art fades up. */
+html[data-kinetic="on"] #sf-spotlight { animation: kPlateIn var(--k-5) var(--k-slam) backwards; }
+@keyframes kPlateIn {
+  from { opacity: 0; transform: scale(.965); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #sf-spot-kicker { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 120ms; }
+html[data-kinetic="on"] #sf-spot-name   { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 170ms; }
+html[data-kinetic="on"] #sf-spot-sub    { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 220ms; }
+html[data-kinetic="on"] #sf-spot-actions{ animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 270ms; }
+/* The art itself drifts for the whole time a slide is up, so a spotlight
+   that has been sitting there for six seconds is still moving. */
+html[data-kinetic="on"] #sf-spot-art { animation: kSpotDrift 9s ease-in-out infinite alternate; }
+@keyframes kSpotDrift {
+  from { transform: scale(1.02) translate3d(0, 0, 0); }
+  to   { transform: scale(1.07) translate3d(-1.2%, -1%, 0); }
+}
+
+/* Shelves arrive one after another, and the covers within each one deal
+   left to right. js/kinetic.js stamps both indices — the shelf from
+   #sf-rails, the card from its own strip, which is why a card never
+   inherits its shelf's number. */
+html[data-kinetic="on"] .sf-rail {
+  animation: kRailIn var(--k-4) var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 70ms + 120ms), 520ms);
+}
+@keyframes kRailIn {
+  from { opacity: 0; transform: translate3d(-22px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] .sf-card {
+  animation: kPop var(--k-3) var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 34ms + 180ms), 620ms);
+}
+
+/* Hover is a lift with weight behind it rather than a fade. */
+html[data-kinetic="on"] .sf-card-art { transition: transform var(--k-3) var(--k-slam), box-shadow var(--k-3) var(--k-slam); }
+html[data-kinetic="on"] .sf-card:hover .sf-card-art { transform: translateY(-4px); }
+html[data-kinetic="on"] .sf-card:active .sf-card-art { transform: translateY(-1px) scale(.98); transition-duration: 80ms; }
+html[data-kinetic="on"] .sf-card-art img { transition: transform var(--k-5) var(--k-slam), filter var(--k-2); }
+
+/* The live dot actually pulses; it is the one figure on the page that is
+   true only for this second. */
+html[data-kinetic="on"] .sf-chip.is-live i { animation: kGlowPulse 1.6s ease-in-out infinite; }
+html[data-kinetic="on"] .sf-chip { transition: transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] .sf-card:hover .sf-chip { transform: scale(1.06); }
+
+/* The dots that mark which spotlight slide is up. */
+html[data-kinetic="on"] #sf-spot-dots i { transition: width var(--k-3) var(--k-elastic), background var(--k-3); }
+
+/* ─── Store page ─────────────────────────────────────────────────── */
+
+/* The cinema opens; the words on it follow a beat later, from the left. */
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-cinema { animation: kPlateIn var(--k-5) var(--k-slam) backwards; }
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-kicker  { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 140ms; }
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-logo,
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-title   { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 190ms; }
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-tagline { animation: kSlideL var(--k-4) var(--k-slam) backwards; animation-delay: 240ms; }
+html[data-kinetic="on"] #store-detail:not(.hidden) #sd-bar     { animation: kBarDrop var(--k-4) var(--k-slam) backwards; animation-delay: 300ms; }
+@keyframes kBarDrop {
+  from { opacity: 0; transform: translate3d(0, -14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-kinetic="on"] #sd-back { animation: kSlideL var(--k-3) var(--k-slam) backwards; }
+
+/* Facts, tags, depots and thumbnails all count themselves in. Scale and
+   leftward travel only — see the note at the top of this section. */
+html[data-kinetic="on"] .sd-fact  { animation: kSlideL var(--k-3) var(--k-slam) backwards; animation-delay: min(calc(var(--k-i, 0) * 40ms + 340ms), 620ms); }
+html[data-kinetic="on"] .sd-tag   { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 22ms), 300ms); }
+html[data-kinetic="on"] .sd-depot { animation: kSlideL var(--k-3) var(--k-slam) backwards; animation-delay: min(calc(var(--k-i, 0) * 30ms), 340ms); }
+html[data-kinetic="on"] .sd-shot  { animation: kPop var(--k-3) var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 40ms + 380ms), 700ms); }
+
+html[data-kinetic="on"] .sd-shot { transition: opacity var(--k-2), border-color var(--k-2), transform var(--k-3) var(--k-elastic); }
+html[data-kinetic="on"] .sd-shot:hover { transform: translateY(-3px) scale(1.04); }
+html[data-kinetic="on"] .sd-tag  { transition: color var(--k-1), border-color var(--k-1), transform var(--k-2) var(--k-elastic); }
+html[data-kinetic="on"] .sd-tag:hover { transform: translateY(-2px); }
+
+/* The install button is the point of the page, so it keeps a slow pull on
+   the eye until it is used — and stops the moment the game is already
+   yours, because then it is not the point any more. */
+html[data-kinetic="on"] #sd-install:not(.is-owned) { animation: kCallToAction 3.6s ease-in-out infinite; }
+@keyframes kCallToAction {
+  0%, 82%, 100% { box-shadow: 0 0 0 0 var(--primary-glow, rgba(210,166,92,.22)); }
+  90%           { box-shadow: 0 0 0 5px transparent, 0 0 22px var(--primary-glow-strong, rgba(210,166,92,.42)); }
+}
+
+/* ─── Big Picture ────────────────────────────────────────────────
+   Scoped inside #bp-root, which carries its own .no-anim guard for an
+   occluded window — so these are covered by it without extra work. */
+
+html[data-kinetic="on"] #bp-root #bp-sf-search { animation: kSlideL .44s var(--k-slam) backwards; animation-delay: .1s; }
+html[data-kinetic="on"] #bp-root #bp-sf-kicker { animation: kSlideL .44s var(--k-slam) backwards; animation-delay: .16s; }
+html[data-kinetic="on"] #bp-root #bp-sf-name   { animation: kSlideL .48s var(--k-slam) backwards; animation-delay: .2s; }
+html[data-kinetic="on"] #bp-root .bp-sf-rail {
+  animation: kRailIn .46s var(--k-slam) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 80ms + 240ms), 700ms);
+}
+html[data-kinetic="on"] #bp-root .bp-sf-card {
+  animation: kPop .4s var(--k-elastic) backwards;
+  animation-delay: min(calc(var(--k-i, 0) * 40ms + 300ms), 820ms);
+}
+/* The heading is rewritten on every step along a shelf, so it flinches
+   rather than sliding — a slide would restart mid-travel and stutter. */
+html[data-kinetic="on"] #bp-root .bp-sf-pill { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 50ms), 200ms); }
+
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-logo,
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-name  { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .12s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-sub   { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .18s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-facts { animation: kSlideL .5s var(--k-slam) backwards; animation-delay: .24s; }
+html[data-kinetic="on"] #bp-root #bp-store.is-on #bp-store-right { animation: kSlideR .55s var(--k-slam) backwards; animation-delay: .3s; }
+html[data-kinetic="on"] #bp-root .bp-store-tag { animation: kPop .3s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 22ms + 340ms), 620ms); }
+html[data-kinetic="on"] #bp-root #bp-store-shots img { animation: kPop .34s var(--k-elastic) backwards; animation-delay: min(calc(var(--k-i, 0) * 44ms + 380ms), 700ms); }

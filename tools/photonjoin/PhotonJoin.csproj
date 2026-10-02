@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>PhotonJoin</AssemblyName>
+    <RootNamespace>PhotonJoin</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- Compilé contre le socle du jeu, pas celui du SDK : c'est le seul moyen
+         d'obtenir un assembly que le Mono d'Unity charge sans redirection. -->
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- N'importe quel jeu Unity avec BepInEx ferait l'affaire pour fournir ces
+         DLL de référence ; PEAK est simplement celui qui est installé ici. Rien
+         de ce qui lui est propre n'est référencé, et c'est vérifiable :
+         node tools/photonjoin/verify/check-asmrefs.mjs -->
+    <RefGameDir Condition="'$(RefGameDir)' == ''">e:\games\steam\steamapps\common\PEAK</RefGameDir>
+    <Managed>$(RefGameDir)\PEAK_Data\Managed</Managed>
+    <BepCore>$(RefGameDir)\BepInEx\core</BepCore>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src/*.cs" />
+    <Compile Include="src/unity/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Le socle .NET du jeu. -->
+    <Reference Include="mscorlib">    <HintPath>$(Managed)\mscorlib.dll</HintPath></Reference>
+    <Reference Include="System">      <HintPath>$(Managed)\System.dll</HintPath></Reference>
+    <Reference Include="System.Core"> <HintPath>$(Managed)\System.Core.dll</HintPath></Reference>
+    <Reference Include="netstandard"> <HintPath>$(Managed)\netstandard.dll</HintPath></Reference>
+
+    <!-- Le chargeur. Présent par définition, puisque c'est lui qui nous charge. -->
+    <Reference Include="BepInEx">  <HintPath>$(BepCore)\BepInEx.dll</HintPath></Reference>
+    <Reference Include="0Harmony"> <HintPath>$(BepCore)\0Harmony.dll</HintPath></Reference>
+
+    <!-- Les deux seuls modules Unity nécessaires. CoreModule porte MonoBehaviour,
+         Application et KeyCode ; IMGUIModule porte la fenêtre. InputLegacyModule
+         n'est délibérément PAS référencé : certains jeux ne le livrent pas, et
+         l'entrée clavier est donc atteinte par réflexion. -->
+    <!-- La façade UnityEngine.dll est exigée par BepInEx lui-même, compilé
+         contre elle : BaseUnityPlugin y déclare sa classe de base. Elle ne
+         contient que des redirections de type et tout jeu Unity la livre. -->
+    <Reference Include="UnityEngine">             <HintPath>$(Managed)\UnityEngine.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule">  <HintPath>$(Managed)\UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"> <HintPath>$(Managed)\UnityEngine.IMGUIModule.dll</HintPath></Reference>
+  </ItemGroup>
+
+</Project>

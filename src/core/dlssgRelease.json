@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/sdli1995/dlssg_for_sm86",
+  "commit": "a4760d4a49d6c791bba88f24378a56c0dd1c57b0",
+  "runtime": "310.1",
+  "files": [
+    { "name": "version.dll", "size": 10522624, "sha256": "03d445237d519ac48cd9226278a0f07aecd7ac597697697eb64404e1d51b3c5a", "deploy": true },
+    { "name": "dlssg_sm86.ini", "size": 1459, "sha256": "77a698310818b90039b72c61331cb50e7fc6692eff220ca9eb14c494998c96b8", "deploy": true },
+    { "name": "README.en.md", "size": 11756, "sha256": "101282be1e64ffc98554d9c77813aba91f81af941cade9526aaa171a104c82de" },
+    { "name": "THIRD_PARTY_NOTICES.txt", "size": 2081, "sha256": "71435db5b43c8d5846a1897e1d7dc4e09bb225f4d94abe6a25f7cf6935b92470" }
+  ]
+}

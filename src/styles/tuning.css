@@ -1,0 +1,69 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Tools: the Steam emulator page and Performance tuning.
+   Both are built from the settings panel pieces in main.css.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══ Steam emulator (crack) ═════════════════════════════════════ */
+#page-crack .settings-panel::before { content: 'Steam emulator'; font: 700 38px/1 var(--display); letter-spacing: -.025em; margin: 8px 0 6px; }
+#crack-goldberg-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#crack-goldberg-status .tag { height: 26px; padding: 0 10px; border-radius: 8px; font-size: 12.5px; border-color: transparent !important; }
+#crack-emu-build { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+#crack-emu-build-text { flex: 1 1 320px; }
+#crack-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The host keeps its empty-state class while it shows results. */
+#crack-scan-results.empty-state-small { padding: 0; color: var(--soft); text-align: left; }
+#crack-scan-results ul { display: flex; flex-direction: column; gap: 4px; }
+#crack-scan-results li { background: var(--sunk) !important; border-radius: 8px !important; }
+#crack-log { min-height: 120px; max-height: 300px; }
+
+/* ═══ Performance tuning ═════════════════════════════════════════ */
+#page-tuning .tn-panel { --tn-spark: var(--accent); max-width: 1120px; }
+#page-tuning .settings-section { max-width: none; }
+.tn-head { display: flex; align-items: flex-end; gap: 24px; margin: 8px 0 2px; }
+.tn-head-text { flex: 1; min-width: 0; }
+.tn-lead { color: var(--soft); margin-top: 10px; max-width: 78ch; line-height: 1.55; }
+.tn-master { flex: none; padding: 10px 14px; border-radius: var(--r-m); background: var(--panel); border: 1px solid var(--line-strong); font-weight: 600; }
+.tn-status { padding: 11px 14px; border-radius: var(--r-m); background: var(--panel); border: 1px solid var(--line); color: var(--soft); font-size: 13.5px; }
+.tn-status.is-live { color: var(--good); border-color: color-mix(in srgb, var(--good) 38%, transparent); background: color-mix(in srgb, var(--good) 8%, var(--panel)); }
+.tn-status.is-warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 38%, transparent); background: color-mix(in srgb, var(--warn) 8%, var(--panel)); }
+.tn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+#page-tuning.tn-off .tn-grid, #page-tuning.tn-off #tn-game { opacity: .62; }
+.tn-card .setting-hint { margin-left: 0; }
+.tn-card .toggle-row + .setting-hint { margin-left: 52px; }
+.tn-field { margin-bottom: 14px; }
+.tn-field-head { display: flex; align-items: baseline; gap: 12px; font-weight: 600; margin-bottom: 8px; }
+.tn-hint { font-size: 12.5px; color: var(--mute); font-weight: 400; }
+.tn-seg button.is-on { background: var(--raised); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.tn-inline { display: flex; align-items: center; gap: 12px; }
+.tn-inline.tn-wrap { flex-wrap: wrap; }
+.tn-inline-label { font-weight: 500; color: var(--soft); }
+.tn-num { width: 96px; text-align: right; }
+.tn-select { width: min(420px, 100%); }
+.tn-select-sm { width: 130px; height: 34px; }
+.tn-card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.tn-card-head .settings-title { margin: 0; }
+.tn-api { font-size: 12.5px; color: var(--mute); }
+.tn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.tn-tile { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: var(--r-m); background: var(--sunk); border: 1px solid var(--line); min-width: 0; }
+.tn-tile-key { border-color: var(--accent-line); background: color-mix(in srgb, var(--accent) 8%, var(--sunk)); }
+.tn-tile-label { font-size: 12.5px; color: var(--mute); }
+.tn-tile-value { font: 650 24px/1.2 var(--display); letter-spacing: -.01em; }
+.tn-tile-sub { font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tn-spark { display: block; width: 100%; height: 72px; margin-top: 12px; border-radius: var(--r-s); background: var(--sunk); }
+.tn-applied { font-size: 12.5px; color: var(--soft); margin-top: 10px; }
+.tn-applied:empty { display: none; }
+.tn-ab-progress { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.tn-ab-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+.tn-ab-bar span { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--accent); transition: width 600ms linear; }
+.tn-ab-phase { font-size: 12.5px; color: var(--soft); white-space: nowrap; }
+.tn-table-wrap { overflow-x: auto; }
+.tn-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tn-table th { text-align: left; font-weight: 600; color: var(--soft); padding: 8px 12px 10px 0; border-bottom: 1px solid var(--line-strong); }
+.tn-table th small { display: block; font-weight: 400; font-size: 12px; color: var(--mute); }
+.tn-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); }
+.tn-table td.is-better { color: var(--good); font-weight: 600; }
+.tn-table td.is-worse { color: var(--bad); font-weight: 600; }
+.tn-table td.is-same, .tn-muted { color: var(--mute); }
+.tn-table-foot td { border-bottom: 0; line-height: 1.6; }
+.tn-notes ul { padding-left: 18px; display: grid; gap: 8px; color: var(--soft); line-height: 1.55; font-size: 13.5px; }
+@media (max-width: 1100px) { .tn-grid { grid-template-columns: 1fr; } }

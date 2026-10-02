@@ -1,0 +1,62 @@
+/* Keep actions reachable at the supported minimum window size and at zoom. */
+.page-bar-left, .page-bar-right { min-width: 0; flex-wrap: wrap; }
+.page-bar-right { max-width: 100%; justify-content: flex-end; flex: 1 1 540px; }
+.page-bar-right input { min-width: 100px; max-width: 100%; }
+.page-bar-right > button { flex-shrink: 0; }
+#lib-filter { flex: 1 1 180px; width: auto; }
+#topbar-search { flex: 0 1 270px; min-width: 170px; }
+@media (max-width: 1380px) {
+  .nav-tab { min-width: 40px; padding-left: 11px; padding-right: 11px; }
+  .nav-tab span:not(.nav-badge) { display: none; }
+  #topbar-search { width: 260px; flex-basis: 260px; }
+}
+@media (max-width: 1080px) {
+  .page-bar-right { flex-basis: 100%; justify-content: flex-start; }
+  #topbar-search kbd { display: none; }
+}
+.game-tile-meta, .queue-card-status, .library-path { font-size: 12px; }
+.queue-card-status { white-space: normal; overflow-wrap: anywhere; }
+.queue-card-retry { margin-top: 8px; }
+.library-pagination { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 10px 0 0; border-top: 1px solid var(--line); font: 12px var(--font-mono); color: var(--paper-2); }
+.library-pagination[hidden] { display: none; }
+.library-page-actions { display: flex; align-items: center; gap: 12px; }
+.game-tile.is-unavailable { opacity: .6; }
+button:focus-visible, [role="button"]:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--paper, #f3eee1); outline-offset: 3px;
+}
+.custom-update-form { display: grid; gap: 12px; }
+.custom-update-form p { margin: 0; line-height: 1.5; font-size: 13px; }
+.custom-update-form > label { margin-top: 6px; font-size: 13px; }
+.custom-update-path { min-width: 0; overflow-wrap: anywhere; font-family: var(--font-mono, monospace); font-size: 12px; }
+.custom-update-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.custom-update-row > span { flex: 1 1 220px; }
+.custom-update-result { padding: 16px; border: 1px solid var(--border, #49433b); border-radius: 10px; background: rgba(255,255,255,.025); font-size: 13px; }
+.custom-update-result dl { display: grid; grid-template-columns: minmax(95px, 1fr) minmax(0, 2fr); gap: 8px 16px; margin: 14px 0; }
+.custom-update-result dt { opacity: .75; }
+.custom-update-result dd { margin: 0; overflow-wrap: anywhere; }
+.custom-update-form .modal-actions { flex-wrap: wrap; }
+
+/* Keep library management apart from search/display controls. */
+#page-library .page-bar { padding: 16px 0 12px; gap: 10px 16px; }
+#page-library .page-bar-right { flex: 0 1 auto; gap: 8px; }
+#page-library .xbox-btn { min-height: 36px; padding: 7px 12px; font-size: 13px; }
+#lib-controls { display: flex; flex: 0 0 auto; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 14px; }
+#lib-filter-wrap { position: relative; flex: 1 1 180px; min-width: 140px; }
+#lib-filter { width: 100%; padding-right: 38px; min-height: 36px; }
+#lib-sort { flex: 0 1 154px; min-width: 130px; min-height: 36px; width: 154px; }
+#lib-clear-filter { position: absolute; right: 3px; top: 3px; width: 30px; height: 30px; border: 0; border-radius: 6px; color: var(--paper-2); background: transparent; font-size: 22px; cursor: pointer; }
+#lib-clear-filter:hover { background: var(--surface-3); color: var(--paper); }
+#lib-toolbar-extra { flex: 0 0 auto; gap: 8px; }
+#lib-grid { min-height: 0; scrollbar-gutter: stable; padding-top: 8px; scroll-padding: 12px; }
+#lib-grid .game-tile:focus-visible { outline-offset: -2px; }
+.library-empty { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 180px; }
+.library-empty p { margin: 0; overflow-wrap: anywhere; }
+.shortcut-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+#shortcut-close { flex-shrink: 0; width: 36px; height: 36px; font-size: 24px; }
+@media (max-width: 900px) {
+  #page-library .page-heading { font-size: 26px; }
+  #page-library .page-bar { padding-top: 12px; }
+  #page-library .page-bar-left { gap: 8px; }
+  #lib-filter-wrap { flex-basis: calc(100% - 170px); }
+  .library-page-actions { gap: 8px; }
+}

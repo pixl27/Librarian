@@ -1,0 +1,1521 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Librarian — the store
+   ═══════════════════════════════════════════════════════════════════
+   Loaded after library.css and before kinetic.css, so the motion layer can
+   put its cadence on top of these without either file guessing at the
+   other's rules.
+
+   ── Why this does not look like the game detail view ──────────────
+   The library flyout is a catalogue record: poster on the left, Fraunces
+   serif, quiet, vertical, archival. It describes something you already own,
+   and its job is to be legible and calm.
+
+   A store is the opposite errand. You do not own any of this yet, so the
+   page has to sell: media first and full-bleed, the wordmark burned into
+   the artwork rather than set beside it, wide grotesque type instead of the
+   serif, live numbers with real colour, and a commit bar that stays stuck
+   to the top of the viewport the whole way down so the decision is never
+   more than a glance away.
+
+   Same app, deliberately different room.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Only one face of the Store page is up at a time. */
+#page-store[data-mode="detail"] > :is(#store-hero, #search-status, #search-results, #store-front) { display: none; }
+#page-store[data-mode="results"] > #store-front { display: none; }
+
+
+/* ─── The search hero, folded ────────────────────────────────────
+   Search is one of two ways into a store and it is the one you use when you
+   already know the answer. Browsing is the other, and it is what a store is
+   for. So once there is a front page to show, the hero stops being a
+   full-height panel with its own headline and folds into a bar: the field
+   stays exactly where the muscle memory expects it, the question it was
+   asking goes away, and the rails start above the fold instead of below it.
+
+   js/store.js sets data-front only when the rails actually loaded. Offline,
+   or if Steam refuses, the hero opens back up to full size, because then it
+   is the only thing the page can offer. */
+#page-store[data-front="on"] #store-hero {
+  /* Left, not centre. The hero centres its field, and the front page below
+     it is left-aligned to the rails — so a centred pill over left-aligned
+     shelves put two different vertical axes on one screen, which is what
+     read as everything being off. Same left inset as #store-front, so the
+     field lines up with the first card of every rail underneath it. */
+  align-items: flex-start;
+  padding: 12px clamp(20px, 4vw, 60px) 12px;
+  min-height: 0;
+}
+#page-store[data-front="on"] :is(#store-title, #store-sub) {
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+#page-store[data-front="on"] #store-search-box {
+  height: 42px;
+  width: min(520px, 100%);
+}
+#page-store[data-front="on"] #store-aurora { opacity: .12; }
+/* The status line and the results grid still hold their boxes when they have
+   nothing in them, and between the folded field and the first shelf that was
+   sixty pixels of nothing — the gap that made the top of the page look
+   broken. `:empty` rather than a blunt hide, so a search error still has
+   somewhere to appear. */
+#page-store[data-front="on"] #search-status:empty,
+#page-store[data-front="on"] #search-results:empty { display: none; }
+/* The recent-search chips are a search affordance too; they come back the
+   moment the field has focus. */
+#page-store[data-front="on"] .store-chips { max-height: 0; margin: 0; opacity: 0; overflow: hidden; }
+#page-store[data-front="on"] #store-hero:focus-within .store-chips {
+  max-height: 60px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE FRONT PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+#store-front {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px clamp(20px, 4vw, 60px) 60px;
+}
+
+/* ─── Spotlight ──────────────────────────────────────────────────
+   One wide plate at the top, rotating on its own until the pointer
+   arrives. Sized by aspect ratio rather than a fixed height so it holds
+   its shape from a laptop to an ultrawide. */
+#sf-spotlight {
+  position: relative;
+  /* width first, then the ratio. A min-height alongside an aspect-ratio lets
+     the box resolve its width *from* that height, and in a narrow window the
+     plate then grew wider than the column it sits in and overflowed. */
+  width: 100%;
+  aspect-ratio: 21 / 8;
+  max-height: 46vh;
+  margin-bottom: 34px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface-2, #17181d);
+  box-shadow: 0 26px 64px rgba(0, 0, 0, .55), 0 0 0 1px rgba(236, 231, 221, .06);
+}
+#sf-spot-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity .5s ease, transform 7s linear;
+}
+#sf-spot-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(9, 10, 13, .95) 6%, rgba(9, 10, 13, .55) 46%, transparent 74%),
+    linear-gradient(0deg, rgba(9, 10, 13, .85), transparent 58%);
+}
+#sf-spot-body {
+  position: absolute;
+  left: clamp(22px, 3.4vw, 48px);
+  right: 45%;
+  bottom: clamp(22px, 3vw, 40px);
+}
+#sf-spot-kicker {
+  font: 800 10px var(--font-mono);
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: var(--primary, #D2A65C);
+  margin-bottom: 9px;
+}
+#sf-spot-name {
+  margin: 0 0 6px;
+  font: 800 clamp(24px, 3vw, 40px)/1.05 var(--font-wide, var(--font-ui));
+  font-stretch: 118%;
+  letter-spacing: -.01em;
+  color: #fff;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, .8);
+}
+#sf-spot-sub {
+  margin: 0 0 16px;
+  font: 700 13px var(--font-mono);
+  color: var(--paper-2, #B7B1A4);
+}
+#sf-spot-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+#sf-spot-dots {
+  position: absolute;
+  right: clamp(18px, 2.4vw, 30px);
+  bottom: clamp(18px, 2.4vw, 30px);
+  display: flex;
+  gap: 6px;
+}
+#sf-spot-dots i {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(236, 231, 221, .26);
+  transition: background .3s, width .3s;
+}
+#sf-spot-dots i.is-on { background: var(--primary, #D2A65C); width: 34px; }
+
+/* ─── Rails ──────────────────────────────────────────────────────
+   Horizontal, because that is how you skim a shelf, and because a grid of
+   forty unfamiliar games is a wall rather than an invitation. */
+.sf-rail { margin-bottom: 34px; }
+.sf-rail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+.sf-rail-title {
+  margin: 0;
+  font: 800 17px var(--font-wide, var(--font-ui));
+  font-stretch: 112%;
+  letter-spacing: .2px;
+  color: var(--paper, #ECE7DD);
+}
+.sf-rail-sub {
+  font: 600 11.5px var(--font-ui);
+  color: var(--paper-3, #7E786C);
+}
+/* No scrollbar furniture. The app's own scrollbars carry step arrows at
+   each end, and a row of those under every shelf was the single loudest
+   thing on the page. Home solved this years ago for .row-scroll: hide the
+   bar, fade the edges, let the wheel and the drag do the work. Same here. */
+.sf-rail-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Overflow clips at the padding box, so the room a hovered card needs has
+     to be padding, not margin. It lifts 4px and throws a 38px shadow, and
+     with 4px of padding-bottom and none at the top both were sliced flat
+     against the scroller edge — which is what "cut off when highlighted"
+     was. The negative margins hand the same space back to the layout, so
+     the shelves sit where they did. */
+  padding: 26px 0 30px;
+  margin: -26px 0 -26px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, #000 0, #000 94%, transparent 100%);
+}
+.sf-rail-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── Cards ──────────────────────────────────────────────────────
+   The 460x215 header capsule, which is the asset every one of these games
+   definitely has — the 600x900 portrait does not exist for a lot of the
+   back catalogue and would have left holes across the page. */
+.sf-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 268px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+.sf-card-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 460 / 215;
+  border-radius: 11px;
+  overflow: hidden;
+  background: var(--surface-2, #17181d);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 0 1px rgba(236, 231, 221, .05);
+  transition: box-shadow .24s, transform .24s;
+}
+.sf-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .5s var(--ease-entrance, ease), filter .24s;
+  filter: saturate(.94) brightness(.94);
+}
+.sf-card:hover .sf-card-art img { transform: scale(1.05); filter: none; }
+.sf-card:hover .sf-card-art {
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .62), 0 0 0 1px var(--primary, #D2A65C);
+}
+.sf-card:active .sf-card-art { transform: scale(.985); }
+
+/* Chart position, for the rail where position is the point. */
+.sf-rank {
+  position: absolute;
+  left: 8px; top: 8px;
+  min-width: 26px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgba(9, 10, 13, .82);
+  color: var(--primary, #D2A65C);
+  font: 800 12px var(--font-mono);
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+.sf-owned {
+  position: absolute;
+  right: 8px; top: 8px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: rgba(9, 10, 13, .82);
+  color: var(--patina, #74BBAB);
+  font: 800 9.5px var(--font-mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.sf-card.is-owned .sf-card-art img { filter: saturate(.5) brightness(.7); }
+
+/* The chip sits on the artwork, bottom-right, where the eye already is.
+   Spread across the foot with the name it read as two unrelated labels at
+   opposite ends of a 268px card. */
+.sf-card-foot { margin-top: 9px; }
+.sf-card-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 13px var(--font-ui);
+  color: var(--paper-2, #B7B1A4);
+  transition: color .18s;
+}
+.sf-card:hover .sf-card-name { color: var(--paper, #ECE7DD); }
+
+/* ─── Chips ──────────────────────────────────────────────────────
+   The one number each rail exists to show. Colour is meaning here, not
+   decoration: green is a good score, red is a discount, and the live dot
+   only appears where the figure is genuinely live. */
+.sf-chip {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 2;
+  padding: 3px 8px;
+  backdrop-filter: blur(8px);
+  border-radius: 6px;
+  background: rgba(236, 231, 221, .07);
+  font: 800 10.5px var(--font-mono);
+  letter-spacing: .4px;
+  color: var(--paper-2, #B7B1A4);
+  white-space: nowrap;
+}
+.sf-chip { background: rgba(9, 10, 13, .8); }
+.sf-chip.is-live { display: inline-flex; align-items: center; gap: 5px; color: var(--patina, #74BBAB); }
+.sf-chip.is-live i {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.sf-chip.is-cut { background: #4B7A2F; color: #E4FFD2; }
+.sf-chip.is-score { color: #0b0f0d; }
+.sf-chip.is-score.is-high { background: #8FC96B; }
+.sf-chip.is-score.is-mid  { background: #E0C36A; }
+.sf-chip.is-score.is-low  { background: #D4776A; }
+
+#sf-status {
+  padding: 14px 2px;
+  font: 700 11.5px var(--font-mono);
+  letter-spacing: .8px;
+  color: var(--paper-3, #7E786C);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE STORE PAGE — one game
+   ═══════════════════════════════════════════════════════════════════ */
+
+#store-detail {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+#sd-bg {
+  position: absolute;
+  inset: -8%;
+  z-index: 0;
+  background-size: cover;
+  background-position: center 18%;
+  filter: blur(56px) saturate(160%);
+  opacity: .45;
+  transform: scale(1.08);
+}
+#sd-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(12, 13, 16, .35), var(--ink, #0C0D10) 78%);
+}
+
+#sd-scroll {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#sd-back {
+  position: absolute;
+  left: clamp(18px, 3vw, 34px);
+  top: 16px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px 8px 11px;
+  border: 1px solid rgba(236, 231, 221, .14);
+  border-radius: 999px;
+  background: rgba(9, 10, 13, .6);
+  color: var(--paper-2, #B7B1A4);
+  font: 700 12.5px var(--font-ui);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: color .16s, border-color .16s, background .16s;
+}
+#sd-back svg { width: 15px; height: 15px; }
+#sd-back:hover { color: #fff; border-color: var(--primary, #D2A65C); background: rgba(9, 10, 13, .85); }
+
+/* ─── The cinema ─────────────────────────────────────────────────
+   Full-bleed, 16:9, trailer over stills, with the name burned into the
+   bottom-left of the plate. This is the whole difference in stance from
+   the library flyout: there, art supports the record; here, the art *is*
+   the page and the words sit on top of it. */
+#sd-cinema {
+  position: relative;
+  /* Full-bleed means full-bleed. `aspect-ratio` with `max-height` and an
+     auto width transfers the height cap back onto the width: at 1280 the
+     plate came out 882px wide inside a 994px page and the artwork stopped
+     in a hard vertical edge with 112px of dead ink beside it. Pin the
+     width and let the ratio only decide how tall the plate wants to be. */
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(58vh, 580px);
+  min-height: 300px;
+  overflow: hidden;
+  background: #06070a;
+  /* The caption and the contact strip used to be two absolutely positioned
+     boxes that both wanted the bottom of the plate, and on any title long
+     enough to wrap they printed straight through each other. One grid, one
+     row, and the overlap cannot happen. */
+  display: grid;
+  /* A track of `auto` sizes to the strip's max-content — five thumbnails,
+     552px — and then the strip's own max-width shrank the element inside
+     that track without giving the width back, so the caption was squeezed
+     into 307px and the name wrapped for no reason. The track is capped
+     instead, and the strip scrolls inside it. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 336px);
+  grid-template-rows: 1fr auto;
+  align-items: end;
+  column-gap: clamp(18px, 2.4vw, 40px);
+  padding: 0 clamp(20px, 3.6vw, 52px) clamp(18px, 2.6vw, 34px);
+}
+#sd-cinema > :is(video, img) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#sd-still { z-index: 1; }
+#sd-trailer { z-index: 2; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+#sd-trailer.is-on { opacity: 1; }
+#sd-cinema-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(0deg, var(--ink, #0C0D10) 1%, rgba(12, 13, 16, .82) 22%, transparent 62%),
+    linear-gradient(90deg, rgba(12, 13, 16, .72), transparent 62%);
+}
+
+#sd-cinema-head {
+  position: relative;
+  z-index: 4;
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  max-width: 72ch;
+}
+#sd-kicker {
+  font: 800 10px var(--font-mono);
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: var(--primary, #D2A65C);
+  margin-bottom: 8px;
+}
+#sd-logo {
+  display: block;
+  width: auto; height: auto;
+  max-width: min(400px, 74%);
+  max-height: 96px;
+  object-fit: contain;
+  object-position: left bottom;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 3px 18px rgba(0, 0, 0, .82));
+}
+#store-detail:has(#sd-logo:not(.hidden)) #sd-title {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+#sd-title {
+  margin: 0 0 8px;
+  font: 800 clamp(26px, 3.4vw, 44px)/1.04 var(--font-wide, var(--font-ui));
+  font-stretch: 118%;
+  letter-spacing: -.015em;
+  color: #fff;
+  text-shadow: 0 3px 24px rgba(0, 0, 0, .85);
+}
+#sd-tagline {
+  margin: 0;
+  max-width: 66ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--paper-2, #B7B1A4);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .8);
+  /* The plate has a fixed ratio, so the caption cannot be allowed to grow
+     without bound: past three lines it would push its own row out of a box
+     with overflow:hidden on it. Steam's short_description is one sentence
+     nine times in ten; this catches the tenth. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sd-stage-btn {
+  position: absolute;
+  right: 14px; top: 14px;
+  z-index: 5;
+  width: 36px; height: 36px;
+  border: 1px solid rgba(236, 231, 221, .14);
+  border-radius: 50%;
+  background: rgba(9, 10, 13, .68);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+/* Thumbnails ride the bottom-right of the plate rather than sitting under
+   it, so the media stays one object instead of two stacked ones. */
+#sd-strip {
+  position: relative;
+  z-index: 4;
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+#sd-strip:empty { display: none; }
+#sd-strip::-webkit-scrollbar { display: none; }
+.sd-shot {
+  flex: 0 0 auto;
+  width: 104px;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #06070a;
+  cursor: pointer;
+  opacity: .72;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .5);
+  transition: opacity .2s, border-color .2s, transform .22s;
+}
+.sd-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sd-shot:hover { opacity: 1; transform: translateY(-2px); }
+.sd-shot.is-on { opacity: 1; border-color: var(--primary, #D2A65C); }
+
+/* ─── The commit bar ─────────────────────────────────────────────
+   Sticky for the length of the page. A store page is a decision, and the
+   decision should never require scrolling back up. */
+#sd-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px clamp(20px, 3.6vw, 52px);
+  border-bottom: 1px solid rgba(236, 231, 221, .08);
+  background: rgba(10, 11, 14, .86);
+  backdrop-filter: blur(20px) saturate(150%);
+}
+#sd-bar-left { min-width: 0; }
+#sd-bar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 700 14px var(--font-ui);
+  color: var(--paper, #ECE7DD);
+}
+#sd-size {
+  margin-top: 2px;
+  font: 700 11px var(--font-mono);
+  letter-spacing: .6px;
+  color: var(--paper-3, #7E786C);
+}
+#sd-bar-right { display: flex; gap: 9px; flex-shrink: 0; }
+#sd-install { min-width: 140px; }
+#sd-install.is-owned { filter: saturate(.5); }
+
+/* ─── Body ───────────────────────────────────────────────────────── */
+#sd-body { padding: 30px clamp(20px, 3.6vw, 52px) 70px; }
+
+#sd-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 34px;
+  padding-bottom: 26px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(236, 231, 221, .07);
+}
+.sd-fact { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sd-fact-label {
+  font: 700 9.5px var(--font-mono);
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--paper-3, #7E786C);
+}
+.sd-fact-value {
+  font: 600 13.5px var(--font-ui);
+  color: var(--paper, #ECE7DD);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 34ch;
+}
+.sd-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font: 800 13px var(--font-mono);
+  color: #0b0f0d;
+}
+.sd-score.is-high { background: #8FC96B; }
+.sd-score.is-mid  { background: #E0C36A; }
+.sd-score.is-low  { background: #D4776A; }
+
+.sd-block { margin-bottom: 38px; }
+.sd-block-title {
+  margin: 0 0 14px;
+  font: 800 13px var(--font-wide, var(--font-ui));
+  font-stretch: 112%;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--paper-3, #7E786C);
+}
+
+#sd-about-text {
+  max-width: 82ch;
+  font-size: 14.5px;
+  line-height: 1.74;
+  color: var(--paper-2, #B7B1A4);
+  white-space: pre-wrap;
+}
+
+#sd-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.sd-tag {
+  padding: 6px 12px;
+  border: 1px solid rgba(236, 231, 221, .09);
+  border-radius: 999px;
+  background: rgba(236, 231, 221, .04);
+  font: 600 12px var(--font-ui);
+  color: var(--paper-2, #B7B1A4);
+  transition: color .16s, border-color .16s;
+}
+.sd-tag:hover { color: var(--paper, #ECE7DD); border-color: var(--primary, #D2A65C); }
+
+/* The part no other launcher shows: what the download is actually made of,
+   before you commit rather than after. */
+#sd-depot-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 8px;
+  max-width: 940px;
+}
+.sd-depot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(236, 231, 221, .08);
+  border-radius: 10px;
+  background: rgba(236, 231, 221, .03);
+}
+.sd-depot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--paper-2, #B7B1A4);
+}
+.sd-depot-size {
+  flex-shrink: 0;
+  font: 700 11.5px var(--font-mono);
+  color: var(--primary, #D2A65C);
+}
+
+@media (max-width: 980px) {
+  /* Below this the caption and the strip stop being able to share a line
+     without one of them becoming a column of thumbnails. The strip goes
+     under the caption rather than fighting it. */
+  #sd-cinema { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto auto; }
+  #sd-cinema-head { grid-row: 2; max-width: none; }
+  #sd-strip { grid-column: 1; grid-row: 3; margin-top: 12px; }
+}
+
+@media (max-width: 760px) {
+  #sf-spot-body { right: 18%; }
+  #sd-strip { display: none; }
+}
+/* ─── The store front, on the couch ──────────────────────────────
+   Written in the vocabulary Big Picture already speaks, not the desktop
+   store's.
+
+   Everything that makes the browse screen feel like Big Picture is here:
+   the game's own art full-bleed behind everything, a heading that follows
+   the cursor instead of sitting still, 2:3 portrait covers at the shelf's
+   proportions, the teal outline and the lift on selection, light type
+   sized in --u. The first version of this put 460x215 header images on a
+   flat panel, which read as a browser window pasted into a television.
+   ═══════════════════════════════════════════════════════════════════ */
+#bp-root #bp-storefront {
+  position: absolute;
+  inset: 0;
+  /* Under .bp-sheet, which sits at 30: a store page opened from here has to
+     land on top of the page that launched it. */
+  z-index: 25;
+  overflow: hidden;
+  background: var(--bp-void, #08090A);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .32s ease;
+}
+#bp-root #bp-storefront.is-on { opacity: 1; pointer-events: auto; }
+
+/* The backdrop is the highlighted game, full-bleed and far out of focus —
+   the treatment #bp-bg gives the shelf, so moving the stick repaints the
+   whole screen in the colour of whatever is under the cursor. */
+#bp-root #bp-sf-bg {
+  position: absolute;
+  inset: calc(var(--u) * -4);
+  width: calc(100% + var(--u) * 8);
+  height: calc(100% + var(--u) * 8);
+  object-fit: cover;
+  filter: blur(calc(var(--u) * 2.2)) saturate(140%);
+  opacity: .5;
+  transform: scale(1.04);
+  transition: opacity .5s ease;
+}
+#bp-root #bp-sf-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 9, 10, .96) 12%, rgba(8, 9, 10, .72) 46%, rgba(8, 9, 10, .5)),
+    linear-gradient(0deg, rgba(8, 9, 10, .96) 6%, transparent 52%);
+}
+
+#bp-root #bp-sf-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: calc(var(--u) * 4.4) 0 calc(var(--u) * 3.4);
+}
+
+/* ─── The heading, which follows the cursor ─────────────────────── */
+#bp-root #bp-sf-head {
+  flex-shrink: 0;
+  padding: 0 var(--bp-gutter) calc(var(--u) * 1.8);
+  max-width: calc(var(--u) * 62);
+}
+#bp-root #bp-sf-kicker {
+  font-size: calc(var(--u) * 0.86);
+  font-weight: 600;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--bp-accent, #17C8B6);
+  margin-bottom: calc(var(--u) * 0.5);
+}
+#bp-root #bp-sf-name {
+  font-size: calc(var(--u) * 3.4);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -.005em;
+  color: var(--bp-ink, #fff);
+  text-shadow: 0 calc(var(--u) * 0.12) calc(var(--u) * 0.9) rgba(0, 0, 0, .85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#bp-root #bp-sf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.5);
+  margin-top: calc(var(--u) * 0.7);
+}
+#bp-root .bp-sf-pill {
+  padding: calc(var(--u) * 0.2) calc(var(--u) * 0.7);
+  border: 1px solid var(--bp-line, rgba(255, 255, 255, .14));
+  border-radius: calc(var(--u) * 0.3);
+  background: rgba(255, 255, 255, .05);
+  font-size: calc(var(--u) * 0.86);
+  font-weight: 500;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+}
+
+/* ─── Shelves ────────────────────────────────────────────────────── */
+#bp-root #bp-sf-rails {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /* scrollIntoView({ block: 'nearest' }) parks a shelf flush against this
+     scroller's clip edge, and a cover scaled to 1.075 hangs past its shelf —
+     so the highlighted poster was sliced flat by the container, as one hard
+     horizontal line across the bottom, and across the top once you had
+     scrolled down. scroll-padding is the property for exactly this: it tells
+     the scroll machinery where the usable area really ends, so a shelf brought
+     into view stops short of the edge instead of touching it. */
+  scroll-padding-block: calc(var(--u) * 3.4);
+  /* Real padding as well, so the first and last shelves have somewhere to
+     grow into rather than being cut by the ends of the scroll range. */
+  padding-block: calc(var(--u) * 0.6) calc(var(--u) * 2.6);
+}
+#bp-root #bp-sf-rails::-webkit-scrollbar { display: none; }
+
+/* The strip's own padding is the gap between shelves now. */
+#bp-root .bp-sf-rail { margin-bottom: 0; }
+#bp-root .bp-sf-rail-head {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 0.9);
+  padding: 0 var(--bp-gutter) calc(var(--u) * 0.6);
+}
+#bp-root .bp-sf-rail-title {
+  font-size: calc(var(--u) * 1.2);
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: var(--bp-mute, rgba(255, 255, 255, .46));
+  transition: color .22s ease;
+}
+#bp-root .bp-sf-rail.is-row .bp-sf-rail-title { color: var(--bp-ink, #fff); }
+#bp-root .bp-sf-rail-sub {
+  font-size: calc(var(--u) * 0.82);
+  font-weight: 400;
+  color: var(--bp-mute, rgba(255, 255, 255, .46));
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+#bp-root .bp-sf-rail.is-row .bp-sf-rail-sub { opacity: 1; }
+
+#bp-root .bp-sf-strip {
+  display: flex;
+  gap: calc(var(--u) * 0.6);
+  /* The selected cover scales to 1.075, which on a card 21.7u tall grows it
+     by 1.63u — 0.82u past each edge — and then adds a 0.17u outline and a
+     2.4u accent bloom on top of that. That room has to be padding, because
+     overflow clips at the padding box.
+
+     No negative margin. It was here to keep the shelves tight, and what it
+     actually did was drag the reserved room back out of the scrollable area,
+     so the parent scroller clipped exactly the space this padding had just
+     bought. The shelves are spaced by this padding now; .bp-sf-rail carries
+     no bottom margin of its own any more.
+
+     overflow-y is stated rather than left to default: a single `auto` axis
+     makes the other axis `auto` too, and that clips. */
+  padding: calc(var(--u) * 2.6) var(--bp-gutter) calc(var(--u) * 2.8);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+#bp-root .bp-sf-strip::-webkit-scrollbar { display: none; }
+
+/* ─── Covers ─────────────────────────────────────────────────────
+   Two-thirds of a shelf card: small enough that three shelves fit on one
+   screen, large enough to read a cover from across a room. */
+#bp-root .bp-sf-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(var(--bp-card-w) * 0.66);
+  height: calc(var(--bp-card-h) * 0.66);
+  padding: 0;
+  border: 0;
+  background: #14171A;
+  overflow: hidden;
+  cursor: pointer;
+  outline: calc(var(--u) * 0.17) solid transparent;
+  outline-offset: calc(var(--u) * -0.17);
+  box-shadow: 0 calc(var(--u) * 0.3) calc(var(--u) * 1.1) rgba(0, 0, 0, .5);
+  transition: transform .3s var(--bp-spring), outline-color .18s ease, box-shadow .3s ease;
+}
+#bp-root[data-rounded="on"] .bp-sf-card { border-radius: var(--bp-radius); }
+
+#bp-root .bp-sf-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(.86) saturate(.94);
+  transition: filter .3s ease;
+}
+/* No portrait exists for much of the back catalogue; the header capsule
+   stands in, fitted rather than cropped so it is not a band of pixels. */
+#bp-root .bp-sf-art.is-wide { object-fit: contain; background: #0d0f11; }
+
+#bp-root .bp-sf-card.is-cursor {
+  transform: scale(1.075);
+  outline-color: var(--bp-accent, #17C8B6);
+  box-shadow:
+    0 calc(var(--u) * 0.7) calc(var(--u) * 2.2) rgba(0, 0, 0, .62),
+    0 0 calc(var(--u) * 2.4) var(--bp-accent-soft, rgba(23, 200, 182, .24));
+  z-index: 2;
+}
+#bp-root .bp-sf-card.is-cursor .bp-sf-art { filter: brightness(1.02) saturate(1.04); }
+#bp-root .bp-sf-card.is-owned .bp-sf-art { filter: brightness(.45) saturate(.35); }
+
+/* The name plate rises only under the cursor, exactly as on the shelf — a
+   wall of always-on captions would bury the artwork. */
+#bp-root .bp-sf-plate {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 0.55) calc(var(--u) * 0.45);
+  background: linear-gradient(to top, rgba(8, 9, 10, .93) 0%, rgba(8, 9, 10, .55) 55%, transparent 100%);
+  transform: translateY(112%);
+  opacity: 0;
+  transition: transform .34s var(--bp-spring), opacity .24s ease;
+}
+#bp-root .bp-sf-card.is-cursor .bp-sf-plate { transform: none; opacity: 1; }
+#bp-root .bp-sf-plate-name {
+  display: block;
+  font-size: calc(var(--u) * 0.92);
+  font-weight: 500;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One figure per cover, top-left, where the shelf puts its flags. */
+#bp-root .bp-sf-chip {
+  position: absolute;
+  left: calc(var(--u) * 0.4);
+  top: calc(var(--u) * 0.4);
+  z-index: 3;
+  padding: calc(var(--u) * 0.14) calc(var(--u) * 0.42);
+  border-radius: calc(var(--u) * 0.28);
+  background: rgba(8, 9, 10, .84);
+  font-size: calc(var(--u) * 0.8);
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+  backdrop-filter: blur(calc(var(--u) * 0.3));
+}
+#bp-root .bp-sf-chip.is-live { color: var(--bp-accent, #17C8B6); }
+#bp-root .bp-sf-chip.is-score { background: #8FC96B; color: #0b0f0d; }
+#bp-root .bp-sf-chip.is-cut { background: #4B7A2F; color: #E4FFD2; }
+
+/* Owned is a corner mark, not a word: the cover is already dimmed. */
+#bp-root .bp-sf-owned {
+  position: absolute;
+  right: calc(var(--u) * 0.4);
+  top: calc(var(--u) * 0.4);
+  z-index: 3;
+  width: calc(var(--u) * 0.62);
+  height: calc(var(--u) * 0.62);
+  border-radius: 50%;
+  background: var(--bp-accent, #17C8B6);
+  box-shadow: 0 0 calc(var(--u) * 0.7) var(--bp-accent, #17C8B6);
+}
+
+#bp-root #bp-sf-status {
+  flex-shrink: 0;
+  padding: calc(var(--u) * 0.8) var(--bp-gutter) 0;
+  font-size: calc(var(--u) * 1);
+  font-weight: 400;
+  color: var(--bp-mute, rgba(255, 255, 255, .46));
+}
+
+/* The rail entry that opens all this, set apart from the filters above it:
+   those narrow the shelf, this one leaves it. */
+#bp-root .bp-rail-item.is-store {
+  margin-top: auto;
+  color: var(--bp-accent, #17C8B6);
+}
+#bp-root .bp-rail-item.is-store::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 0;
+  height: 1px;
+  background: var(--bp-line, rgba(255, 255, 255, .14));
+}
+
+/* ─── Three things this screen does that nothing else in the app does ──
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1 · The trailer takes the wall.
+   Rest on a cover for a second and the game starts playing full-bleed
+   behind the whole store, under the scrim, muted. The shelf does this for
+   games you own; a store is where it earns its keep, because a trailer is
+   how the decision actually gets made. */
+#bp-root #bp-sf-bg { transition: opacity .8s ease; }
+
+/* 2 · The backdrop drifts against the shelf.
+   js/bigpicture.js writes --bp-sf-par from the cursor position along the
+   row; the art slides the other way, so the two planes read as different
+   distances instead of one flat sheet. */
+#bp-root #bp-sf-bg {
+  transform: translate3d(calc(var(--bp-sf-par, 0) * -2.4%), 0, 0) scale(1.06);
+  transition: transform .62s var(--bp-ease), opacity .8s ease;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   Corrections, after looking at it on a screen
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Light ──────────────────────────────────────────────────────
+   The first pass laid two near-opaque black gradients over artwork that
+   was already dimmed, and then dimmed the covers again on top of that.
+   The result was a store you had to squint at. The scrim now only does
+   what a scrim is for — keep text legible over the parts text sits on —
+   and the artwork is left alone. */
+#bp-root #bp-sf-bg { opacity: .78; filter: blur(calc(var(--u) * 1.5)) saturate(125%); }
+#bp-root #bp-sf-scrim {
+  background:
+    linear-gradient(90deg, rgba(8, 9, 10, .88) 0%, rgba(8, 9, 10, .52) 34%, rgba(8, 9, 10, .18) 62%),
+    linear-gradient(0deg, rgba(8, 9, 10, .9) 0%, rgba(8, 9, 10, .3) 34%, transparent 62%);
+}
+/* Covers are the artwork. They are not decoration to be turned down. */
+#bp-root .bp-sf-art { filter: none; }
+#bp-root .bp-sf-card:not(.is-cursor) .bp-sf-art { filter: brightness(.94); }
+#bp-root .bp-sf-card.is-owned .bp-sf-art { filter: brightness(.6) saturate(.55); }
+
+/* ─── Bigger ─────────────────────────────────────────────────────
+   Two-thirds of a shelf card was a thumbnail at couch distance. These are
+   nearly the size of the shelf's own covers; two shelves on screen with
+   art you can actually read beats four you cannot. */
+#bp-root .bp-sf-card {
+  width: calc(var(--bp-card-w) * 0.92);
+  height: calc(var(--bp-card-h) * 0.92);
+}
+#bp-root .bp-sf-strip { gap: calc(var(--u) * 0.75); }
+
+/* ─── No black band at the foot ──────────────────────────────────
+   #bp-sf-status held its padding with nothing in it, under a body that
+   already reserved a bottom margin — together, a black bar across the
+   width of the screen under the last shelf. */
+#bp-root #bp-sf-status:empty { display: none; }
+#bp-root #bp-sf-body { padding-bottom: calc(var(--u) * 0.6); }
+#bp-root #bp-sf-rails { padding-bottom: calc(var(--u) * 1.2); }
+
+/* ─── The search bar ─────────────────────────────────────────────
+   Row -1, above the first shelf. Reached by stepping up off the shelves,
+   which is where a couch user looks for it. */
+#bp-root #bp-sf-search {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.7);
+  margin: 0 var(--bp-gutter) calc(var(--u) * 1.4);
+  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.3);
+  width: calc(var(--u) * 34);
+  max-width: calc(100% - var(--bp-gutter) * 2);
+  border: 1px solid var(--bp-line, rgba(255, 255, 255, .14));
+  border-radius: calc(var(--u) * 0.45);
+  background: rgba(255, 255, 255, .06);
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+  font: inherit;
+  font-size: calc(var(--u) * 1.05);
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .26s var(--bp-spring);
+}
+#bp-root #bp-sf-search svg {
+  width: calc(var(--u) * 1.2);
+  height: calc(var(--u) * 1.2);
+  fill: currentColor;
+  flex-shrink: 0;
+}
+#bp-root #bp-sf-search.is-cursor {
+  background: rgba(255, 255, 255, .12);
+  border-color: var(--bp-accent, #17C8B6);
+  color: #fff;
+  transform: scale(1.02);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE STORE PAGE — a full screen, not a panel
+   ═══════════════════════════════════════════════════════════════════
+   It was a centred sheet taking a third of the screen in one corner. A
+   store page is the page that sells the game: it gets the whole display,
+   the trailer playing behind it, and everything Steam knows laid out in
+   two columns — what it is and what you can do about it on the left, what
+   it looks like and what it contains on the right.
+   ═══════════════════════════════════════════════════════════════════ */
+#bp-root #bp-store {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  overflow: hidden;
+  background: var(--bp-void, #08090A);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+#bp-root #bp-store.is-on { opacity: 1; pointer-events: auto; }
+
+#bp-root #bp-store-bg,
+#bp-root #bp-store-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#bp-root #bp-store-bg { opacity: .85; }
+#bp-root #bp-store-video { opacity: 0; transition: opacity 1s ease; }
+#bp-root #bp-store-video.is-on { opacity: 1; }
+#bp-root #bp-store:has(#bp-store-video.is-on) #bp-store-bg { opacity: 0; transition: opacity 1s ease; }
+#bp-root #bp-store-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 9, 10, .94) 0%, rgba(8, 9, 10, .74) 38%, rgba(8, 9, 10, .34) 72%),
+    linear-gradient(0deg, rgba(8, 9, 10, .92) 0%, rgba(8, 9, 10, .25) 44%, transparent 70%);
+}
+
+#bp-root #bp-store-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: calc(var(--u) * 4);
+  height: 100%;
+  padding: calc(var(--u) * 5) var(--bp-gutter) calc(var(--u) * 4);
+  align-items: start;
+}
+
+/* ─── Left: what it is, and what you can do ──────────────────────── */
+#bp-root #bp-store-left { min-width: 0; align-self: center; }
+#bp-root #bp-store-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(var(--u) * 30);
+  max-height: calc(var(--u) * 7);
+  object-fit: contain;
+  object-position: left bottom;
+  margin-bottom: calc(var(--u) * 0.6);
+  filter: drop-shadow(0 calc(var(--u) * 0.12) calc(var(--u) * 0.8) rgba(0, 0, 0, .85));
+}
+#bp-root #bp-store-name {
+  font-size: calc(var(--u) * 3.6);
+  font-weight: 300;
+  line-height: 1.04;
+  color: #fff;
+  text-shadow: 0 calc(var(--u) * 0.12) calc(var(--u) * 0.9) rgba(0, 0, 0, .85);
+}
+#bp-root #bp-store-sub {
+  margin-top: calc(var(--u) * 0.7);
+  max-width: calc(var(--u) * 42);
+  font-size: calc(var(--u) * 1.15);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#bp-root #bp-store-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.9) calc(var(--u) * 2.6);
+  margin: calc(var(--u) * 1.4) 0;
+  padding: calc(var(--u) * 1.1) 0;
+  border-top: 1px solid var(--bp-line, rgba(255, 255, 255, .14));
+  border-bottom: 1px solid var(--bp-line, rgba(255, 255, 255, .14));
+}
+#bp-root #bp-store-rows { max-width: calc(var(--u) * 34); }
+#bp-root #bp-store-rows .bp-row { padding-left: calc(var(--u) * 0.9); }
+
+/* ─── Right: what it looks like, and what is in it ───────────────── */
+#bp-root #bp-store-right {
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-right: calc(var(--u) * 0.5);
+}
+#bp-root #bp-store-right::-webkit-scrollbar { display: none; }
+#bp-root .bp-store-block { margin-bottom: calc(var(--u) * 1.8); }
+#bp-root .bp-store-block.is-empty { display: none; }
+#bp-root .bp-store-block-head {
+  font-size: calc(var(--u) * 0.82);
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--bp-accent, #17C8B6);
+  margin-bottom: calc(var(--u) * 0.6);
+}
+#bp-root #bp-store-about {
+  font-size: calc(var(--u) * 1);
+  font-weight: 400;
+  line-height: 1.62;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#bp-root #bp-store-shots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--u) * 0.5);
+}
+#bp-root #bp-store-shots img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-radius: calc(var(--u) * 0.35);
+  background: #0d0f11;
+}
+#bp-root #bp-store-tags { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 0.4); }
+#bp-root .bp-store-tag {
+  padding: calc(var(--u) * 0.2) calc(var(--u) * 0.65);
+  border: 1px solid var(--bp-line, rgba(255, 255, 255, .14));
+  border-radius: calc(var(--u) * 0.9);
+  background: rgba(255, 255, 255, .04);
+  font-size: calc(var(--u) * 0.86);
+  font-weight: 500;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+}
+
+@media (max-aspect-ratio: 5/4) {
+  #bp-root #bp-store-inner { grid-template-columns: minmax(0, 1fr); }
+  #bp-root #bp-store-right { display: none; }
+}
+
+/* The fact cells the store page lays under its title. */
+#bp-root .bp-store-fact { min-width: 0; }
+#bp-root .bp-store-fact-label {
+  font-size: calc(var(--u) * 0.78);
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--bp-mute, rgba(255, 255, 255, .46));
+}
+#bp-root .bp-store-fact-value {
+  margin-top: calc(var(--u) * 0.18);
+  font-size: calc(var(--u) * 1.1);
+  font-weight: 600;
+  color: var(--bp-tan, #D8B98C);
+  max-width: calc(var(--u) * 22);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Search results, as the store ───────────────────────────────
+   app.js builds these from the same component the shelves use, so all this
+   has to do is lay them out as a grid rather than a row. The old
+   .result-card rules in enhance.css still apply when js/store.js failed to
+   load and the fallback list is what rendered. */
+#search-results[data-view="store"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px 14px;
+  align-content: start;
+  /* Same reasoning as the shelves: a hovered card lifts and casts, and this
+     is a scrolling container. */
+  padding: 26px clamp(20px, 4vw, 60px) 60px;
+}
+#search-results[data-view="store"] .sf-card { width: auto; }
+#search-results[data-view="store"] .sf-card-art { aspect-ratio: 460 / 215; }
+
+/* ─── Store results inside the search screen ─────────────────────
+   bigpicture.js builds these from the same component the store front deals
+   out. The results grid drives selection with .is-sel rather than the
+   .is-cursor the shelves use, so the selected treatment is stated for both
+   rather than duplicated. */
+#bp-root #bp-results .bp-sf-card {
+  width: auto;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+#bp-root .bp-sf-card.is-sel {
+  transform: scale(1.075);
+  outline-color: var(--bp-accent, #17C8B6);
+  box-shadow:
+    0 calc(var(--u) * 0.7) calc(var(--u) * 2.2) rgba(0, 0, 0, .62),
+    0 0 calc(var(--u) * 2.4) var(--bp-accent-soft, rgba(23, 200, 182, .24));
+  z-index: 2;
+}
+#bp-root .bp-sf-card.is-sel .bp-sf-art { filter: brightness(1.02) saturate(1.04); }
+#bp-root .bp-sf-card.is-sel .bp-sf-plate { transform: none; opacity: 1; }
+/* The results grid is a scroller too, and a scaled cover inside one gets
+   sliced exactly the way the shelves did. */
+#bp-root #bp-results {
+  padding-top: calc(var(--u) * 1.6);
+  padding-bottom: calc(var(--u) * 1.6);
+}
+
+/* ─── Placeholder shelves ────────────────────────────────────────
+   The shape of the page, while the charts are being read. A sentence on an
+   empty screen reads as a dead application; the layout arriving first reads
+   as one that is working. */
+#bp-root .bp-sf-card.is-skeleton {
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, .04) 0%,
+    rgba(255, 255, 255, .09) 46%,
+    rgba(255, 255, 255, .04) 72%);
+  background-size: 280% 100%;
+  animation: bpSfSkeleton 1.5s ease-in-out infinite;
+  cursor: default;
+  pointer-events: none;
+}
+#bp-root .bp-sf-rail.is-skeleton .bp-sf-rail-title {
+  display: inline-block;
+  width: calc(var(--u) * 12);
+  border-radius: calc(var(--u) * 0.2);
+  background: rgba(255, 255, 255, .07);
+  animation: bpSfSkeleton 1.5s ease-in-out infinite;
+}
+@keyframes bpSfSkeleton {
+  0%, 100% { background-position: 120% 0; }
+  50%      { background-position: -20% 0; }
+}
+/* A placeholder must never look selected. */
+#bp-root .bp-sf-card.is-skeleton.is-cursor,
+#bp-root .bp-sf-card.is-skeleton.is-sel {
+  transform: none;
+  outline-color: transparent;
+  box-shadow: 0 calc(var(--u) * 0.3) calc(var(--u) * 1.1) rgba(0, 0, 0, .5);
+}
+
+/* ─── CS.RIN.RU ─────────────────────────────────────────────────────
+   The second source's button. app.js stamps html[data-csrin] once it has
+   asked the main process whether the tools exist in deps/csrin; until
+   then, and when they are missing, the button is not there at all. */
+html:not([data-csrin="on"]) #sd-csrin { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE LEAD RESULT
+   ═══════════════════════════════════════════════════════════════════
+   The top hit of a search, set like the spotlight: a search is for one
+   title nearly every time, and that title used to arrive as one card in a
+   grid of twenty look-alikes. It spans the grid, keeps the shelf's radius
+   and shadow, and carries the commit so the answer is one click away. */
+#search-results[data-view="store"] .sf-lead {
+  grid-column: 1 / -1;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 6;
+  min-height: 190px;
+  max-height: 300px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface-2, #17181d);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .55), 0 0 0 1px rgba(236, 231, 221, .06);
+  transition: transform .28s var(--ease-entrance, ease), box-shadow .28s;
+}
+#search-results[data-view="store"] .sf-lead:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 26px 56px rgba(0, 0, 0, .6), 0 0 0 1px rgba(210, 166, 92, .28);
+}
+.sf-lead-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  filter: saturate(1.02);
+  transition: transform .9s var(--ease-entrance, ease);
+}
+.sf-lead:hover .sf-lead-art { transform: scale(1.03); }
+.sf-lead.is-plate { background: linear-gradient(120deg, #1b1a20, #2a2320 70%, #3a2c1d); }
+.sf-lead-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 11, 14, .96) 0%, rgba(10, 11, 14, .82) 34%, rgba(10, 11, 14, .18) 62%, rgba(10, 11, 14, 0) 100%),
+    linear-gradient(0deg, rgba(10, 11, 14, .55) 0%, rgba(10, 11, 14, 0) 45%);
+}
+.sf-lead-body {
+  position: absolute;
+  left: clamp(20px, 3.2vw, 44px);
+  right: 34%;
+  bottom: clamp(18px, 3vw, 34px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sf-lead-kicker {
+  font: 700 10.5px var(--font-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--primary, #D2A65C);
+}
+.sf-lead.is-owned .sf-lead-kicker { color: var(--patina, #74BBAB); }
+.sf-lead-name {
+  font: 800 clamp(22px, 2.6vw, 34px)/1.02 var(--font-wide, var(--font-ui));
+  letter-spacing: .01em;
+  color: var(--paper, #ECE7DD);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .7);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.sf-lead-sub {
+  font: 700 11px var(--font-mono);
+  letter-spacing: .06em;
+  color: var(--paper-3, #7E786C);
+}
+.sf-lead-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* ─── The plate that stands in for missing art ───────────────────
+   The browser's broken-image glyph on a grey slab is what a grid of new
+   or delisted apps used to be. The library's own tinted plate takes the
+   art's place instead, and the card stays a card. */
+.sf-card-art.is-plate { background: var(--surface-2, #17181d); }
+.sf-card-art.is-plate .sf-plate { position: absolute; inset: 0; border-radius: inherit; }
+
+/* ─── What's new, from the Store ─────────────────────────────────
+   A quiet control beside the search, lit only when something is unseen. */
+#store-news-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 14px 8px 12px;
+  border: 1px solid rgba(236, 231, 221, .12);
+  border-radius: 999px;
+  background: rgba(236, 231, 221, .04);
+  color: var(--paper-2, #B7B1A4);
+  font: 600 12px var(--font-ui);
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+#store-news-btn:hover { border-color: rgba(210, 166, 92, .4); color: var(--paper, #ECE7DD); background: rgba(210, 166, 92, .08); }
+#store-news-btn .sn-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(236, 231, 221, .28);
+  transition: background .2s, box-shadow .2s;
+}
+#store-news-btn.has-new .sn-dot { background: var(--primary, #D2A65C); box-shadow: 0 0 10px var(--primary, #D2A65C); }
+#store-news-count {
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--primary, #D2A65C);
+  color: #1a1408;
+  font: 800 10.5px var(--font-mono);
+  text-align: center;
+}
+/* On the folded hero the button sits at the right of the search row. */
+#page-store[data-front="on"] #store-news-btn {
+  position: absolute;
+  right: clamp(20px, 4vw, 60px);
+  top: 12px;
+  margin: 0;
+  height: 42px;
+}
+#store-hero { position: relative; }
+
+/* ─── Big Picture: the featured shelf, and covers without a portrait ── */
+#bp-root .bp-sf-rail.is-wide .bp-sf-card {
+  width: calc(var(--bp-card-w) * 1.42);
+  height: calc(var(--bp-card-w) * 1.42 * 215 / 460);
+}
+#bp-root .bp-sf-art.is-wide-art { object-fit: cover; }
+#bp-root .bp-sf-card.is-wide-card .bp-sf-plate { transform: none; opacity: 1; }
+#bp-root .bp-sf-card.is-wide-card .bp-sf-plate-name { font-size: calc(var(--u) * 1.02); font-weight: 600; }
+#bp-root .bp-sf-plate-sub {
+  display: block;
+  margin-top: calc(var(--u) * 0.1);
+  font-size: calc(var(--u) * 0.8);
+  font-weight: 500;
+  color: var(--bp-dim, rgba(255, 255, 255, .74));
+}
+#bp-root .bp-sf-card.is-noart { background: linear-gradient(135deg, #1d2024, #2a2f36); }
+/* The header, blown up and blurred, fills the space the portrait would have
+   taken; the same header sits fitted on top of it, so what was two black
+   bars is now a cover. */
+#bp-root .bp-sf-card.is-fill::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--u) * -1);
+  background: var(--bp-sf-fill) center / cover no-repeat;
+  filter: blur(calc(var(--u) * 0.9)) saturate(1.25) brightness(.55);
+  transform: scale(1.15);
+}
+#bp-root .bp-sf-card.is-fill .bp-sf-art.is-wide { position: relative; z-index: 1; background: transparent; }
+/* A <button> does not honour aspect-ratio the way a div does — measured:
+   the lead sat at its min-height with its plate clipped off the bottom.
+   The height is stated outright instead. */
+#search-results[data-view="store"] .sf-lead { aspect-ratio: auto; height: clamp(200px, 17vw, 300px); min-height: 0; max-height: none; }
+
+/* ─── The release line, Denuvo titles only ───────────────────────
+   Under the size in the commit bar: what the forum has for this game,
+   before Install is pressed. Same mono voice as the size line; the colour
+   is the answer. */
+#sd-csrin-line {
+  margin-top: 3px;
+  font: 700 11px var(--font-mono);
+  letter-spacing: .5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#sd-csrin-line.sd-csrin-wait { color: var(--paper-3, #7E786C); }
+#sd-csrin-line.sd-csrin-ok { color: var(--patina, #74BBAB); }
+#sd-csrin-line.sd-csrin-none { color: #E79B90; }

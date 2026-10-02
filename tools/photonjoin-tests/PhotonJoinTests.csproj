@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>PhotonJoinTests</AssemblyName>
+    <RootNamespace>PhotonJoin.Tests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS0649;CS0414</NoWarn>
+  </PropertyGroup>
+
+  <!-- Les sources pures du moteur, compilées ici telles quelles. Le motif est
+       volontairement non récursif : les fichiers qui dépendent d'Unity vivent
+       dans src/unity/ et ne peuvent donc pas se glisser dans l'hôte de test.
+       C'est la structure elle-même qui garantit la séparation. -->
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Meta.cs" />
+    <Compile Include="../photonjoin/src/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="abstractions/FakePhoton.Abstractions.csproj" />
+    <ProjectReference Include="standard/FakePhoton.Standard.csproj" />
+    <ProjectReference Include="variant/FakePhoton.Variant.csproj" />
+  </ItemGroup>
+
+</Project>
